@@ -10,9 +10,11 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define X_AXIS {1.0f, 0.0f, 0.0f}
-#define Y_AXIS {0.0f, 1.0f, 0.0f}
-#define Z_AXIS {0.0f, 0.0f, 1.0f}
+#define X_AXIS (vec3){1.0f, 0.0f, 0.0f}
+#define Y_AXIS (vec3){0.0f, 1.0f, 0.0f}
+#define Z_AXIS (vec3){0.0f, 0.0f, 1.0f}
+
+typedef versor quat;
 
 typedef struct {
     vec3 min;
@@ -23,6 +25,7 @@ float rad(float degrees);
 float deg(float radians);
 float min(float a, float b);
 float max(float a, float b);
+float clip(float x, float a, float b);
 
 void bbox_get_center(bbox_t* bbox, vec3 center);
 

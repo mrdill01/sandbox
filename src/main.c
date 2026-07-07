@@ -1,4 +1,4 @@
-#include "core.h"
+#include "sbox.h"
 #include "video.h"
 
 #include <stdlib.h>
@@ -24,104 +24,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     sbox.world_shader = shader_load(&sbox, "res/shaders/world.vs", "res/shaders/world.fs");
-    mesh_t* quad_mesh = mesh_load(&sbox, "res/meshes/quad.obj");
-    mesh_t* crate_mesh = mesh_load(&sbox, "res/meshes/crate.obj");
-    mesh_t* floor_mesh = mesh_load(&sbox, "res/meshes/floor.obj");
-    mesh_t* barrel_mesh = mesh_load(&sbox, "res/meshes/barrel.obj");
-    mesh_t* chainlink_fence_mesh = mesh_load(&sbox, "res/meshes/chainlink_fence.obj");
-    mesh_t* tommy_gun_mesh = mesh_load(&sbox, "res/meshes/tommy_gun.obj");
-    
-    material_t* crate = material_load(&sbox,
-        "res/textures/crate.png",
-        "res/textures/crate_r.png",
-        "res/textures/crate_n.png",
-        1, 1, false);
+    sbox_load_map(&sbox);
 
-    material_t* chainlink = material_load(&sbox,
-        "res/textures/chainlink.png",
-        "res/textures/chainlink_r.png",
-        "res/textures/chainlink_n.png",
-        20, 20, true);
-
-    material_t* metal = material_load(&sbox,
-        "res/textures/metal.png",
-        "res/textures/metal_r.png",
-        "res/textures/metal_n.png",
-        1, 1, false);
-
-    material_t* barrel = material_load(&sbox,
-        "res/textures/barrel.png",
-        "res/textures/barrel_r.png",
-        "res/textures/barrel_n.png",
-        1, 1, false);
-
-    material_t* wood = material_load(&sbox,
-        "res/textures/wood.png",
-        "res/textures/wood_r.png",
-        "res/textures/wood_n.png",
-        1, 1, false);
-
-    ent_t floor_entity = {0};
-    floor_entity.name = "floor";
-    vec3 pos3 = {0, -0.5, 0};
-    glm_vec3_copy(pos3, floor_entity.position);
-    floor_entity.mesh = floor_mesh;
-    floor_entity.nmaterials = 0;
-    floor_entity.materials[floor_entity.nmaterials++] = metal;
-    floor_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, floor_entity);
-
-    ent_t crate_entity = {0};
-    crate_entity.name = "crate";
-    vec3 pos = {0, 0, 0};
-    glm_vec3_copy(pos, crate_entity.position);
-    crate_entity.mesh = crate_mesh;
-    crate_entity.nmaterials = 0;
-    crate_entity.materials[crate_entity.nmaterials++] = crate;
-    crate_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, crate_entity);
-
-    ent_t crate2_entity = {0};
-    crate2_entity.name = "crate";
-    vec3 pos5 = {-1, 0, 0.1};
-    glm_vec3_copy(pos5, crate2_entity.position);
-    crate2_entity.mesh = crate_mesh;
-    crate2_entity.nmaterials = 0;
-    crate2_entity.materials[crate2_entity.nmaterials++] = crate;
-    crate2_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, crate2_entity);
-
-    ent_t barrel_entity = {0};
-    barrel_entity.name = "barrel";
-    vec3 pos4 = {1.5, 0, 0};
-    glm_vec3_copy(pos4, barrel_entity.position);
-    barrel_entity.mesh = barrel_mesh;
-    barrel_entity.nmaterials = 0;
-    barrel_entity.materials[barrel_entity.nmaterials++] = barrel;
-    barrel_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, barrel_entity);
-
-    ent_t chainlink_fence_entity = {0};
-    chainlink_fence_entity.name = "chainlink fence";
-    vec3 pos2 = {0, -0.5, 0.8};
-    glm_vec3_copy(pos2, chainlink_fence_entity.position);
-    chainlink_fence_entity.mesh = chainlink_fence_mesh;
-    chainlink_fence_entity.nmaterials = 0;
-    chainlink_fence_entity.materials[chainlink_fence_entity.nmaterials++] = wood;
-    chainlink_fence_entity.materials[chainlink_fence_entity.nmaterials++] = chainlink;
-    chainlink_fence_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, chainlink_fence_entity);
-
-    ent_t tommy_gun_entity = {0};
-    tommy_gun_entity.name = "tommy gun";
-    vec3 pos6 = {1.5f, 1.5f, 0.0f};
-    glm_vec3_copy(pos6, tommy_gun_entity.position);
-    tommy_gun_entity.mesh = tommy_gun_mesh;
-    tommy_gun_entity.nmaterials = 0;
-    tommy_gun_entity.materials[tommy_gun_entity.nmaterials++] = metal;
-    tommy_gun_entity.dist_to_camera = 0.0f;
-    add_ent(&sbox, tommy_gun_entity);
-    
     while (sbox.running) {
         tick(&sbox);
         render(&sbox);
@@ -166,16 +70,17 @@ int init(sbox_t* sbox) {
         return -1;
     }
 
+    info(sbox, "%s", SANDBOX_VERSION);
+
     time_t current_time = time(NULL);
 	struct tm* local_time = localtime(&current_time);
 	char* time_string = asctime(local_time);
 	time_string[strlen(time_string) - 1] = '\0';
-    info(sbox, "current date & time: %s", time_string);
+    info(sbox, "current date and time: %s", time_string);
 
-    info(sbox, "opengl gpu: %s", glGetString(GL_RENDERER));
-    info(sbox, "opengl vendor: %s", glGetString(GL_VENDOR));
-    info(sbox, "opengl version: %s", glGetString(GL_VERSION));
-
+    info(sbox, "GPU: %s", glGetString(GL_RENDERER));
+    info(sbox, "vendor: %s", glGetString(GL_VENDOR));
+    info(sbox, "version: %s", glGetString(GL_VERSION));
     return 0;
 }
 
@@ -214,26 +119,6 @@ void tick(sbox_t* sbox) {
     if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
         sbox->running = false;
     }
-
-    if (sbox->keys[SDL_SCANCODE_W]) {
-        sbox->camera.position[2] -= 1 * sbox->dt;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_S]) {
-        sbox->camera.position[2] += 1 * sbox->dt;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_A]) {
-        sbox->camera.position[0] -= 1 * sbox->dt;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_D]) {
-        sbox->camera.position[0] += 1 * sbox->dt;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_G]) {
-        camera_add_pitch(&sbox->camera, 30.0f);
-    }
 }
 
 void render(sbox_t* sbox) {
@@ -248,21 +133,13 @@ void render(sbox_t* sbox) {
     glEnable(GL_DEPTH_TEST);
 
     mat4 projection;
-    glm_perspective(rad(sbox->camera.fov),
-        (float)sbox->cfg.v_width / sbox->cfg.v_height,
-        0.001f,
-        100.0f,
-        projection);
+    camera_get_projection_matrix(&sbox->camera, sbox->cfg.v_width, sbox->cfg.v_height, projection);
     shader_set_mat4(sbox->world_shader, "projection", projection);
 
     mat4 view;
-    vec3 dir;
-    vec3 forward = {0.0f, 0.0f, -1.0f};
-    vec3 up = {0.0f, 1.0f, 0.0f};
-    glm_vec3_add(sbox->camera.position, forward, dir);
-    glm_lookat(sbox->camera.position, dir, up, view);
+    camera_get_view_matrix(&sbox->camera, view);
     shader_set_mat4(sbox->world_shader, "view", view);
-
+    
     shader_set_vec3(sbox->world_shader, "view_pos", sbox->camera.position);
 
     vec3 light_position = {1.5f, 1.5f, -1.5f};
@@ -272,16 +149,21 @@ void render(sbox_t* sbox) {
     shader_set_vec3(sbox->world_shader, "light.color", light_color);
 
     for (int i = 0; i < sbox->entlist.len; i++) {
-        ent_t* ent = &sbox->entlist.ents[i];
+        entity_t* entity = sbox->entlist.ents[i];
 
         mat4 model;
         glm_mat4_identity(model);
-        glm_translate(model, ent->position);
+        glm_translate(model, entity->position);
+
+        if (strcmp(entity->name, "tommy gun") == 0)
+            glm_quat(entity->rotation, rad(sbox->time * 30.0f), 0.0f, 1.0f, 0.0f);
+        glm_quat_rotate(model, entity->rotation, model);
+
         shader_set_mat4(sbox->world_shader, "model", model);
 
-        for (int i = 0; i < ent->nmaterials; i++)
-            video_set_material(sbox->world_shader, ent->materials[i], i);
-        video_draw_mesh(ent->mesh);
+        for (int i = 0; i < entity->nmaterials; i++)
+            video_set_material(sbox->world_shader, entity->materials[i], i);
+        video_draw_mesh(entity->mesh);
     }
 
     SDL_GL_SwapWindow(sbox->window);
@@ -290,36 +172,52 @@ void render(sbox_t* sbox) {
 void shutdown(sbox_t* sbox) {
     info(sbox, "shutting down...");
 
+    int n = 0;
     shader_t* shader = sbox->shaders;
     while (shader) {
         shader_t* next = shader->next;
         shader_free(sbox, shader);
         shader = next;
+        n++;
     }
 
+    info(sbox, "released %d shader(s)", n);
+
+    n = 0;
     mesh_t* mesh = sbox->meshes;
     while (mesh) {
         mesh_t* next = mesh->next;
         mesh_free(sbox, mesh);
         mesh = next;
+        n++;
     }
 
+    info(sbox, "released %d meshes(s)", n);
+
+    n = 0;
     texture_t* texture = sbox->textures;
     while (texture) {
         texture_t* next = texture->next;
         texture_free(sbox, texture);
         texture = next;
+        n++;
     }
 
+    info(sbox, "released %d texture(s)", n);
+
+    n = 0;
     material_t* material = sbox->materials;
     while (material) {
         material_t* next = material->next;
         material_free(sbox, material);
         material = next;
+        n++;
     }
+
+    info(sbox, "released %d material(s)", n);
 
     SDL_GL_DeleteContext(sbox->gl_context);
     SDL_DestroyWindow(sbox->window);
 
-    info(sbox, "cleanup complete! exiting...");
+    sbox_free(sbox);
 }

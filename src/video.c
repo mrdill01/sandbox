@@ -1,5 +1,5 @@
 #include "video.h"
-#include "core.h"
+#include "sbox.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,29 +12,52 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 
-void camera_init(camera_t* camera) {
-    vec3 position = {0.0f, 1.8f / 2.0f, 1.0f};
+#define PITCH_LIMIT 89.99
 
-    glm_vec3_copy(position, camera->position);
-    glm_quat_copy(GLM_QUAT_IDENTITY, camera->right);
-    glm_quat_copy(GLM_QUAT_IDENTITY, camera->up);
-    glm_quat_copy(GLM_QUAT_IDENTITY, camera->forward);
+void camera_init(camera_t* camera) {
+    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, camera->position);
+    vec3 angles = {0.0f, 90.0f, 0.0f};
+    glm_vec3_copy(angles, camera->angles);
+    glm_vec3_copy(X_AXIS, camera->right);
+    glm_vec3_copy(Y_AXIS, camera->up);
+    glm_vec3_copy(Z_AXIS, camera->forward);
     camera->fov = 75.0f;
+    camera->near = 0.001f;
+    camera->far = 100.0f;
+}
+
+void camera_tick(sbox_t* sbox, camera_t* camera) {
+    camera->forward[0] = cos(rad(camera->angles[1])) * cos(rad(camera->angles[0]));
+    camera->forward[1] = sin(rad(camera->angles[0]));
+    camera->forward[2] = sin(rad(camera->angles[1])) * cos(rad(camera->angles[0]));
+
+    glm_cross(Y_AXIS, camera->forward, camera->right);
+    glm_normalize(camera->right);
+
+    glm_cross(camera->forward, camera->right, camera->up);
 }
 
 void camera_add_pitch(camera_t* camera, float pitch) {
-    versor change;
-    glm_quat_copy(GLM_QUAT_IDENTITY, change);
-    glm_quatv(camera->right, rad(pitch), change);
-    glm_quat_mul(camera->right, change, camera->right);
+    camera->angles[0] += pitch;
+    camera->angles[0] = clip(camera->angles[0], -PITCH_LIMIT, PITCH_LIMIT);        
 }
 
 void camera_add_yaw(camera_t* camera, float yaw) {
-    
+    camera->angles[1] += yaw;
 }
 
 void camera_add_roll(camera_t* camera, float roll) {
+    camera->angles[2] += roll;
+}
 
+void camera_get_projection_matrix(camera_t* camera, int width, int height, mat4 proj) {
+    glm_perspective(rad(camera->fov), (float)width / height, camera->near, camera->far, proj);
+}
+
+void camera_get_view_matrix(camera_t* camera, mat4 view) {
+    vec3 center;
+    glm_vec3_add(camera->position, camera->forward, center);
+    glm_lookat(camera->position, center, Y_AXIS, view);
 }
 
 static int64_t compile_shader(sbox_t* sbox, const char* src, const char* name, int type) {
@@ -117,7 +140,6 @@ void shader_set_mat4(shader_t* shader, const char* name, mat4 m) {
 }
 
 void shader_free(sbox_t* sbox, shader_t* shader) {
-    info(sbox, "freeing shader %p", shader);
     glDeleteProgram(shader->id);
     free(shader);
 }
@@ -265,7 +287,6 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
 }
 
 void mesh_free(sbox_t* sbox, mesh_t* mesh) {
-    info(sbox, "freeing mesh %p", mesh);
     glDeleteVertexArrays(1, &mesh->vao);
     glDeleteBuffers(1, &mesh->vbo);
     glDeleteBuffers(1, &mesh->ebo);
@@ -311,7 +332,6 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
 }
 
 void texture_free(sbox_t* sbox, texture_t* texture) {
-    info(sbox, "freeing texture %p", texture);
     glDeleteTextures(1, &texture->id);
     free(texture);
 }
@@ -338,7 +358,6 @@ material_t* material_load(sbox_t* sbox,
 }
 
 void material_free(sbox_t* sbox, material_t* material) {
-    info(sbox, "freeing material %p", material);
     free(material);
 }
 

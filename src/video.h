@@ -7,12 +7,15 @@
 
 typedef struct sbox_t sbox_t;
 
-typedef struct {
+typedef struct camera_t {
     vec3 position;
-    versor right;
-    versor up;
-    versor forward;
+    vec3 angles;
+    vec3 right;
+    vec3 up;
+    vec3 forward;
     float fov;
+    float near;
+    float far;
 } camera_t;
 
 typedef struct shader_t {
@@ -47,9 +50,12 @@ typedef struct material_t {
 } material_t;
 
 void camera_init(camera_t* camera);
+void camera_tick(sbox_t* sbox, camera_t* camera);
 void camera_add_pitch(camera_t* camera, float pitch);
 void camera_add_yaw(camera_t* camera, float yaw);
 void camera_add_roll(camera_t* camera, float roll);
+void camera_get_projection_matrix(camera_t* camera, int width, int height, mat4 proj);
+void camera_get_view_matrix(camera_t* camera, mat4 view);
 
 shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char* fs, const char* fname);
 shader_t* shader_load(sbox_t* sbox, const char* vpath, const char* fpath);
