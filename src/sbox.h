@@ -17,6 +17,14 @@
 
 #define SANDBOX_VERSION "sbox 1.0"
 
+#define SANDBOX_DEBUG true
+
+#ifdef SANDBOX_DEBUG
+#define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);
+#else
+#define unreachable(sbox) (void)sbox
+#endif 
+
 #define NUM_KEYS 512
 
 typedef struct sbox_t {

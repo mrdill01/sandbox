@@ -36,8 +36,14 @@ typedef struct mesh_t {
     struct mesh_t* next;
 } mesh_t;
 
+typedef enum {
+    TEX_2D,
+    TEX_CUBE,
+} texture_type_t;
+
 typedef struct texture_t {
     uint32_t id;
+    texture_type_t type;
     int width;
     int height;
     struct texture_t* next;
@@ -86,6 +92,7 @@ typedef struct {
     shader_t* viewmodel_shader;
     shader_t* ambient_light_shader;
     shader_t* direct_light_shader;
+    shader_t* skybox_shader;
     shader_t* ui_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
@@ -126,6 +133,7 @@ void mesh_free(sbox_t* sbox, mesh_t* mesh);
 
 texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data);
 texture_t* texture_load(sbox_t* sbox, const char* path);
+texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]);
 void texture_free(sbox_t* sbox, texture_t* texture);
 
 material_t* material_load(sbox_t* sbox,

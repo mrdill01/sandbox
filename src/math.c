@@ -20,6 +20,10 @@ float clip(float x, float a, float b) {
     return min(max(x, a), b);
 }
 
+float interp_to(float current, float target, float speed, float dt) {
+    return current + (target - current) * (speed * dt);
+}
+
 void bbox_get_center(const bbox_t* bbox, vec3 center) {
     if (!center) return;
 

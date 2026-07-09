@@ -26,6 +26,7 @@ float deg(float radians);
 float min(float a, float b);
 float max(float a, float b);
 float clip(float x, float a, float b);
+float interp_to(float current, float target, float speed, float dt);
 
 void bbox_get_center(const bbox_t* bbox, vec3 center);
 

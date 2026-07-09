@@ -3,7 +3,7 @@
 
 #include "../include/gl.h"
 
-#define MAX_ATTACHMENTS 3
+#define MAX_ATTACHMENTS 4
 
 framebuffer_t* framebuffer_new(sbox_t* sbox) {
     framebuffer_t* framebuffer = malloc(sizeof(framebuffer_t));

@@ -18,7 +18,9 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     renderer->ambient_light_shader = shader_load(sbox,
         "res/shaders/ambient_light.vs", "res/shaders/ambient_light.fs"); 
     renderer->direct_light_shader = shader_load(sbox,
-        "res/shaders/direct_light.vs", "res/shaders/direct_light.fs");   
+        "res/shaders/direct_light.vs", "res/shaders/direct_light.fs"); 
+    renderer->skybox_shader = shader_load(sbox,
+        "res/shaders/skybox.vs", "res/shaders/skybox.fs");  
     renderer->ui_shader = shader_load(sbox,
         "res/shaders/ui.vs", "res/shaders/ui.fs");
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
@@ -128,6 +130,7 @@ void r_create_framebuffers(sbox_t* sbox) {
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
     framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
     framebuffer_finish(sbox, renderer->gbuffer);
 }
@@ -158,7 +161,12 @@ void r_set_shader(shader_t* shader) {
 void r_set_texture(texture_t* texture, int slot) {
     if (!texture) return;
     glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, texture->id);
+
+    int type = GL_TEXTURE_2D;
+    if (texture->type == TEX_CUBE)
+        type = GL_TEXTURE_CUBE_MAP;
+    
+    glBindTexture(type, texture->id);
 }
 
 void r_set_material(renderer_t* renderer, shader_t* shader, const material_t* material, int slot) {

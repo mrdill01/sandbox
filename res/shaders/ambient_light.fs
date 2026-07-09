@@ -3,6 +3,13 @@
 const float GAMMA = 2.2f;
 const float PI = 3.14159265359f;
 
+#define VISUALIZE_POSITION 0
+#define VISUALIZE_NORMALS 1
+#define VISUALIZE_ALBEDO 2
+#define VISUALIZE_ROUGHNESS 3
+#define VISUALIZE_DEPTH_BUFFER 4
+#define VISUALIZE_BUFFER -1
+
 out vec4 frag_color;
 
 in vec2 vs_uv;
@@ -11,6 +18,7 @@ struct GBuffer {
     sampler2D position;
     sampler2D normal;
     sampler2D albedo_roughness;
+    sampler2D depth;
 };
 
 struct GBufferSample {
@@ -35,10 +43,26 @@ void main() {
     sample.ao = 1.0f;
     vec3 view_dir = normalize(view_position - sample.position);
 
-    vec3 ambient = vec3(0.05) * sample.albedo * sample.ao;
+    vec3 ambient = vec3(0.4) * sample.albedo * sample.ao;
     
     vec3 color = ambient;
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / 2.2f)); 
     frag_color = vec4(color, 1.0f);
+
+    #if VISUALIZE == -1
+    return;
+    #endif
+
+    #if VISUALIZE_BUFFER == VISUALIZE_POSITION
+    frag_color = vec4(sample.position, 1.0f);
+    #elif VISUALIZE_BUFFER == VISUALIZE_NORMALS
+    frag_color = vec4(sample.normal * 0.5f + 0.5f, 1.0f);
+    #elif VISUALIZE_BUFFER == VISUALIZE_ALBEDO
+    frag_color = vec4(sample.albedo, 1.0f);
+    #elif VISUALIZE_BUFFER == VISUALIZE_ROUGHNESS
+    frag_color = vec4(vec3(sample.roughness), 1.0f);
+    #elif VISUALIZE_BUFFER == VISUALIZE_DEPTH_BUFFER
+    frag_color = vec4(texture(gbuffer.depth, vs_uv).rrr, 1.0f);
+    #endif
 }

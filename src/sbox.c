@@ -11,11 +11,23 @@
 
 cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
-cvar_t r_scale = {"r_scale", "0.5f", true};
+cvar_t r_scale = {"r_scale", "1.0f", true};
 cvar_t r_fov = {"r_fov", "70.0f", true};
 cvar_t m_sens = {"m_sens", "3.0f", true};
 
 void sbox_init(sbox_t* sbox) {
+	info(sbox, "%s", SANDBOX_VERSION);
+
+	#ifdef SANDBOX_DEBUG
+	info(sbox, "DEBUG BUILD (undefine SANDBOX_DEBUG for release)");
+	#endif
+
+    time_t current_time = time(NULL);
+	struct tm* local_time = localtime(&current_time);
+	char* time_string = asctime(local_time);
+	time_string[strlen(time_string) - 1] = '\0';
+    info(sbox, "current date and time: %s", time_string);
+	
     sbox->cvars = NULL;
     cvar_register(sbox, &r_width, NULL);
     cvar_register(sbox, &r_height, NULL);
@@ -42,7 +54,7 @@ void sbox_init(sbox_t* sbox) {
 	sbox->textures = NULL;
 	sbox->materials = NULL;
 
-    player_init(&sbox->player);
+    player_init(sbox, &sbox->player);
 }
 
 void sbox_free(sbox_t* sbox) {
@@ -77,6 +89,10 @@ void error(sbox_t* sbox, const char* msg, ...) {
 	va_end(args);
 
     printf("error: %s\n", buffer);
+
+	#ifdef SANDBOX_DEBUG
+	exit(EXIT_FAILURE);
+	#endif
 }
 
 char* load_file(sbox_t* sbox, const char* path) {

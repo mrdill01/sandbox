@@ -3,6 +3,7 @@
 layout (location = 0) out vec3 g_position;
 layout (location = 1) out vec3 g_normal;
 layout (location = 2) out vec4 g_albedo_roughness;
+layout (location = 3) out vec3 g_depth;
 
 #define GAMMA 2.2
 
@@ -55,4 +56,12 @@ void main() {
     g_normal = perturb_normal(vs_normal, view_dir, uv);
     g_albedo_roughness.rgb = texture(materials[vs_mat].albedo, uv).rgb;
     g_albedo_roughness.a = texture(materials[vs_mat].roughness, uv).r;
+
+    float depth = gl_FragCoord.z;
+    float ndc = depth * 2.0 - 1.0;
+    float near = 0.01f;
+    float far = 100.0f;
+    float linear_depth = (2.0 * near * far) / (far + near - ndc * (far - near));	
+    linear_depth /= far; 
+    g_depth.r = linear_depth;
 }

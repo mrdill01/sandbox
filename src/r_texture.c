@@ -20,6 +20,7 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data) {
 
     texture_t* texture = malloc(sizeof(texture_t));
     texture->id = id;
+    texture->type = TEX_2D;
     texture->width = width;
     texture->height = height;
 
@@ -40,6 +41,44 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
 
     texture_t* texture = texture_new(sbox, width, height, data);
     stbi_image_free(data);
+    return texture;
+}
+
+texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]) {
+    unsigned int id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+
+    int width, height, channels;
+    unsigned char* data;
+    for (int i = 0; i < 6; i++) {
+        const char* path = paths[i];
+        data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
+        if (!data) {
+            error(sbox, "failed to load texture %s", path);
+            return NULL;
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+            0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        stbi_image_free(data);
+    }
+    
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);  
+
+    texture_t* texture = malloc(sizeof(texture_t));
+    texture->id = id;
+    texture->type = TEX_CUBE;
+    texture->width = width;
+    texture->height = height;
+
+    texture->next = sbox->textures;
+    sbox->textures = texture;
     return texture;
 }
 

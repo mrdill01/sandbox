@@ -33,14 +33,6 @@ int main(int argc, char* argv[]) {
 }
 
 int init(sbox_t* sbox) {
-    info(sbox, "%s", SANDBOX_VERSION);
-
-    time_t current_time = time(NULL);
-	struct tm* local_time = localtime(&current_time);
-	char* time_string = asctime(local_time);
-	time_string[strlen(time_string) - 1] = '\0';
-    info(sbox, "current date and time: %s", time_string);
-
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         error(sbox, "failed to initialize SDL: %s", SDL_GetError());
         return -1;
