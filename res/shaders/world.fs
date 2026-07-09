@@ -1,10 +1,14 @@
 #version 330 core
 
+layout (location = 0) out vec3 g_position;
+layout (location = 1) out vec3 g_normal;
+layout (location = 2) out vec4 g_albedo_roughness;
+
 #define GAMMA 2.2
 
 #define MAX_MATERIALS 4
 
-in vec3 vs_frag_pos;
+in vec3 vs_frag_position;
 in vec3 vs_normal;
 in vec2 vs_uv;
 flat in int vs_mat;
@@ -19,14 +23,8 @@ struct Material {
     float tiley;
 };
 
-struct Light {
-    vec3 position;
-    vec3 color;
-};
-
-uniform vec3 view_pos;
 uniform Material materials[MAX_MATERIALS];
-uniform Light light;
+uniform vec3 view_position;
 
 mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
     vec3 dp1 = dFdx(p);
@@ -50,25 +48,11 @@ vec3 perturb_normal(vec3 normal, vec3 view_dir, vec2 uv) {
 }
 
 void main() {
-    vec3 view_dir = normalize(view_pos - vs_frag_pos);
+    vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
+    vec3 view_dir = normalize(view_position - vs_frag_position);
 
-    vec2 tiled_uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
-
-    vec4 albedo = texture(materials[vs_mat].albedo, tiled_uv);
-    albedo.rgb = pow(albedo.rgb, vec3(GAMMA));
-    float roughness = texture(materials[vs_mat].roughness, tiled_uv).r;
-    vec3 normal = perturb_normal(vs_normal, view_dir, tiled_uv);
-
-    vec3 ambient = vec3(0.3, 0.3, 0.4) * albedo.rgb;
-
-    vec3 norm = normalize(normal);
-    vec3 light_dir = normalize(light.position - vs_frag_pos);
-    float diff = max(dot(normal, light_dir), 0.0);
-    vec3 diffuse = light.color * diff * albedo.rgb;
-
-    vec3 reflect_dir = reflect(-light_dir, norm);
-    float spec = pow(max(dot(view_dir, reflect_dir), 0.0), 32);
-    vec3 specular = light.color * spec * roughness;
-
-    frag_color = vec4(pow(ambient + diffuse + specular, vec3(1.0 / GAMMA)), albedo.w);
+    g_position = vs_frag_position;
+    g_normal = perturb_normal(vs_normal, view_dir, uv);
+    g_albedo_roughness.rgb = texture(materials[vs_mat].albedo, uv).rgb;
+    g_albedo_roughness.a = texture(materials[vs_mat].roughness, uv).r;
 }

@@ -10,10 +10,10 @@
 #define MAX_MSG_LEN 2048
 
 void sbox_init(sbox_t* sbox) {
-    sbox->cfg.v_width = 960;
-    sbox->cfg.v_height = 540;
-    sbox->cfg.v_fov = 75.0f;
-    sbox->cfg.m_sens = 1.0f;
+    sbox->cfg.r_width = 960;
+    sbox->cfg.r_height = 540;
+    sbox->cfg.v_fov = 80.0f;
+    sbox->cfg.m_sens = 2.5f;
 
 	sbox->running = true;
 	sbox->now = SDL_GetPerformanceCounter();
@@ -34,7 +34,6 @@ void sbox_init(sbox_t* sbox) {
 	sbox->textures = NULL;
 	sbox->materials = NULL;
 
-    camera_init(&sbox->camera);
 	entlist_init(sbox, &sbox->entlist);
     player_init(&sbox->player);
 }
@@ -50,15 +49,15 @@ void sbox_tick(sbox_t* sbox) {
 	sbox->time += sbox->dt;
 
 	entlist_tick(sbox, &sbox->entlist);
-    player_tick(sbox, &sbox->player, &sbox->camera);
+    player_tick(sbox, &sbox->player, &sbox->renderer.camera);
 }
 
 void sbox_load_map(sbox_t* sbox) {
-	//mesh_t* quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
-    mesh_t* crate_mesh = mesh_load(sbox, "res/meshes/crate.obj");
     mesh_t* floor_mesh = mesh_load(sbox, "res/meshes/floor.obj");
     mesh_t* wall_mesh = mesh_load(sbox, "res/meshes/wall.obj");
+    mesh_t* crate_mesh = mesh_load(sbox, "res/meshes/crate.obj");
     mesh_t* barrel_mesh = mesh_load(sbox, "res/meshes/barrel.obj");
+    mesh_t* cactus_mesh = mesh_load(sbox, "res/meshes/cactus.obj");
     mesh_t* chainlink_fence_mesh = mesh_load(sbox, "res/meshes/chainlink_fence.obj");
     mesh_t* tommy_gun_mesh = mesh_load(sbox, "res/meshes/tommy_gun.obj");
     
@@ -86,6 +85,12 @@ void sbox_load_map(sbox_t* sbox) {
         "res/textures/barrel_n.png",
         1, 1, false);
 
+    material_t* barrel_top = material_load(sbox,
+        "res/textures/barrel_top.png",
+        "res/textures/barrel_top_r.png",
+        "res/textures/barrel_top_n.png",
+        1, 1, false);
+
     material_t* wood = material_load(sbox,
         "res/textures/wood.png",
         "res/textures/wood_r.png",
@@ -97,6 +102,12 @@ void sbox_load_map(sbox_t* sbox) {
         "res/textures/brick_r.png",
         "res/textures/brick_n.png",
         8, 8, false);
+
+    material_t* cactus = material_load(sbox,
+        "res/textures/cactus.png",
+        "res/textures/cactus_r.png",
+        "res/textures/cactus_n.png",
+        3, 3, false);
 
     entity_t* entity;
     entity_init(sbox, "floor", 0.0f, -0.5f, 0.0f, &entity);
@@ -132,18 +143,25 @@ void sbox_load_map(sbox_t* sbox) {
     entity_init(sbox, "barrel", 1.5f, 0.0f, 0.0f, &entity);
     entity->mesh = barrel_mesh;
     entity->materials[entity->nmaterials++] = barrel;
+    entity->materials[entity->nmaterials++] = barrel_top;
+    entlist_add(sbox, &sbox->entlist, entity);
+
+    entity_init(sbox, "cactus", 2.0f, -0.5f, -2.5f, &entity);
+    entity->mesh = cactus_mesh;
+    entity->materials[entity->nmaterials++] = cactus;
     entlist_add(sbox, &sbox->entlist, entity);
 
     entity_init(sbox, "chainlink fence", 0.0f, -0.5f, 0.8f, &entity);
     entity->mesh = chainlink_fence_mesh;
-    entity->materials[entity->nmaterials++] = wood;
     entity->materials[entity->nmaterials++] = chainlink;
+    entity->materials[entity->nmaterials++] = wood;
     entlist_add(sbox, &sbox->entlist, entity);
 
     entity_init(sbox, "tommy gun", 1.5f, 0.7f, 0.0f, &entity);
     entity->mesh = tommy_gun_mesh;
     entity->materials[entity->nmaterials++] = metal;
     entity->materials[entity->nmaterials++] = wood;
+    entity->is_viewmodel = true;
     entlist_add(sbox, &sbox->entlist, entity);
 }
 

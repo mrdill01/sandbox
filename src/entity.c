@@ -1,13 +1,6 @@
 #include "entity.h"
 #include "sbox.h"
 
-void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
-	if (!entity) return;
-	info(sbox, "entlist: add %s", entity->name);
-	sbox->entlist.ents = realloc(sbox->entlist.ents, sizeof(entity_t*) * (sbox->entlist.len + 1));
-	sbox->entlist.ents[sbox->entlist.len++] = entity;
-}
-
 void entity_init(sbox_t* sbox, const char* name, float x, float y, float z, entity_t** out) {
     if (!out) return;
 
@@ -23,6 +16,7 @@ void entity_init(sbox_t* sbox, const char* name, float x, float y, float z, enti
         entity->materials[i] = NULL;
 
     entity->dist_to_camera = 0.0f;
+	entity->is_viewmodel = false;
 
     *out = entity;
 }
@@ -60,7 +54,7 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		vec3 center;
 		bbox_get_center(&ent->mesh->bbox, center);
 
-		glm_vec3_sub(center, sbox->camera.position, tmp);
+		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
 		ent->dist_to_camera = glm_vec3_norm2(tmp);
 
 		bool is_translucent = true;
@@ -76,4 +70,20 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 	}
 
 	qsort(entlist->ents, entlist->len, sizeof(entity_t*), comp_ent_distance);
+}
+
+void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
+	if (!entity) return;
+	info(sbox, "entlist: add %s", entity->name);
+	sbox->entlist.ents = realloc(sbox->entlist.ents, sizeof(entity_t*) * (sbox->entlist.len + 1));
+	sbox->entlist.ents[sbox->entlist.len++] = entity;
+}
+
+entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name) {
+	for (size_t i = 0; i < entlist->len; i++) {
+		entity_t* entity = entlist->ents[i];
+		if (strcmp(entity->name, name) == 0)
+			return entity;
+	}
+	return NULL;
 }

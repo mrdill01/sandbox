@@ -2,7 +2,7 @@
 #define CORE_H
 
 #include "math.h"
-#include "video.h"
+#include "render.h"
 #include "entity.h"
 #include "player.h"
 
@@ -16,8 +16,8 @@
 #define NUM_KEYS 512
 
 typedef struct {
-    int v_width;
-    int v_height;
+    int r_width;
+    int r_height;
     float v_fov;
     float m_sens;
 } config_t;
@@ -37,14 +37,13 @@ typedef struct sbox_t {
 
     SDL_Window* window;
     SDL_GLContext* gl_context;
-    shader_t* world_shader;
+    renderer_t renderer;
 
     shader_t* shaders;
     mesh_t* meshes;
     texture_t* textures;
     material_t* materials;
 
-    camera_t camera;
     entlist_t entlist;
     player_t player;
 } sbox_t;
