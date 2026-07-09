@@ -6,6 +6,8 @@
 #include "entity.h"
 #include "player.h"
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
 
@@ -18,7 +20,8 @@
 typedef struct {
     int r_width;
     int r_height;
-    float v_fov;
+    float r_scale;
+    float r_fov;
     float m_sens;
 } config_t;
 

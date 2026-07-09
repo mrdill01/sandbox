@@ -90,7 +90,9 @@ void tick(sbox_t* sbox) {
         case SDL_WINDOWEVENT: {
             switch (e.window.event) {
             case SDL_WINDOWEVENT_RESIZED: {
-                glViewport(0, 0, e.window.data1, e.window.data2);
+                sbox->cfg.r_width = e.window.data1;
+                sbox->cfg.r_height = e.window.data2;
+                r_on_resize(sbox, &sbox->renderer, e.window.data1, e.window.data2);
                 break;
             }
             }

@@ -88,7 +88,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         default: msg = "unknown"; break;
         }
 
-        error(sbox, "failed to load mesh '%s': %s", path, msg);
+        error(sbox, "failed to load mesh %s: %s", path, msg);
         return NULL;
     }
 
@@ -139,7 +139,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         if (num_materials == 0 || num_materials == 1)
             vertices[len++] = 0.0f;
         else
-            vertices[len++] = attrib.material_ids[index.v_idx * 3 + 0];
+            vertices[len++] = attrib.material_ids[i];
 
         indices[i] = i;
     }
@@ -149,6 +149,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
 }
 
 void mesh_free(sbox_t* sbox, mesh_t* mesh) {
+    if (!mesh) return;
     glDeleteVertexArrays(1, &mesh->vao);
     glDeleteBuffers(1, &mesh->vbo);
     glDeleteBuffers(1, &mesh->ebo);

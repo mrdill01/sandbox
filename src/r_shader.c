@@ -15,7 +15,7 @@ static int64_t compile_shader(sbox_t* sbox, const char* src, const char* name, i
     if (!success) {
         char buffer[512];
         glGetShaderInfoLog(id, 512, NULL, buffer);
-        error(sbox, "failed to compile shader '%s': %s", name, buffer);
+        error(sbox, "failed to compile shader %s: %s", name, buffer);
         return -1;
     }
 
@@ -85,6 +85,7 @@ void shader_set_mat4(shader_t* shader, const char* name, mat4 m) {
 }
 
 void shader_free(sbox_t* sbox, shader_t* shader) {
+    if (!shader) return;
     glDeleteProgram(shader->id);
     free(shader);
 }

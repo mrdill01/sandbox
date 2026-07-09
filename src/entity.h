@@ -12,8 +12,6 @@ typedef struct {
     mesh_t* mesh;
     size_t nmaterials;
     material_t* materials[MAX_MATERIALS];
-
-    float dist_to_camera;
     bool is_viewmodel;
 } entity_t;
 

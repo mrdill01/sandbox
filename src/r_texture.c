@@ -34,7 +34,7 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
     int width, height, channels;
     unsigned char* data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
     if (!data) {
-        error(sbox, "failed to load texture '%s'", path);
+        error(sbox, "failed to load texture %s", path);
         return NULL;
     }
 
@@ -44,6 +44,7 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
 }
 
 void texture_free(sbox_t* sbox, texture_t* texture) {
+    if (!texture) return;
     glDeleteTextures(1, &texture->id);
     free(texture);
 }

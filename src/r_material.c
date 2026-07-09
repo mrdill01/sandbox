@@ -23,5 +23,6 @@ material_t* material_load(sbox_t* sbox,
 }
 
 void material_free(sbox_t* sbox, material_t* material) {
+    if (!material) return;
     free(material);
 }

@@ -1,15 +1,16 @@
 #include "render.h"
+#include "sbox.h"
 
 #define PITCH_LIMIT 89.99
 
-void camera_init(camera_t* camera) {
+void camera_init(sbox_t* sbox, camera_t* camera) {
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, camera->position);
     vec3 angles = {0.0f, 90.0f, 0.0f};
     glm_vec3_copy(angles, camera->angles);
     glm_vec3_copy(X_AXIS, camera->right);
     glm_vec3_copy(Y_AXIS, camera->up);
     glm_vec3_copy(Z_AXIS, camera->forward);
-    camera->fov = 75.0f;
+    camera->fov = sbox->cfg.r_fov;
     camera->near = 0.001f;
     camera->far = 100.0f;
 }
@@ -23,6 +24,8 @@ void camera_tick(sbox_t* sbox, camera_t* camera) {
     glm_normalize(camera->right);
 
     glm_cross(camera->forward, camera->right, camera->up);
+
+    camera->fov = sbox->cfg.r_fov;
 }
 
 void camera_add_pitch(camera_t* camera, float pitch) {

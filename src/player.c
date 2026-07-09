@@ -10,7 +10,8 @@
 #define P_STOPSPEED 100
 
 void player_init(player_t* player) {
-    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->position);
+    vec3 position = {0.0f, 0.0f, -2.5f};
+    glm_vec3_copy(position, player->position);
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->wishdir);
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->velocity);
     player->speed = P_MAXSPEED;

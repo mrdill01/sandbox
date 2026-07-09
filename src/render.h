@@ -65,6 +65,8 @@ typedef struct {
     size_t nmaterials;
     const material_t* materials[MAX_MATERIALS];
     mat4 model;
+    float dist_to_camera;
+    bool is_translucent;
 } drawcall_t;
 
 typedef struct {
@@ -77,11 +79,15 @@ typedef struct {
     size_t ndrawcalls;
     drawcall_t* drawcalls;
 
+    size_t ntranslucent_drawcalls;
+    drawcall_t* translucent_drawcalls;
+
     shader_t* world_shader;
     shader_t* viewmodel_shader;
     shader_t* lighting_shader;
     shader_t* ui_shader;
     mesh_t* quad_mesh;
+    mesh_t* sphere_mesh;
     material_t* default_material;
 
     framebuffer_t* gbuffer;
@@ -92,7 +98,7 @@ typedef struct {
     ui_t ui;
 } renderer_t;
 
-void camera_init(camera_t* camera);
+void camera_init(sbox_t* sbox, camera_t* camera);
 void camera_tick(sbox_t* sbox, camera_t* camera);
 void camera_add_pitch(camera_t* camera, float pitch);
 void camera_add_yaw(camera_t* camera, float yaw);
@@ -131,19 +137,24 @@ material_t* material_load(sbox_t* sbox,
 void material_free(sbox_t* sbox, material_t* material);
 
 framebuffer_t* framebuffer_new(sbox_t* sbox);
-void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer);
-void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer);
+void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height);
+void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height);
 void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer);
 void framebuffer_free(framebuffer_t* framebuffer);
 
 void r_init(sbox_t* sbox, renderer_t* renderer);
 void r_free(sbox_t* sbox, renderer_t* renderer);
+void r_tick(sbox_t* sbox, renderer_t* renderer);
+void r_on_resize(sbox_t* sbox, renderer_t* renderer, int width, int height);
+
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
+void r_clear_drawcalls(renderer_t* renderer);
+
 void r_set_shader(shader_t* shader);
 void r_set_texture(texture_t* texture, int slot);
-void r_set_material(renderer_t* renderer, shader_t* shader, material_t* material, int slot);
+void r_set_material(renderer_t* renderer, shader_t* shader, const material_t* material, int slot);
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer);
-void r_draw_mesh(mesh_t* mesh);
+void r_draw_mesh(const mesh_t* mesh);
 void r_render(sbox_t* sbox, renderer_t* renderer);
 
 #endif

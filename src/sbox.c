@@ -12,7 +12,8 @@
 void sbox_init(sbox_t* sbox) {
     sbox->cfg.r_width = 960;
     sbox->cfg.r_height = 540;
-    sbox->cfg.v_fov = 80.0f;
+    sbox->cfg.r_scale = 0.5f;
+    sbox->cfg.r_fov = 70.0f;
     sbox->cfg.m_sens = 2.5f;
 
 	sbox->running = true;
@@ -50,6 +51,32 @@ void sbox_tick(sbox_t* sbox) {
 
 	entlist_tick(sbox, &sbox->entlist);
     player_tick(sbox, &sbox->player, &sbox->renderer.camera);
+
+    for (size_t i = 0; i < sbox->entlist.len; i++) {
+        entity_t* entity = sbox->entlist.ents[i];
+        if (entity->is_viewmodel) continue;
+
+        drawcall_t drawcall;
+        drawcall.mesh = entity->mesh;
+        drawcall.nmaterials = entity->nmaterials;
+        memcpy(drawcall.materials, entity->materials, sizeof(material_t*) * entity->nmaterials);
+
+        glm_mat4_identity(drawcall.model);
+        glm_translate(drawcall.model, entity->position);
+        glm_quat_rotate(drawcall.model, entity->rotation, drawcall.model);
+
+        drawcall.dist_to_camera = 0.0f;
+
+        drawcall.is_translucent = false;
+		for (int i = 0; i < drawcall.nmaterials; i++) {
+			if (drawcall.materials[i]->is_translucent) {
+				drawcall.is_translucent = true;
+				break;
+			}
+		}
+
+        r_add_drawcall(&sbox->renderer, drawcall);
+    }
 }
 
 void sbox_load_map(sbox_t* sbox) {
@@ -187,7 +214,7 @@ void error(sbox_t* sbox, const char* msg, ...) {
 
 char* load_file(sbox_t* sbox, const char* path) {
 	FILE* fp = fopen(path, "r");
-	if (!fp) error(sbox, "failed to read '%s'", path);
+	if (!fp) error(sbox, "failed to read %s", path);
 	
 	fseek(fp, 0, SEEK_END);
 	size_t len = ftell(fp);

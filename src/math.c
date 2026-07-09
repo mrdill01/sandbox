@@ -20,7 +20,7 @@ float clip(float x, float a, float b) {
     return min(max(x, a), b);
 }
 
-void bbox_get_center(bbox_t* bbox, vec3 center) {
+void bbox_get_center(const bbox_t* bbox, vec3 center) {
     if (!center) return;
 
     vec3 result = {

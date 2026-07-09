@@ -3,7 +3,7 @@
 
 #include "../include/gl.h"
 
-#define MAX_ATTACHMENTS 8
+#define MAX_ATTACHMENTS 3
 
 framebuffer_t* framebuffer_new(sbox_t* sbox) {
     framebuffer_t* framebuffer = malloc(sizeof(framebuffer_t));
@@ -18,7 +18,7 @@ framebuffer_t* framebuffer_new(sbox_t* sbox) {
     return framebuffer;
 }
 
-void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer) {
+void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height) {
     if (framebuffer->ntextures >= MAX_ATTACHMENTS) {
         error(sbox, "too many framebuffer attachments (max is %d)", MAX_ATTACHMENTS);
         return;
@@ -27,7 +27,7 @@ void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer) {
     framebuffer->textures = realloc(framebuffer->textures,
         sizeof(texture_t*) * (framebuffer->ntextures + 1));
 
-    texture_t* texture = texture_new(sbox, sbox->cfg.r_width, sbox->cfg.r_height, NULL);
+    texture_t* texture = texture_new(sbox, width, height, NULL);
     framebuffer->textures[framebuffer->ntextures++] = texture;
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
@@ -35,8 +35,8 @@ void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer) {
     glTexImage2D(GL_TEXTURE_2D,
         0,
         GL_RGBA16F,
-        sbox->cfg.r_width,
-        sbox->cfg.r_height,
+        width,
+        height,
         0,
         GL_RGBA,
         GL_FLOAT,
@@ -51,14 +51,11 @@ void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer) {
+void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
     glGenRenderbuffers(1, &framebuffer->depth_buffer);
     glBindRenderbuffer(GL_RENDERBUFFER, framebuffer->depth_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER,
-        GL_DEPTH_COMPONENT,
-        sbox->cfg.r_width,
-        sbox->cfg.r_height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
         framebuffer->depth_buffer);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -80,5 +77,6 @@ void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer) {
 }
 
 void framebuffer_free(framebuffer_t* framebuffer) {
+    if (!framebuffer) return;
     glDeleteFramebuffers(1, &framebuffer->id);
 }
