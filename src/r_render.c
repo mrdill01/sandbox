@@ -6,7 +6,7 @@
 static void render_world(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer->world_shader);
     r_set_framebuffer(renderer, renderer->gbuffer);
-    glViewport(0, 0, sbox->cfg.r_width * sbox->cfg.r_scale, sbox->cfg.r_height * sbox->cfg.r_scale);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -17,7 +17,7 @@ static void render_world(sbox_t* sbox, renderer_t* renderer) {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
-    camera_get_projection_matrix(&renderer->camera, sbox->cfg.r_width, sbox->cfg.r_height,
+    camera_get_projection_matrix(&renderer->camera, r_width.value, r_height.value,
         renderer->projection);
     shader_set_mat4(renderer->world_shader, "projection", renderer->projection);
 
@@ -40,7 +40,7 @@ static void render_world(sbox_t* sbox, renderer_t* renderer) {
 }
 
 static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
-    entity_t* entity = entlist_find_by_name(sbox, &sbox->entlist, "tommy gun");
+    entity_t* entity = entlist_find_by_name(sbox, &sbox->map.entlist, "tommy gun");
     if (!entity) return;
 
     r_set_framebuffer(renderer, renderer->gbuffer);
@@ -92,34 +92,66 @@ static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
-static void render_lighting(sbox_t* sbox, renderer_t* renderer) {
-    r_set_shader(renderer->lighting_shader);
-    glViewport(0, 0, sbox->cfg.r_width, sbox->cfg.r_height);
+static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
+    r_set_shader(renderer->ambient_light_shader);
+    glViewport(0, 0, r_width.value, r_height.value);
 
-    shader_set_int(renderer->lighting_shader, "gbuffer.position", 0);
-    shader_set_int(renderer->lighting_shader, "gbuffer.normal", 1);
-    shader_set_int(renderer->lighting_shader, "gbuffer.albedo_roughness", 2);
-
+    shader_set_int(renderer->ambient_light_shader, "gbuffer.position", 0);
+    shader_set_int(renderer->ambient_light_shader, "gbuffer.normal", 1);
+    shader_set_int(renderer->ambient_light_shader, "gbuffer.albedo_roughness", 2);
     r_set_texture(renderer->gbuffer->textures[0], 0);
     r_set_texture(renderer->gbuffer->textures[1], 1);
     r_set_texture(renderer->gbuffer->textures[2], 2);
 
-    shader_set_vec3(renderer->lighting_shader, "view_position", renderer->camera.position);
+    shader_set_vec3(renderer->ambient_light_shader, "view_position", renderer->camera.position);
+
+    r_draw_mesh(renderer->quad_mesh);
+}
+
+static void render_direct_light(sbox_t* sbox, renderer_t* renderer) {
+    r_set_shader(renderer->direct_light_shader);
+    glViewport(0, 0, r_width.value, r_height.value);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+    shader_set_int(renderer->direct_light_shader, "gbuffer.position", 0);
+    shader_set_int(renderer->direct_light_shader, "gbuffer.normal", 1);
+    shader_set_int(renderer->direct_light_shader, "gbuffer.albedo_roughness", 2);
+    r_set_texture(renderer->gbuffer->textures[0], 0);
+    r_set_texture(renderer->gbuffer->textures[1], 1);
+    r_set_texture(renderer->gbuffer->textures[2], 2);
+
+    shader_set_vec3(renderer->direct_light_shader, "view_position", renderer->camera.position);
 
     vec3 light_position = {1.5f, 1.5f, -1.5f};
     vec3 light_color = {8.0f, 8.0f, 8.0f};
-    shader_set_vec3(renderer->lighting_shader, "light.position", light_position);
-    shader_set_vec3(renderer->lighting_shader, "light.color", light_color);
+    shader_set_vec3(renderer->direct_light_shader, "light.position", light_position);
+    shader_set_vec3(renderer->direct_light_shader, "light.color", light_color);
 
-    r_draw_mesh(renderer->quad_mesh);
+    shader_set_mat4(renderer->direct_light_shader, "projection", renderer->projection);
+    shader_set_mat4(renderer->direct_light_shader, "view", renderer->view);
+
+    float scale = 3.0f;
+    
+    mat4 model;
+    glm_mat4_identity(model);
+    glm_translate(model, light_position);
+    glm_scale(model, (vec3){scale, scale, scale});
+    shader_set_mat4(renderer->direct_light_shader, "model", model);
+
+    r_draw_mesh(renderer->sphere_mesh);
+
+    glDisable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 }
 
 static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->gbuffer->id);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBlitFramebuffer(
-        0, 0, sbox->cfg.r_width * sbox->cfg.r_scale, sbox->cfg.r_height * sbox->cfg.r_scale,
-        0, 0, sbox->cfg.r_width * sbox->cfg.r_scale, sbox->cfg.r_height * sbox->cfg.r_scale,
+        0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value,
+        0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value,
         GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -143,7 +175,8 @@ static void render_ui(sbox_t* sbox, renderer_t* renderer) {
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_world(sbox, renderer);
     //render_viewmodel(sbox, renderer);
-    render_lighting(sbox, renderer);
+    render_ambient_light(sbox, renderer);
+    //render_direct_light(sbox, renderer);
     copy_depth(sbox, renderer);
     render_ui(sbox, renderer);
 

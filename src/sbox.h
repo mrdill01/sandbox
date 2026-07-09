@@ -1,10 +1,12 @@
 #ifndef CORE_H
 #define CORE_H
 
-#include "math.h"
+#include "config.h"
 #include "render.h"
+#include "math.h"
 #include "entity.h"
 #include "player.h"
+#include "map.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -17,16 +19,8 @@
 
 #define NUM_KEYS 512
 
-typedef struct {
-    int r_width;
-    int r_height;
-    float r_scale;
-    float r_fov;
-    float m_sens;
-} config_t;
-
 typedef struct sbox_t {
-    config_t cfg;
+    cvar_t* cvars;
     
     bool running;
     uint64_t now;
@@ -47,15 +41,19 @@ typedef struct sbox_t {
     texture_t* textures;
     material_t* materials;
 
-    entlist_t entlist;
+    map_t map;
     player_t player;
 } sbox_t;
+
+extern cvar_t r_width;
+extern cvar_t r_height;
+extern cvar_t r_scale;
+extern cvar_t r_fov;
+extern cvar_t m_sens;
 
 void sbox_init(sbox_t* sbox);
 void sbox_free(sbox_t* sbox);
 void sbox_tick(sbox_t* sbox);
-
-void sbox_load_map(sbox_t* sbox);
 
 void info(sbox_t* sbox, const char* msg, ...);
 void error(sbox_t* sbox, const char* msg, ...);

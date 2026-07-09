@@ -84,7 +84,8 @@ typedef struct {
 
     shader_t* world_shader;
     shader_t* viewmodel_shader;
-    shader_t* lighting_shader;
+    shader_t* ambient_light_shader;
+    shader_t* direct_light_shader;
     shader_t* ui_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
@@ -146,6 +147,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer);
 void r_free(sbox_t* sbox, renderer_t* renderer);
 void r_tick(sbox_t* sbox, renderer_t* renderer);
 void r_on_resize(sbox_t* sbox, renderer_t* renderer, int width, int height);
+void r_create_framebuffers(sbox_t* sbox);
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);

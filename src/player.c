@@ -20,16 +20,16 @@ void player_init(player_t* player) {
 
 static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
     if (sbox->keys[SDL_SCANCODE_Z])
-        camera_add_pitch(camera, -sbox->cfg.m_sens);
+        camera_add_pitch(camera, -m_sens.value);
 
     if (sbox->keys[SDL_SCANCODE_X])
-        camera_add_pitch(camera, sbox->cfg.m_sens);
+        camera_add_pitch(camera, m_sens.value);
 
     if (sbox->keys[SDL_SCANCODE_LEFT])
-        camera_add_yaw(camera, sbox->cfg.m_sens);
+        camera_add_yaw(camera, m_sens.value);
 
     if (sbox->keys[SDL_SCANCODE_RIGHT])
-        camera_add_yaw(camera, -sbox->cfg.m_sens);
+        camera_add_yaw(camera, -m_sens.value);
     
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->wishdir);
 

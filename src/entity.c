@@ -43,8 +43,8 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
 	if (!entity) return;
 	info(sbox, "entlist: add %s", entity->name);
-	sbox->entlist.ents = realloc(sbox->entlist.ents, sizeof(entity_t*) * (sbox->entlist.len + 1));
-	sbox->entlist.ents[sbox->entlist.len++] = entity;
+	entlist->ents = realloc(entlist->ents, sizeof(entity_t*) * (entlist->len + 1));
+	entlist->ents[entlist->len++] = entity;
 }
 
 entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name) {

@@ -78,21 +78,11 @@ vec3 draw_light(vec3 view_dir, vec3 f0, GBufferSample sample) {
         max(dot(sample.normal, L), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
     
-    // kS is equal to Fresnel
     vec3 kS = F;
-    // for energy conservation, the diffuse and specular light can't
-    // be above 1.0 (unless the surface emits light); to preserve this
-    // relationship the diffuse component (kD) should equal 1.0 - kS.
     vec3 kD = vec3(1.0) - kS;
-    // multiply kD by the inverse metalness such that only non-metals 
-    // have diffuse lighting, or a linear blend if partly metal (pure metals
-    // have no diffuse light).
     kD *= 1.0 - sample.metallic;	  
 
-    // scale light by NdotL
     float NdotL = max(dot(sample.normal, L), 0.0);        
-
-    // add to outgoing radiance Lo
     return (kD * sample.albedo / PI + specular) * radiance * NdotL;
 }
 
@@ -109,15 +99,12 @@ void main() {
     vec3 f0 = vec3(0.04); 
     f0 = mix(f0, sample.albedo, sample.metallic);
 
-    vec3 Lo = vec3(0.0);
-    Lo += draw_light(view_dir, f0, sample);
+    vec3 direct = vec3(0.0);
+    direct += draw_light(view_dir, f0, sample);
     
-    vec3 ambient = vec3(0.03) * sample.albedo * sample.ao;
-    
-    vec3 color = ambient + Lo;
-
+    vec3 color = direct;
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / 2.2f)); 
-
     frag_color = vec4(color, 1.0f);
+    //frag_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 }

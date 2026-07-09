@@ -10,7 +10,7 @@ void camera_init(sbox_t* sbox, camera_t* camera) {
     glm_vec3_copy(X_AXIS, camera->right);
     glm_vec3_copy(Y_AXIS, camera->up);
     glm_vec3_copy(Z_AXIS, camera->forward);
-    camera->fov = sbox->cfg.r_fov;
+    camera->fov = r_fov.value;
     camera->near = 0.001f;
     camera->far = 100.0f;
 }
@@ -25,7 +25,7 @@ void camera_tick(sbox_t* sbox, camera_t* camera) {
 
     glm_cross(camera->forward, camera->right, camera->up);
 
-    camera->fov = sbox->cfg.r_fov;
+    camera->fov = r_fov.value;
 }
 
 void camera_add_pitch(camera_t* camera, float pitch) {

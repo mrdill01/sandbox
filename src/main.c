@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     if (init(&sbox) == -1)
         return EXIT_FAILURE;
 
-    sbox_load_map(&sbox);
+    map_load(&sbox, &sbox.map);
 
     while (sbox.running) {
         tick(&sbox);
@@ -53,8 +53,8 @@ int init(sbox_t* sbox) {
     sbox->window = SDL_CreateWindow("sandbox",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        sbox->cfg.r_width,
-        sbox->cfg.r_height,
+        r_width.value,
+        r_height.value,
         SDL_WINDOW_OPENGL);
 
     if (!sbox->window) {
@@ -90,8 +90,8 @@ void tick(sbox_t* sbox) {
         case SDL_WINDOWEVENT: {
             switch (e.window.event) {
             case SDL_WINDOWEVENT_RESIZED: {
-                sbox->cfg.r_width = e.window.data1;
-                sbox->cfg.r_height = e.window.data2;
+                cvar_set_value(sbox, "r_width", e.window.data1);
+                cvar_set_value(sbox, "r_height", e.window.data2);
                 r_on_resize(sbox, &sbox->renderer, e.window.data1, e.window.data2);
                 break;
             }

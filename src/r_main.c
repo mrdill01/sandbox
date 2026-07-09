@@ -3,21 +3,6 @@
 
 #include "../include/gl.h"
 
-static void create_framebuffers(sbox_t* sbox, renderer_t* renderer) {
-    if (renderer->gbuffer)
-        framebuffer_free(renderer->gbuffer);
-
-    int width = sbox->cfg.r_width * sbox->cfg.r_scale;
-    int height = sbox->cfg.r_height * sbox->cfg.r_scale;
-    
-    renderer->gbuffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
-    framebuffer_finish(sbox, renderer->gbuffer);
-}
-
 void r_init(sbox_t* sbox, renderer_t* renderer) {
     camera_init(sbox, &renderer->camera);
 
@@ -30,8 +15,10 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/shaders/world.vs", "res/shaders/world.fs");
     renderer->viewmodel_shader = shader_load(sbox,
         "res/shaders/viewmodel.vs", "res/shaders/viewmodel.fs"); 
-    renderer->lighting_shader = shader_load(sbox,
-        "res/shaders/lighting.vs", "res/shaders/lighting.fs");   
+    renderer->ambient_light_shader = shader_load(sbox,
+        "res/shaders/ambient_light.vs", "res/shaders/ambient_light.fs"); 
+    renderer->direct_light_shader = shader_load(sbox,
+        "res/shaders/direct_light.vs", "res/shaders/direct_light.fs");   
     renderer->ui_shader = shader_load(sbox,
         "res/shaders/ui.vs", "res/shaders/ui.fs");
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
@@ -43,7 +30,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         1, 1, false);
 
     renderer->gbuffer = NULL;
-    create_framebuffers(sbox, renderer);
+    r_create_framebuffers(sbox);
 
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
@@ -125,7 +112,24 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
 void r_on_resize(sbox_t* sbox, renderer_t* renderer, int width, int height) {
     glViewport(0, 0, width, height);
-    create_framebuffers(sbox, renderer);
+    r_create_framebuffers(sbox);
+}
+
+void r_create_framebuffers(sbox_t* sbox) {
+    renderer_t* renderer = &sbox->renderer;
+
+    if (renderer->gbuffer)
+        framebuffer_free(renderer->gbuffer);
+
+    int width = r_width.value * r_scale.value;
+    int height = r_height.value * r_scale.value;
+    
+    renderer->gbuffer = framebuffer_new(sbox);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
+    framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
+    framebuffer_finish(sbox, renderer->gbuffer);
 }
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {
