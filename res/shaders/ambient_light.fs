@@ -4,8 +4,8 @@ const float GAMMA = 2.2f;
 const float PI = 3.14159265359f;
 
 #define VISUALIZE_POSITION 0
-#define VISUALIZE_NORMALS 1
-#define VISUALIZE_ALBEDO 2
+#define VISUALIZE_ALBEDO 1
+#define VISUALIZE_NORMALS 2
 #define VISUALIZE_ROUGHNESS 3
 #define VISUALIZE_DEPTH_BUFFER 4
 #define VISUALIZE_BUFFER -1
@@ -45,10 +45,7 @@ void main() {
 
     vec3 ambient = vec3(0.4) * sample.albedo * sample.ao;
     
-    vec3 color = ambient;
-    color = color / (color + vec3(1.0f));
-    color = pow(color, vec3(1.0f / 2.2f)); 
-    frag_color = vec4(color, 1.0f);
+    frag_color = vec4(ambient, 1.0f);
 
     #if VISUALIZE == -1
     return;

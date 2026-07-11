@@ -28,8 +28,11 @@ static void render_world(sbox_t* sbox, renderer_t* renderer) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
         shader_set_mat4(renderer->world_shader, "model", drawcall->model);
 
-        for (int i = 0; i < drawcall->nmaterials; i++)
-            r_set_material(renderer, renderer->world_shader, drawcall->materials[i], i);
+        for (int i = 0; i < MAX_MATERIALS; i++) {
+            const material_t* material = drawcall->materials[i];
+            if (!material) continue;
+            r_set_material(renderer, renderer->world_shader, material, i);
+        }
         r_draw_mesh(drawcall->mesh);
     }
 
@@ -83,8 +86,11 @@ static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
 
     shader_set_mat4(renderer->viewmodel_shader, "model", model);
 
-    for (int i = 0; i < entity->data.prop.nmaterials; i++)
-        r_set_material(renderer, renderer->viewmodel_shader, entity->data.prop.materials[i], i);
+    for (int i = 0; i < MAX_MATERIALS; i++) {
+        const material_t* material = entity->data.prop.materials[i];
+        if (!material) continue;
+        r_set_material(renderer, renderer->viewmodel_shader, material, i);
+    }
     r_draw_mesh(entity->data.prop.mesh);
 
     glDisable(GL_DEPTH_TEST);
@@ -93,12 +99,13 @@ static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
 }
 
 static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
+    r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer->ambient_light_shader);
     glViewport(0, 0, r_width.value, r_height.value);
 
     shader_set_int(renderer->ambient_light_shader, "gbuffer.position", 0);
-    shader_set_int(renderer->ambient_light_shader, "gbuffer.normal", 1);
-    shader_set_int(renderer->ambient_light_shader, "gbuffer.albedo_roughness", 2);
+    shader_set_int(renderer->ambient_light_shader, "gbuffer.albedo_roughness", 1);
+    shader_set_int(renderer->ambient_light_shader, "gbuffer.normal", 2);
     shader_set_int(renderer->ambient_light_shader, "gbuffer.depth", 3);
     r_set_texture(renderer->gbuffer->textures[0], 0);
     r_set_texture(renderer->gbuffer->textures[1], 1);
@@ -108,21 +115,25 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     shader_set_vec3(renderer->ambient_light_shader, "view_position", renderer->camera.position);
 
     r_draw_mesh(renderer->quad_mesh);
+    r_set_framebuffer(renderer, NULL);
 }
 
 static void render_direct_light(sbox_t* sbox, renderer_t* renderer) {
+    r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer->direct_light_shader);
     glViewport(0, 0, r_width.value, r_height.value);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-    glEnable(GL_BLEND);
+    //glEnable(GL_CULL_FACE);
+    //glCullFace(GL_FRONT);
+    //glEnable(GL_BLEND);
     /*glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);*/
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
 
     shader_set_int(renderer->direct_light_shader, "gbuffer.position", 0);
-    shader_set_int(renderer->direct_light_shader, "gbuffer.normal", 1);
-    shader_set_int(renderer->direct_light_shader, "gbuffer.albedo_roughness", 2);
+    shader_set_int(renderer->direct_light_shader, "gbuffer.albedo_roughness", 1);
+    shader_set_int(renderer->direct_light_shader, "gbuffer.normal", 2);
     shader_set_int(renderer->direct_light_shader, "gbuffer.depth", 3);
     r_set_texture(renderer->gbuffer->textures[0], 0);
     r_set_texture(renderer->gbuffer->textures[1], 1);
@@ -139,7 +150,7 @@ static void render_direct_light(sbox_t* sbox, renderer_t* renderer) {
 
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENT_LIGHT) continue;
+        if (entity->type != ENTITY_LIGHT) continue;
 
         shader_set_vec3(renderer->direct_light_shader, "light.position", entity->position);
         shader_set_vec3(renderer->direct_light_shader, "light.color", entity->data.light.color);
@@ -148,18 +159,21 @@ static void render_direct_light(sbox_t* sbox, renderer_t* renderer) {
         
         mat4 model;
         glm_mat4_identity(model);
-        /*glm_translate_make(model, entity->position);
-        glm_scale(model, (vec3){scale, scale, scale});*/
+        glm_scale(model, (vec3){scale, scale, scale});
+        glm_translate_make(model, entity->position);
         shader_set_mat4(renderer->direct_light_shader, "model", model);
 
         r_draw_mesh(renderer->quad_mesh);
     }
 
-    glDisable(GL_CULL_FACE);
+    /*glDisable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);*/
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    r_set_framebuffer(renderer, NULL);
 }
 
 static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
@@ -173,10 +187,11 @@ static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
 }
 
 static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
+    r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer->skybox_shader);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    //glDepthFunc(GL_LEQUAL);
+    glDepthFunc(GL_LEQUAL);
 
     mat4 projection;
     glm_mat4_copy(renderer->projection, projection);
@@ -198,16 +213,27 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
 
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
-    //glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LESS);
+    r_set_framebuffer(renderer, NULL);
+}
+
+static void render_screen(sbox_t* sbox, renderer_t* renderer) {
+    r_set_shader(renderer->screen_shader);
+
+    shader_set_int(renderer->screen_shader, "screen", 0);
+    r_set_texture(renderer->screen_buffer->textures[0], 0);
+    
+    r_draw_mesh(renderer->quad_mesh);
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_world(sbox, renderer);
     //render_viewmodel(sbox, renderer);
     render_ambient_light(sbox, renderer);
-    render_direct_light(sbox, renderer);
+    //render_direct_light(sbox, renderer);
     //copy_depth(sbox, renderer);
-    render_skybox(sbox, renderer);
+    //render_skybox(sbox, renderer);
+    render_screen(sbox, renderer);
 
     r_clear_drawcalls(renderer);
     SDL_GL_SwapWindow(sbox->window);

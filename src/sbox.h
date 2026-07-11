@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "render.h"
+#include "audio.h"
 #include "math.h"
 #include "entity.h"
 #include "player.h"
@@ -11,6 +12,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdarg.h>
 #include <assert.h>
 
 #include <SDL2/SDL.h>
@@ -43,11 +46,12 @@ typedef struct sbox_t {
     SDL_Window* window;
     SDL_GLContext* gl_context;
     renderer_t renderer;
-
     shader_t* shaders;
     mesh_t* meshes;
     texture_t* textures;
     material_t* materials;
+
+    audio_t audio;
 
     map_t map;
     player_t player;

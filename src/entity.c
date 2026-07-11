@@ -11,21 +11,23 @@ static void init_common(
 	entity->type = type;
 	glm_vec3_copy((vec3){x, y, z}, entity->position);
     glm_quat_copy(GLM_QUAT_IDENTITY, entity->rotation);
+	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
 
 	*out = entity;
 }
 
 void entity_init_prop(sbox_t* sbox,
-	const char* name, float x, float y, float z, entity_t** out)
+	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
-    entity_t* entity;
-	init_common(name, ENT_PROP, x, y, z, &entity);
-    entity->data.prop.mesh = NULL;
-	entity->data.prop.nmaterials = 0;
+    entity_t* entity = NULL;
+	init_common(name, ENTITY_PROP, x, y, z, &entity);
+    entity->data.prop.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.prop.materials[i] = NULL;
 	}
 	entity->data.prop.is_viewmodel = false;
+	entity->data.prop.is_pickup = false;
+	entity->data.prop.collision_enabled = true;
 
     *out = entity;
 }
@@ -35,8 +37,8 @@ void entity_init_light(sbox_t* sbox,
 {
 	if (!out) return;
 
-	entity_t* entity;
-	init_common(name, ENT_LIGHT, x, y, z, &entity);
+	entity_t* entity = NULL;
+	init_common(name, ENTITY_LIGHT, x, y, z, &entity);
 	glm_vec3_copy(color, entity->data.light.color);
 
 	*out = entity;
@@ -47,6 +49,19 @@ void entity_free(sbox_t* sbox, entity_t* entity) {
     free(entity);
 }
 
+void entity_prop_set_material(sbox_t* sbox,
+    entity_t* entity,
+    material_t* material,
+    int slot)
+{
+	if (slot >= MAX_MATERIALS) {
+		error(sbox, "material limit per entity reached (%d)", MAX_MATERIALS);
+		return;
+	}
+
+    entity->data.prop.materials[slot] = material;
+}
+
 void entlist_init(sbox_t* sbox, entlist_t* entlist) {
 	entlist->len = 0;
 	entlist->ents = NULL;
@@ -55,16 +70,29 @@ void entlist_init(sbox_t* sbox, entlist_t* entlist) {
 void entlist_free(sbox_t* sbox, entlist_t* entlist) {
 	for (size_t i = 0; i < entlist->len; i++)
 		entity_free(sbox, entlist->ents[i]);
+	info(sbox, "freed %d entities", entlist->len);
 	free(entlist->ents);
 }
 
 void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
-	
+	for (size_t i = 0; i < entlist->len; i++) {
+		entity_t* entity = entlist->ents[i];
+		switch (entity->type) {
+		case ENTITY_PROP: {
+			entity_prop_t* prop = &entity->data.prop;
+			if (prop->is_pickup) {
+    			glm_quat(entity->rotation, rad(sbox->time * PICKUP_SPIN_RATE), 0.0f, 1.0f, 0.0f);
+			}
+			break;
+		}
+		default: break;
+		}
+	}
 }
 
 void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
 	if (!entity) return;
-	info(sbox, "entlist: add %s", entity->name);
+	info(sbox, "add entity %s", entity->name);
 	entlist->ents = realloc(entlist->ents, sizeof(entity_t*) * (entlist->len + 1));
 	entlist->ents[entlist->len++] = entity;
 }

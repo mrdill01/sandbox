@@ -1,8 +1,8 @@
 #version 330 core
 
 layout (location = 0) out vec3 g_position;
-layout (location = 1) out vec3 g_normal;
-layout (location = 2) out vec4 g_albedo_roughness;
+layout (location = 1) out vec4 g_albedo_roughness;
+layout (location = 2) out vec3 g_normal;
 layout (location = 3) out vec3 g_depth;
 
 #define GAMMA 2.2

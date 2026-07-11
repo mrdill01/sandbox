@@ -9,7 +9,7 @@
 
 #include "../include/gl.h"
 
-int init(sbox_t* sbox);
+bool init(sbox_t* sbox);
 void tick(sbox_t* sbox);
 void shutdown(sbox_t* sbox);
 
@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     sbox_t sbox;
     sbox_init(&sbox);
 
-    if (init(&sbox) == -1)
+    if (!init(&sbox))
         return EXIT_FAILURE;
 
     map_load(&sbox, &sbox.map);
@@ -32,15 +32,21 @@ int main(int argc, char* argv[]) {
     return EXIT_SUCCESS;
 }
 
-int init(sbox_t* sbox) {
+bool init(sbox_t* sbox) {
+    info(sbox, "initializing SDL...");
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         error(sbox, "failed to initialize SDL: %s", SDL_GetError());
-        return -1;
+        return false;
     }
 
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    info(sbox, "SDL initialized!");
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, R_GL_MAJ);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, R_GL_MIN);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+
+    info(sbox, "creating window...");
 
     sbox->window = SDL_CreateWindow("sandbox",
         SDL_WINDOWPOS_CENTERED,
@@ -51,27 +57,36 @@ int init(sbox_t* sbox) {
 
     if (!sbox->window) {
         error(sbox, "failed to open window: %s", SDL_GetError());
-        return -1;
+        return false;
     }
+
+    info(sbox, "window created!");
+    info(sbox, "setting up OpenGL context...");
 
     sbox->gl_context = SDL_GL_CreateContext(sbox->window);
 
     if (!sbox->gl_context) {
         error(sbox, "failed to setup OpenGL context: %s", SDL_GetError());
-        return -1;
+        return false;
     }
+
+    info(sbox, "created OpenGL context!");
+    info(sbox, "loading OpenGL functions...");
 
     if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
         error(sbox, "failed to initialize GLAD");
-        return -1;
+        return false;
     }
 
-    r_init(sbox, &sbox->renderer);
-
+    info(sbox, "OpenGL loaded!");
     info(sbox, "GPU: %s", glGetString(GL_RENDERER));
     info(sbox, "vendor: %s", glGetString(GL_VENDOR));
     info(sbox, "version: %s", glGetString(GL_VERSION));
-    return 0;
+
+    r_init(sbox, &sbox->renderer);
+    a_init(sbox, &sbox->audio);
+
+    return true;
 }
 
 void tick(sbox_t* sbox) {
@@ -84,7 +99,7 @@ void tick(sbox_t* sbox) {
             case SDL_WINDOWEVENT_RESIZED: {
                 cvar_set_value(sbox, "r_width", e.window.data1);
                 cvar_set_value(sbox, "r_height", e.window.data2);
-                r_on_resize(sbox, &sbox->renderer, e.window.data1, e.window.data2);
+                r_on_resize(sbox);
                 break;
             }
             }
@@ -108,18 +123,18 @@ void tick(sbox_t* sbox) {
 
     sbox_tick(sbox);
 
-    if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
+    if (sbox->keys[SDL_SCANCODE_ESCAPE])
         sbox->running = false;
-    }
 }
 
 void shutdown(sbox_t* sbox) {
     info(sbox, "shutting down...");
 
     r_free(sbox, &sbox->renderer);
+    a_free(sbox, &sbox->audio);
     SDL_GL_DeleteContext(sbox->gl_context);
     SDL_DestroyWindow(sbox->window);
+    SDL_Quit();
 
-    info(sbox, "shutdown complete. exiting...");
     sbox_free(sbox);
 }

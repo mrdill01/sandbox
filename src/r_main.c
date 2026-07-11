@@ -4,6 +4,8 @@
 #include "../include/gl.h"
 
 void r_init(sbox_t* sbox, renderer_t* renderer) {
+    info(sbox, "initializing renderer...");
+
     camera_init(sbox, &renderer->camera);
 
     renderer->ndrawcalls = 0;
@@ -21,6 +23,8 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/shaders/direct_light.vs", "res/shaders/direct_light.fs"); 
     renderer->skybox_shader = shader_load(sbox,
         "res/shaders/skybox.vs", "res/shaders/skybox.fs");  
+    renderer->screen_shader = shader_load(sbox,
+        "res/shaders/screen.vs", "res/shaders/screen.fs");
     renderer->ui_shader = shader_load(sbox,
         "res/shaders/ui.vs", "res/shaders/ui.fs");
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
@@ -32,16 +36,22 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         1, 1, false);
 
     renderer->gbuffer = NULL;
-    r_create_framebuffers(sbox);
+    renderer->screen_buffer = NULL;
+    r_on_resize(sbox);
 
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
 
     renderer->ui.font = texture_load(sbox, "res/textures/font.png");
+
+    info(sbox, "renderer initialized!");
 }
 
 void r_free(sbox_t* sbox, renderer_t* renderer) {
+    info(sbox, "shutting down renderer...");
+
     framebuffer_free(renderer->gbuffer);
+    framebuffer_free(renderer->screen_buffer);
 
     int n = 0;
     shader_t* shader = sbox->shaders;
@@ -52,7 +62,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         n++;
     }
 
-    info(sbox, "released %d shader(s)", n);
+    info(sbox, "released %d shaders", n);
 
     n = 0;
     mesh_t* mesh = sbox->meshes;
@@ -63,7 +73,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         n++;
     }
 
-    info(sbox, "released %d meshes(s)", n);
+    info(sbox, "released %d meshes", n);
 
     n = 0;
     texture_t* texture = sbox->textures;
@@ -74,7 +84,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         n++;
     }
 
-    info(sbox, "released %d texture(s)", n);
+    info(sbox, "released %d textures", n);
 
     n = 0;
     material_t* material = sbox->materials;
@@ -85,7 +95,9 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         n++;
     }
 
-    info(sbox, "released %d material(s)", n);
+    info(sbox, "released %d materials", n);
+
+    info(sbox, "renderer shut down!");
 }
 
 static int comp_distance(const void* a_ptr, const void* b_ptr) {
@@ -112,16 +124,12 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 	qsort(renderer->drawcalls, renderer->ndrawcalls, sizeof(drawcall_t), comp_distance);
 }
 
-void r_on_resize(sbox_t* sbox, renderer_t* renderer, int width, int height) {
-    glViewport(0, 0, width, height);
-    r_create_framebuffers(sbox);
-}
-
-void r_create_framebuffers(sbox_t* sbox) {
+void r_on_resize(sbox_t* sbox) {
+    glViewport(0, 0, r_width.value, r_height.value);
     renderer_t* renderer = &sbox->renderer;
 
-    if (renderer->gbuffer)
-        framebuffer_free(renderer->gbuffer);
+    framebuffer_free(renderer->gbuffer);
+    framebuffer_free(renderer->screen_buffer);
 
     int width = r_width.value * r_scale.value;
     int height = r_height.value * r_scale.value;
@@ -133,6 +141,11 @@ void r_create_framebuffers(sbox_t* sbox) {
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
     framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
     framebuffer_finish(sbox, renderer->gbuffer);
+
+    renderer->screen_buffer = framebuffer_new(sbox);
+    framebuffer_add_texture(sbox, renderer->screen_buffer, width, height);
+    framebuffer_add_depth_buffer(sbox, renderer->screen_buffer, width, height);
+    framebuffer_finish(sbox, renderer->screen_buffer);
 }
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {

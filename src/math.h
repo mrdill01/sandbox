@@ -2,6 +2,7 @@
 #define MATH_H
 
 #include <math.h>
+#include <stdbool.h>
 
 #include "../include/cglm/cglm.h"
 #include "../include/cglm/quat.h"
@@ -29,5 +30,8 @@ float clip(float x, float a, float b);
 float interp_to(float current, float target, float speed, float dt);
 
 void bbox_get_center(const bbox_t* bbox, vec3 center);
+bbox_t bbox_translate(bbox_t* bbox, vec3 position);
+bbox_t bbox_scale(bbox_t* bbox, vec3 scale);
+bool bbox_point_intersects(const bbox_t* bbox, vec3 point);
 
 #endif

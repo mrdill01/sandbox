@@ -9,7 +9,7 @@
 mesh_t* mesh_new(sbox_t* sbox,
     float* vertices, size_t nvertices,
     uint32_t* indices, size_t nindices,
-    bbox_t bbox)
+    uint8_t nmaterials, bbox_t bbox)
 {
     uint32_t vao, vbo, ebo;
     glGenVertexArrays(1, &vao);
@@ -43,6 +43,7 @@ mesh_t* mesh_new(sbox_t* sbox,
     mesh->vbo = vbo;
     mesh->ebo = ebo;
     mesh->ntris = nindices;
+    mesh->nmaterials = nmaterials;
     mesh->bbox = bbox;
 
     mesh->next = sbox->meshes;
@@ -77,7 +78,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         path,
         file_callback,
         sbox,
-        TINYOBJ_FLAG_TRIANGULATE);
+        0);
 
     if (result != TINYOBJ_SUCCESS) {
         const char* msg;
@@ -92,7 +93,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         return NULL;
     }
 
-    int stride = 14;
+    int stride = 9;
     int num_vertices = attrib.num_faces * stride;
     float* vertices = malloc(num_vertices * sizeof(float));
     int num_indices = attrib.num_faces;
@@ -101,11 +102,11 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     bbox_t bbox = {0};
 
     int len = 0;
-    for (int i = 0; i < num_indices; i++) {
-        tinyobj_vertex_index_t index = attrib.faces[i];
+    for (int i = 0; i < attrib.num_faces; i++) {
+        tinyobj_vertex_index_t face = attrib.faces[i];
 
-        if (index.v_idx != TINYOBJ_INVALID_INDEX) {
-            size_t base = index.v_idx * 3;
+        if (face.v_idx != TINYOBJ_INVALID_INDEX) {
+            int base = face.v_idx * 3;
             float x = attrib.vertices[base + 0];
             float y = attrib.vertices[base + 1];
             float z = attrib.vertices[base + 2];
@@ -123,15 +124,15 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
             bbox.max[2] = max(bbox.max[2], z);
         }
 
-        if (index.vn_idx != TINYOBJ_INVALID_INDEX) {
-            size_t base = index.vn_idx * 3;
+        if (face.vn_idx != TINYOBJ_INVALID_INDEX) {
+            int base = face.vn_idx * 3;
             vertices[len++] = attrib.normals[base + 0];
             vertices[len++] = attrib.normals[base + 1];
             vertices[len++] = attrib.normals[base + 2];
         }
 
-        if (index.vt_idx != TINYOBJ_INVALID_INDEX) {
-            size_t base = index.vt_idx * 2;
+        if (face.vt_idx != TINYOBJ_INVALID_INDEX) {
+            int base = face.vt_idx * 2;
             vertices[len++] = attrib.texcoords[base + 0];
             vertices[len++] = attrib.texcoords[base + 1];
         }
@@ -144,8 +145,11 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         indices[i] = i;
     }
 
+    if (num_materials == 0)
+        num_materials = 1;
+
     tinyobj_attrib_free(&attrib);
-    return mesh_new(sbox, vertices, num_vertices, indices, num_indices, bbox);
+    return mesh_new(sbox, vertices, num_vertices, indices, num_indices, num_materials, bbox);
 }
 
 void mesh_free(sbox_t* sbox, mesh_t* mesh) {

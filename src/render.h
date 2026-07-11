@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#define R_GL_MAJ 3
+#define R_GL_MIN 3
 #define MAX_MATERIALS 4
 
 typedef struct sbox_t sbox_t;
@@ -32,6 +34,7 @@ typedef struct mesh_t {
     uint32_t vbo;
     uint32_t ebo;
     uint32_t ntris;
+    uint8_t nmaterials;
     bbox_t bbox;
     struct mesh_t* next;
 } mesh_t;
@@ -56,6 +59,7 @@ typedef struct material_t {
     float tilex;
     float tiley;
     bool is_translucent;
+    bool is_water;
     struct material_t* next;
 } material_t;
 
@@ -68,7 +72,6 @@ typedef struct {
 
 typedef struct {
     const mesh_t* mesh;
-    size_t nmaterials;
     const material_t* materials[MAX_MATERIALS];
     mat4 model;
     float dist_to_camera;
@@ -93,12 +96,14 @@ typedef struct {
     shader_t* ambient_light_shader;
     shader_t* direct_light_shader;
     shader_t* skybox_shader;
+    shader_t* screen_shader;
     shader_t* ui_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
     material_t* default_material;
 
     framebuffer_t* gbuffer;
+    framebuffer_t* screen_buffer;
 
     mat4 projection;
     mat4 view;
@@ -127,7 +132,7 @@ void shader_free(sbox_t* sbox, shader_t* shader);
 mesh_t* mesh_new(sbox_t* sbox,
     float* vertices, size_t nvertices,
     uint32_t* indices, size_t nindices,
-    bbox_t bbox);
+    uint8_t nmaterials, bbox_t bbox);
 mesh_t* mesh_load(sbox_t* sbox, const char* path);
 void mesh_free(sbox_t* sbox, mesh_t* mesh);
 
@@ -154,8 +159,7 @@ void framebuffer_free(framebuffer_t* framebuffer);
 void r_init(sbox_t* sbox, renderer_t* renderer);
 void r_free(sbox_t* sbox, renderer_t* renderer);
 void r_tick(sbox_t* sbox, renderer_t* renderer);
-void r_on_resize(sbox_t* sbox, renderer_t* renderer, int width, int height);
-void r_create_framebuffers(sbox_t* sbox);
+void r_on_resize(sbox_t* sbox);
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);

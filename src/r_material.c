@@ -16,6 +16,7 @@ material_t* material_load(sbox_t* sbox,
     material->tilex = tilex;
     material->tiley = tiley;
     material->is_translucent = is_translucent;
+    material->is_water = false;
     
     material->next = sbox->materials;
     sbox->materials = material;

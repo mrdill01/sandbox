@@ -1,19 +1,22 @@
-#ifndef ENT_H
-#define ENT_H
+#ifndef ENTITY_H
+#define ENTITY_H
 
 #include "math.h"
 #include "render.h"
 
+#define PICKUP_SPIN_RATE 16.0f
+
 typedef enum {
-    ENT_PROP,
-    ENT_LIGHT,
+    ENTITY_PROP,
+    ENTITY_LIGHT,
 } entity_type_t;
 
 typedef struct {
     mesh_t* mesh;
-    size_t nmaterials;
     material_t* materials[MAX_MATERIALS];
     bool is_viewmodel;
+    bool is_pickup;
+    bool collision_enabled;
 } entity_prop_t;
 
 typedef struct {
@@ -25,6 +28,7 @@ typedef struct {
     entity_type_t type;
     vec3 position;
     quat rotation;
+    vec3 scale;
 
     union {
         entity_prop_t prop;
@@ -32,16 +36,19 @@ typedef struct {
     } data;
 } entity_t;
 
-typedef struct {
+typedef struct entlist_t {
     size_t len;
     entity_t** ents;
 } entlist_t;
 
 void entity_init_prop(sbox_t* sbox,
-    const char* name, float x, float y, float z, entity_t** out);
+    const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_light(sbox_t* sbox,
     const char* name, float x, float y, float z, vec3 color, entity_t** out);
 void entity_free(sbox_t* sbox, entity_t* entity);
+
+void entity_prop_set_material(sbox_t* sbox,
+    entity_t* entity, material_t* material, int slot);
 
 void entlist_init(sbox_t* sbox, entlist_t* entlist);
 void entlist_free(sbox_t* sbox, entlist_t* entlist);

@@ -12,8 +12,8 @@
 cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
 cvar_t r_scale = {"r_scale", "1.0f", true};
-cvar_t r_fov = {"r_fov", "70.0f", true};
-cvar_t m_sens = {"m_sens", "3.0f", true};
+cvar_t r_fov = {"r_fov", "75.0f", true};
+cvar_t m_sens = {"m_sens", "5.0f", true};
 
 void sbox_init(sbox_t* sbox) {
 	info(sbox, "%s", SANDBOX_VERSION);
@@ -48,7 +48,6 @@ void sbox_init(sbox_t* sbox) {
 
 	sbox->window = NULL;
 	sbox->gl_context = NULL;
-
 	sbox->shaders = NULL;
 	sbox->meshes = NULL;
 	sbox->textures = NULL;
@@ -67,8 +66,9 @@ void sbox_tick(sbox_t* sbox) {
    	sbox->dt = (sbox->now - sbox->last) / (double)SDL_GetPerformanceFrequency();
 	sbox->time += sbox->dt;
 
+	a_tick(sbox, &sbox->audio, &sbox->player, &sbox->renderer.camera);
     map_tick(sbox, &sbox->map);
-    player_tick(sbox, &sbox->player, &sbox->renderer.camera);
+    player_tick(sbox, &sbox->player, &sbox->renderer.camera, &sbox->map.entlist);
 }
 
 void info(sbox_t* sbox, const char* msg, ...) {

@@ -5,6 +5,7 @@
 
 typedef struct sbox_t sbox_t;
 typedef struct camera_t camera_t;
+typedef struct entlist_t entlist_t;
 
 typedef enum {
     MOVE_WALK,
@@ -12,17 +13,21 @@ typedef enum {
     MOVE_CROUCH,
 } move_mode_t;
 
-typedef struct {
-    vec3 position;
+typedef struct player_t {
     move_mode_t move_mode;
-    vec3 wishdir;
-    vec3 wishvel;
+    vec3 position;
     vec3 velocity;
-    float wishspeed;
-    float camera_height;
+    vec3 move_input;
+    float target_speed;
+    bool is_grounded;
+    bool pressed_jump;
+    float height;
 } player_t;
 
 void player_init(sbox_t* sbox, player_t* player);
-void player_tick(sbox_t* sbox, player_t* player, camera_t* camera);
+void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist);
+
+void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
+void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
 
 #endif
