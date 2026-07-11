@@ -1,9 +1,8 @@
 #include "player.h"
 #include "sbox.h"
-#include "physics.h"
 
 #define P_GRAVITY 9.81f
-#define P_JUMPFORCE 2.8f
+#define P_JUMPFORCE 3.2f
 #define P_MAXSPEED_WALK 3.2f
 #define P_MAXSPEED_SPRINT 16.0f
 #define P_MAXSPEED_CROUCH 1.8f
@@ -24,6 +23,7 @@ void player_init(sbox_t* sbox, player_t* player) {
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->move_input);
     player->target_speed = get_max_speed(sbox, player);
     player->is_grounded = true;
+    player->ground_mat = PHYSMAT_NONE;
     player->water_level = 0.0f;
     player->last_step_time = 0.0f;
     player->height = get_height(sbox, player);
@@ -54,6 +54,18 @@ static float get_height(sbox_t* sbox, player_t* player) {
     }
 
     return 0.0f;
+}
+
+static float get_step_rate(sbox_t* sbox, player_t* player) {
+    float speed;
+    switch (player->move_mode) {
+    case MOVE_WALK: speed = 0.55; break;
+    case MOVE_SPRINT: speed = 0.25; break;
+    case MOVE_CROUCH: speed = 0.8; break;
+    default: unreachable(sbox);
+    }
+    
+    return speed;
 }
 
 static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
@@ -179,7 +191,8 @@ void move_air(sbox_t* sbox, player_t* player) {
 }
 
 static void hit_ground(sbox_t* sbox, player_t* player) {
-    a_play(sbox, &sbox->audio, sbox->audio.jump_land_sound, 1.0f);
+    sound_t* sound = sbox->audio.jump_land_sounds[player->ground_mat];
+    a_play(sbox, &sbox->audio, sound, random(0.85f, 1.15f));
     player->last_step_time = sbox->time;
 }
 
@@ -189,12 +202,11 @@ static void leave_ground(sbox_t* sbox, player_t* player) {
 }
 
 static void enter_water(sbox_t* sbox, player_t* player) {
-    //a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound);
-    printf("enter water\n");
+    a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound, random(0.9f, 1.1f));
 }
 
 static void exit_water(sbox_t* sbox, player_t* player) {
-    printf("exit water\n");
+    
 }
 
 void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
@@ -212,6 +224,8 @@ void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
 
     if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
+        player->ground_mat = trace.phys_mat;
+
         player->is_grounded = true;
         if (!was_grounded)
             hit_ground(sbox, player);
@@ -221,23 +235,14 @@ void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             enter_water(sbox, player);
         
     } else {
-        if (player->position[1] < -1.5f) {
-            player->position[1] = -1.5f;
-            player->is_grounded = true;
-            if (!was_grounded)
-                hit_ground(sbox, player);
+        player->is_grounded = false;
+        if (was_grounded)
+            leave_ground(sbox, player);
 
-        } else {
-            player->is_grounded = false;
-            if (was_grounded)
-                leave_ground(sbox, player);
-
-            player->water_level = 0.0f;
-            if (was_in_water)
-                exit_water(sbox, player);
-        }
+        player->water_level = 0.0f;
+        if (was_in_water)
+            exit_water(sbox, player);
     }
-    //printf("%g\n", player->water_level);
 }
 
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
@@ -257,12 +262,13 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     float xz_speed = glm_vec3_dot(velocity, velocity);
 
     bool play_sound = player->is_grounded &&
-        sbox->time - player->last_step_time > 0.5f &&
-        xz_speed > P_STOPSPEED;
+        sbox->time - player->last_step_time > get_step_rate(sbox, player) &&
+        xz_speed > 1.0f;
     
-    if (play_sound) {
+    if (play_sound) {        
+        sound_t* sound = sbox->audio.step_sounds[player->ground_mat];
+        a_play(sbox, &sbox->audio, sound, random(0.85f, 1.15f));
         player->last_step_time = sbox->time;
-        a_play(sbox, &sbox->audio, sbox->audio.step_metal_sound, random(0.85f, 1.15f));
     }
 }
 

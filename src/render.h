@@ -10,6 +10,7 @@
 #define MAX_MATERIALS 4
 
 typedef struct sbox_t sbox_t;
+typedef enum phys_material_t phys_material_t;
 
 typedef struct camera_t {
     vec3 position;
@@ -60,6 +61,7 @@ typedef struct material_t {
     float tiley;
     bool is_translucent;
     bool is_water;
+    int phys_mat;
     struct material_t* next;
 } material_t;
 
@@ -147,7 +149,8 @@ material_t* material_load(sbox_t* sbox,
     const char* normal_path,
     float tilex,
     float tiley,
-    bool is_translucent);
+    bool is_translucent,
+    int phys_mat);
 void material_free(sbox_t* sbox, material_t* material);
 
 framebuffer_t* framebuffer_new(sbox_t* sbox);

@@ -33,7 +33,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/default.png",
         "res/textures/default_r.png",
         "res/textures/default_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     renderer->gbuffer = NULL;
     renderer->screen_buffer = NULL;

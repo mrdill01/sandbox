@@ -7,7 +7,8 @@ material_t* material_load(sbox_t* sbox,
     const char* normal_path,
     float tilex,
     float tiley,
-    bool is_translucent)
+    bool is_translucent,
+    int phys_mat)
 {
     material_t* material = malloc(sizeof(material_t));
     material->albedo = texture_load(sbox, albedo_path);
@@ -17,6 +18,7 @@ material_t* material_load(sbox_t* sbox,
     material->tiley = tiley;
     material->is_translucent = is_translucent;
     material->is_water = false;
+    material->phys_mat = phys_mat;
     
     material->next = sbox->materials;
     sbox->materials = material;

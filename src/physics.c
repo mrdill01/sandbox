@@ -7,6 +7,7 @@ bool phys_line_trace(
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
     trace.water_level = 0.0f;
+    trace.phys_mat = PHYSMAT_NONE;
     bool hit = false;
 
     for (trace.distance = 0; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
@@ -18,15 +19,17 @@ bool phys_line_trace(
             entity_t* entity = entlist->ents[j];
             if (entity->type != ENTITY_PROP) continue;
             if (!entity->data.prop.collision_enabled) continue;
-
-            if (entity->data.prop.materials[0]->is_water) {
-                trace.water_level = trace.distance;
-            }
             
             bbox_t bbox = bbox_translate(&entity->data.prop.mesh->bbox, entity->position);
 
             if (bbox_point_intersects(&bbox, trace.point)) {
+                if (entity->data.prop.materials[0]->is_water) {
+                    trace.water_level = trace.distance / max_distance;
+                    continue;
+                }
+
                 hit = true;
+                trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
                 goto on_hit;
             }
         }

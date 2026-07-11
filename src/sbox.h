@@ -60,6 +60,7 @@ extern cvar_t r_width;
 extern cvar_t r_height;
 extern cvar_t r_scale;
 extern cvar_t r_fov;
+extern cvar_t a_volume;
 extern cvar_t m_sens;
 
 void sbox_init(sbox_t* sbox);

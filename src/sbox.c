@@ -13,6 +13,7 @@ cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
 cvar_t r_scale = {"r_scale", "1.0f", true};
 cvar_t r_fov = {"r_fov", "75.0f", true};
+cvar_t a_volume = {"a_volume", "0.0f", true};
 cvar_t m_sens = {"m_sens", "5.0f", true};
 
 void sbox_init(sbox_t* sbox) {
@@ -33,6 +34,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_height, NULL);
     cvar_register(sbox, &r_scale, NULL);
     cvar_register(sbox, &r_fov, NULL);
+    cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
 
 	sbox->running = true;

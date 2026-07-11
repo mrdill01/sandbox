@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "math.h"
+#include "physics.h"
 
 typedef struct sbox_t sbox_t;
 typedef struct camera_t camera_t;
@@ -20,6 +21,7 @@ typedef struct player_t {
     vec3 move_input;
     float target_speed;
     bool is_grounded;
+    phys_material_t ground_mat;
     float water_level;
     float last_step_time;
     bool pressed_jump;

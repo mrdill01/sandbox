@@ -1,6 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include "physics.h"
+
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -20,9 +22,9 @@ typedef struct {
     sound_t* sounds;
 
     sound_t* jump_sound;
-    sound_t* jump_land_sound;
+    sound_t* jump_land_sounds[PHYSMAT_MAX];
+    sound_t* step_sounds[PHYSMAT_MAX];
     sound_t* enter_water_sound;
-    sound_t* step_metal_sound;
 } audio_t;
 
 void a_init(sbox_t* sbox, audio_t* audio);

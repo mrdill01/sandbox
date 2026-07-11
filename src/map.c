@@ -32,140 +32,140 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/crate.png",
         "res/textures/crate_r.png",
         "res/textures/crate_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WOOD);
 
     material_t* crate2 = material_load(sbox,
         "res/textures/crate2.png",
         "res/textures/crate2_r.png",
         "res/textures/crate2_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WOOD);
 
     material_t* container = material_load(sbox,
         "res/textures/container.png",
         "res/textures/container_r.png",
         "res/textures/container_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* chainlink = material_load(sbox,
         "res/textures/chainlink.png",
         "res/textures/chainlink_r.png",
         "res/textures/chainlink_n.png",
-        20, 20, true);
+        20, 20, true, PHYSMAT_METAL);
 
     material_t* metal = material_load(sbox,
         "res/textures/metal.png",
         "res/textures/metal_r.png",
         "res/textures/metal_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* metal2 = material_load(sbox,
         "res/textures/metal2.png",
         "res/textures/metal2_r.png",
         "res/textures/metal2_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* metal3 = material_load(sbox,
         "res/textures/metal3.png",
         "res/textures/metal3_r.png",
         "res/textures/metal3_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* barrel = material_load(sbox,
         "res/textures/barrel.png",
         "res/textures/barrel_r.png",
         "res/textures/barrel_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* barrel_top = material_load(sbox,
         "res/textures/barrel_top.png",
         "res/textures/barrel_top_r.png",
         "res/textures/barrel_top_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     material_t* wood = material_load(sbox,
         "res/textures/wood.png",
         "res/textures/wood_r.png",
         "res/textures/wood_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WOOD);
 
     material_t* wood2 = material_load(sbox,
         "res/textures/wood2.png",
         "res/textures/wood2_r.png",
         "res/textures/wood2_n.png",
-        2, 2, false);
+        2, 2, false, PHYSMAT_WOOD);
 
     material_t* wood3 = material_load(sbox,
         "res/textures/wood3.png",
         "res/textures/wood3_r.png",
         "res/textures/wood3_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WOOD);
 
     material_t* wood4 = material_load(sbox,
         "res/textures/wood4.png",
         "res/textures/wood4_r.png",
         "res/textures/wood4_n.png",
-        2, 2, false);
+        2, 2, false, PHYSMAT_METAL);
 
     material_t* wood5 = material_load(sbox,
         "res/textures/wood5.png",
         "res/textures/wood5_r.png",
         "res/textures/wood5_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WOOD);
 
     material_t* brick = material_load(sbox,
         "res/textures/brick.png",
         "res/textures/brick_r.png",
         "res/textures/brick_n.png",
-        6, 6, false);
+        6, 6, false, PHYSMAT_STONE);
 
     material_t* brick2 = material_load(sbox,
         "res/textures/brick2.png",
         "res/textures/brick2_r.png",
         "res/textures/brick2_n.png",
-        4, 4, false);
+        4, 4, false, PHYSMAT_STONE);
 
     material_t* tile = material_load(sbox,
         "res/textures/tile.png",
         "res/textures/tile_r.png",
         "res/textures/tile_n.png",
-        2, 2, false);
+        2, 2, false, PHYSMAT_STONE);
 
     material_t* tile2 = material_load(sbox,
         "res/textures/tile2.png",
         "res/textures/tile2_r.png",
         "res/textures/tile2_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_STONE);
 
     material_t* cactus = material_load(sbox,
         "res/textures/cactus.png",
         "res/textures/cactus_r.png",
         "res/textures/cactus_n.png",
-        3, 3, false);
+        3, 3, false, PHYSMAT_VEGETATION);
 
     material_t* rock = material_load(sbox,
         "res/textures/rock.png",
         "res/textures/rock_r.png",
         "res/textures/rock_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_STONE);
 
     material_t* stone = material_load(sbox,
         "res/textures/stone.png",
         "res/textures/stone_r.png",
         "res/textures/stone_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_STONE);
 
     material_t* water = material_load(sbox,
         "res/textures/water.png",
         "res/textures/water_r.png",
         "res/textures/water_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_WATER);
     water->is_water = true;
 
     material_t* light = material_load(sbox,
         "res/textures/light.png",
         "res/textures/light_r.png",
         "res/textures/light_n.png",
-        1, 1, false);
+        1, 1, false, PHYSMAT_METAL);
 
     entity_t* entity;
     entity_init_prop(sbox, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
@@ -177,15 +177,15 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "floor(3)", 16.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal2, 0);
+    entity_prop_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "floor(4)", 16.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal2, 0);
+    entity_prop_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "floor(5)", 16.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal2, 0);
+    entity_prop_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "floor(6)", 8.0f, -0.5f, -8.0f, floor_mesh, &entity);
@@ -318,15 +318,15 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "table(2)", 9.0f, -0.5f, -7.0f, table2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_prop_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "bench(1)", 9.0f, -0.5f, -5.8f, bench_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_prop_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "bench(2)", 9.0f, -0.5f, -8.2f, bench_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_prop_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "car", 8.0f, -0.5f, 0.0f, car_mesh, &entity);

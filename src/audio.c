@@ -58,10 +58,28 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     info(sbox, "made audio context current...");
     info(sbox, "audio initialized!");
 
+    audio->sounds = NULL;
+
     audio->jump_sound = sound_load(sbox, audio, "res/sounds/jump.wav");
-    audio->jump_land_sound = sound_load(sbox, audio, "res/sounds/jump_land.wav");
+
+    for (int i = 0; i < PHYSMAT_MAX; i++)
+        audio->jump_land_sounds[i] = NULL;
+    
+    audio->jump_land_sounds[PHYSMAT_METAL] =
+        sound_load(sbox, audio, "res/sounds/jump_land_metal.wav");
+    audio->jump_land_sounds[PHYSMAT_WOOD] =
+        sound_load(sbox, audio, "res/sounds/jump_land_wood.wav");
+    audio->jump_land_sounds[PHYSMAT_STONE] =
+        sound_load(sbox, audio, "res/sounds/jump_land_stone.wav");
+
+    for (int i = 0; i < PHYSMAT_MAX; i++)
+        audio->step_sounds[i] = NULL;
+
+    audio->step_sounds[PHYSMAT_METAL] = sound_load(sbox, audio, "res/sounds/step_metal.wav");
+    audio->step_sounds[PHYSMAT_WOOD] = sound_load(sbox, audio, "res/sounds/step_wood.wav");
+    audio->step_sounds[PHYSMAT_STONE] = sound_load(sbox, audio, "res/sounds/step_stone.wav");
+
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
-    audio->step_metal_sound = sound_load(sbox, audio, "res/sounds/step_metal.wav");
 }
 
 void a_free(sbox_t* sbox, audio_t* audio) {
@@ -90,6 +108,10 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
         camera->up[0], camera->up[1], camera->up[2],
     };
     ALenum err;
+
+    alListenerf(AL_GAIN, a_volume.value);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_GAIN: %d", err);
 
     alListener3f(AL_POSITION, player->position[0], player->position[1], player->position[2]);
     if ((err = alGetError()) != AL_NO_ERROR)
@@ -134,6 +156,8 @@ void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch) {
 }
 
 sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {
+    info(sbox, "loading %s", path);
+
     ALuint buffer;
     ALenum err;
 
