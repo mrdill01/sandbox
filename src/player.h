@@ -20,6 +20,8 @@ typedef struct player_t {
     vec3 move_input;
     float target_speed;
     bool is_grounded;
+    float water_level;
+    float last_step_time;
     bool pressed_jump;
     float height;
 } player_t;

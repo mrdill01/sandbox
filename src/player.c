@@ -1,6 +1,5 @@
 #include "player.h"
 #include "sbox.h"
-#include "render.h"
 #include "physics.h"
 
 #define P_GRAVITY 9.81f
@@ -25,6 +24,8 @@ void player_init(sbox_t* sbox, player_t* player) {
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->move_input);
     player->target_speed = get_max_speed(sbox, player);
     player->is_grounded = true;
+    player->water_level = 0.0f;
+    player->last_step_time = 0.0f;
     player->height = get_height(sbox, player);
 }
 
@@ -178,11 +179,22 @@ void move_air(sbox_t* sbox, player_t* player) {
 }
 
 static void hit_ground(sbox_t* sbox, player_t* player) {
-    glm_vec3_scale(player->velocity, 0.25f, player->velocity);
+    a_play(sbox, &sbox->audio, sbox->audio.jump_land_sound, 1.0f);
+    player->last_step_time = sbox->time;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
+    if (player->pressed_jump)
+       a_play(sbox, &sbox->audio, sbox->audio.jump_sound, random(0.85f, 1.15f));
+}
 
+static void enter_water(sbox_t* sbox, player_t* player) {
+    //a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound);
+    printf("enter water\n");
+}
+
+static void exit_water(sbox_t* sbox, player_t* player) {
+    printf("exit water\n");
 }
 
 void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
@@ -194,13 +206,19 @@ void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 dir = {0.0f, -1.0f, 0.0f};
     float max_distance = get_height(sbox, player);
     trace_result_t trace;
+    
     bool was_grounded = player->is_grounded;
+    bool was_in_water = player->water_level > 0.0f;
 
     if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
         player->is_grounded = true;
         if (!was_grounded)
             hit_ground(sbox, player);
+
+        player->water_level = trace.water_level;
+        if (player->water_level > 0.0f && !was_in_water)
+            enter_water(sbox, player);
         
     } else {
         if (player->position[1] < -1.5f) {
@@ -213,8 +231,13 @@ void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             player->is_grounded = false;
             if (was_grounded)
                 leave_ground(sbox, player);
+
+            player->water_level = 0.0f;
+            if (was_in_water)
+                exit_water(sbox, player);
         }
     }
+    //printf("%g\n", player->water_level);
 }
 
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
@@ -225,6 +248,22 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera->position[2] = player->position[2];
 
     camera_tick(sbox, camera);
+}
+
+static void tick_step_sounds(sbox_t* sbox, player_t* player) {
+    vec3 velocity;
+    glm_vec3_copy(player->velocity, velocity);
+    velocity[1] = 0.0f;
+    float xz_speed = glm_vec3_dot(velocity, velocity);
+
+    bool play_sound = player->is_grounded &&
+        sbox->time - player->last_step_time > 0.5f &&
+        xz_speed > P_STOPSPEED;
+    
+    if (play_sound) {
+        player->last_step_time = sbox->time;
+        a_play(sbox, &sbox->audio, sbox->audio.step_metal_sound, random(0.85f, 1.15f));
+    }
 }
 
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
@@ -240,6 +279,7 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
         move_air(sbox, player);
 
     tick_camera(sbox, player, camera);
+    tick_step_sounds(sbox, player);
 }
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position) {

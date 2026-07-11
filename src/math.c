@@ -24,6 +24,11 @@ float interp_to(float current, float target, float speed, float dt) {
     return current + (target - current) * (speed * dt);
 }
 
+float random(float start, float end) {
+	float scale = rand() / (float)RAND_MAX;
+	return start + scale * (end - start);
+}
+
 void bbox_get_center(const bbox_t* bbox, vec3 center) {
     if (!center) return;
 

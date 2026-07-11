@@ -19,8 +19,7 @@
 #include <SDL2/SDL.h>
 
 #define SANDBOX_VERSION "sbox 1.0"
-
-#define SANDBOX_DEBUG true
+#define SANDBOX_DEBUG
 
 #ifdef SANDBOX_DEBUG
 #define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);

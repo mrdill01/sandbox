@@ -4,7 +4,7 @@
 #include "math.h"
 #include "render.h"
 
-#define PICKUP_SPIN_RATE 16.0f
+#define PICKUP_SPIN_RATE 24.0f
 
 typedef enum {
     ENTITY_PROP,

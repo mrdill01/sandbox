@@ -9,7 +9,7 @@
 typedef struct {
     vec3 point;
     float distance;
-    float water_height;
+    float water_level;
 } trace_result_t;
 
 bool phys_line_trace(

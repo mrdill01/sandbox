@@ -28,6 +28,7 @@ float min(float a, float b);
 float max(float a, float b);
 float clip(float x, float a, float b);
 float interp_to(float current, float target, float speed, float dt);
+float random(float start, float end);
 
 void bbox_get_center(const bbox_t* bbox, vec3 center);
 bbox_t bbox_translate(bbox_t* bbox, vec3 position);

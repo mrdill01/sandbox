@@ -6,7 +6,7 @@ bool phys_line_trace(
 {
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
-    trace.water_height = -1.0f;
+    trace.water_level = 0.0f;
     bool hit = false;
 
     for (trace.distance = 0; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
@@ -20,8 +20,7 @@ bool phys_line_trace(
             if (!entity->data.prop.collision_enabled) continue;
 
             if (entity->data.prop.materials[0]->is_water) {
-                trace.water_height = trace.distance;
-                continue;
+                trace.water_level = trace.distance;
             }
             
             bbox_t bbox = bbox_translate(&entity->data.prop.mesh->bbox, entity->position);
