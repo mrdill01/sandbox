@@ -10,6 +10,6 @@ uniform sampler2D depth;
 
 void main() {
     float depth = texture(depth, vs_uv).r;
+    discard;
     frag_color = texture(cubemap, vs_sample_dir);
-    gl_FragDepth = depth;
 }

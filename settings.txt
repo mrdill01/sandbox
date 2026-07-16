@@ -1,6 +1,7 @@
 m_sens 5.0f
 a_volume 0.5f
 a_device (null)
+r_debug_draw_colliders 1.0f
 r_fov 75.0f
 r_shadow_res 1024.0
 r_scale 1.0f

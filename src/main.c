@@ -130,6 +130,11 @@ void tick(sbox_t* sbox) {
         sbox->keys[SDL_SCANCODE_F2] = false;
         sbox_reload_resources(sbox);
     }
+
+    if (sbox->keys[SDL_SCANCODE_F4]) {
+        sbox->keys[SDL_SCANCODE_F4] = false;
+        cvar_toggle(sbox, "r_debug_draw_colliders");
+    }
 }
 
 void shutdown(sbox_t* sbox) {

@@ -41,10 +41,11 @@ void entity_init_sun_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	init_common(name, ENTITY_DIR_LIGHT, x, y, z, &entity);
-	glm_vec3_copy(color, entity->data.point_light.color);
+	init_common(name, ENTITY_SUN_LIGHT, x, y, z, &entity);
 	glm_vec3_copy(dir, entity->data.sun_light.direction);
 	glm_vec3_norm(entity->data.sun_light.direction);
+	glm_vec3_copy(color, entity->data.sun_light.color);
+	glm_mat4_identity(entity->data.sun_light.matrix);
 
 	*out = entity;
 }

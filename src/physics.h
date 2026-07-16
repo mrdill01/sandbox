@@ -7,20 +7,21 @@
 #define PHYS_TRACE_STEP 0.005
 
 typedef enum phys_material_t {
-    PHYSMAT_NONE,
-    PHYSMAT_METAL,
-    PHYSMAT_WOOD,
-    PHYSMAT_STONE,
-    PHYSMAT_GRASS,
-    PHYSMAT_SAND,
-    PHYSMAT_WATER,
-    PHYSMAT_MAX,
+    PHYS_MAT_NONE,
+    PHYS_MAT_METAL,
+    PHYS_MAT_WOOD,
+    PHYS_MAT_STONE,
+    PHYS_MAT_SAND,
+    PHYS_MAT_GRASS,
+    PHYS_MAT_WATER,
+    PHYS_MAT_MAX,
 } phys_material_t;
 
 typedef struct {
     vec3 point;
     float distance;
     float water_level;
+    entity_t* entity;
     phys_material_t phys_mat;
 } trace_result_t;
 

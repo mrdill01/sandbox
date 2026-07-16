@@ -14,6 +14,7 @@ cvar_t r_height = {"r_height", "540.0f", true};
 cvar_t r_scale = {"r_scale", "1.0f", true};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
 cvar_t r_fov = {"r_fov", "75.0f", true};
+cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "1.0f", true};
 cvar_t a_device = {"a_device", "(null)", true};
 cvar_t a_volume = {"a_volume", "0.5f", true};
 cvar_t m_sens = {"m_sens", "5.0f", true};
@@ -37,6 +38,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_scale, NULL);
     cvar_register(sbox, &r_shadow_res, NULL);
     cvar_register(sbox, &r_fov, NULL);
+    cvar_register(sbox, &r_debug_draw_colliders, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
@@ -91,53 +93,6 @@ void sbox_reload_resources(sbox_t* sbox) {
 	map_load(sbox, &sbox->map);
 
 	info(sbox, "resources reloaded!");
-}
-
-void cfg_write(sbox_t* sbox, const char* path) {
-	info(sbox, "writing config to %s", path);
-	clear_file(sbox, path);
-
-	FILE* fp = fopen(path, "a");
-	if (!fp) {
-		error(sbox, "failed to open %s for writing", path);
-		return;
-	}
-
-	cvar_t* cvar = sbox->cvars;
-	while (cvar) {
-		fprintf(fp, "%s %s\n", cvar->name, cvar->string);
-		cvar = cvar->next;
-	}
-
-	fclose(fp);
-}
-
-void cfg_read(sbox_t* sbox, const char* path) {
-	info(sbox, "reading config from %s", path);
-
-	char* text = load_file(sbox, path);
-	const char* delim = " \r\n";
-
-	const char* name;
-	const char* value;
-	bool first = true;
-
-	for (;;) {
-		name = strtok((first) ? text : NULL, delim);
-		if (!name)
-			break;
-
-		value = strtok(NULL, delim);
-		if (!value) {
-			error(sbox, "in %s: no value for key %s", path, name);
-			continue;
-		}
-
-		first = false;
-		cvar_set(sbox, name, value);
-	}
-
-	free(text);
 }
 
 void info(sbox_t* sbox, const char* msg, ...) {

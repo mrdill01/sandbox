@@ -7,7 +7,8 @@ bool phys_line_trace(
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
     trace.water_level = 0.0f;
-    trace.phys_mat = PHYSMAT_NONE;
+    trace.entity = NULL;
+    trace.phys_mat = PHYS_MAT_NONE;
     bool hit = false;
 
     for (trace.distance = 0; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
@@ -29,6 +30,7 @@ bool phys_line_trace(
                 }
 
                 hit = true;
+                trace.entity = entity;
                 trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
                 goto on_hit;
             }

@@ -39,6 +39,7 @@ void main() {
     color = vignette(color, vs_uv, 0.5f, 0.25f);
     color = add_fog(color, depth);
     color = color / (color + vec3(1.0f));
-    color = pow(color, vec3(1.0f / 2.2f)); 
+    color = pow(color, vec3(1.0f / GAMMA)); 
     frag_color = vec4(color, 1.0f);
+    //frag_color = vec4(texture(debug, vs_uv).rrr, 1.0f);
 }

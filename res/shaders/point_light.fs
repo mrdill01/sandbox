@@ -14,7 +14,7 @@ struct GBuffer {
     sampler2D depth;
 };
 
-struct GBufferSample {
+struct MaterialSample {
     vec3 position;
     vec3 normal;
     vec3 albedo;
@@ -23,13 +23,13 @@ struct GBufferSample {
     float ao;
 };
 
-struct Light {
+struct PointLight {
     vec3 position;
     vec3 color;
 };
 
 uniform GBuffer gbuffer;
-uniform Light light;
+uniform PointLight light;
 uniform vec3 view_position;
   
 float distribution_ggx(vec3 normal, vec3 h, float roughness) {
@@ -63,7 +63,7 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
     return f0 + (1.0f - f0) * pow(clamp(1.0f - cos_theta, 0.0f, 1.0f), 5.0f);
 }
 
-vec3 draw_light(vec3 view_dir, vec3 f0, GBufferSample sample) {
+vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     vec3 l = normalize(light.position - sample.position);
     vec3 h = normalize(view_dir + l);
     float distance = length(light.position - sample.position);
@@ -88,7 +88,7 @@ vec3 draw_light(vec3 view_dir, vec3 f0, GBufferSample sample) {
 }
 
 void main() {
-    GBufferSample sample;
+    MaterialSample sample;
     sample.position = texture(gbuffer.position, vs_uv).rgb;
     sample.normal = texture(gbuffer.normal, vs_uv).rgb;
     sample.albedo = pow(texture(gbuffer.albedo_roughness, vs_uv).rgb, vec3(GAMMA));

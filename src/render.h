@@ -8,8 +8,13 @@
 #define R_GL_MAJ 3
 #define R_GL_MIN 3
 #define MAX_MATERIALS 4
+#define MAX_LINES 2048
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+#define COLOR_MAGENTA (vec4){1.0f, 0.0f, 1.0f, 1.0f}
+#define COLOR_YELLOW (vec4){1.0f, 1.0f, 0.0f, 1.0f}
+#define COLOR_GREEN (vec4){0.0f, 1.0f, 0.0f, 1.0f}
+#define COLOR_BLUE (vec4){0.0f, 0.0f, 1.0f, 1.0f}
 
 typedef struct sbox_t sbox_t;
 typedef enum phys_material_t phys_material_t;
@@ -90,10 +95,21 @@ typedef struct {
 typedef struct {
     const mesh_t* mesh;
     const material_t* materials[MAX_MATERIALS];
+    vec3 position;
+    vec3 scale;
     mat4 model;
     float dist_to_camera;
     bool is_translucent;
 } drawcall_t;
+
+typedef struct {
+    const mesh_t* mesh;
+    vec3 start;
+    vec3 end;
+    vec4 color;
+    float spawn_time;
+    float decay_time;
+} line_t;
 
 typedef struct {
     shader_t* shader;
@@ -117,9 +133,10 @@ typedef struct {
     shader_t* sun_light_shader;
     shader_t* sun_shadow_shader;
     shader_t* point_light_shader;
-    shader_t* translucent_shader;
+    shader_t* forward_shader;
     shader_t* skybox_shader;
     shader_t* screen_shader;
+    shader_t* line_shader;
     shader_t* active_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
@@ -131,6 +148,8 @@ typedef struct {
 
     mat4 projection;
     mat4 view;
+
+    line_t lines[MAX_LINES];
 
     ui_t ui;
 } renderer_t;
@@ -180,8 +199,19 @@ void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int 
 void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer);
 void framebuffer_free(framebuffer_t* framebuffer);
 
+void line_init(sbox_t* sbox, renderer_t* renderer);
+void line_add(sbox_t* sbox,
+    renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time);
+void line_add_box(sbox_t* sbox,
+    renderer_t* renderer, const bbox_t* box, vec4 color, float decay_time);
+void line_render(sbox_t* sbox, renderer_t* renderer);
+
 void ui_init(sbox_t* sbox, ui_t* ui);
-void ui_draw_tex(sbox_t* sbox, ui_t* ui, texture_t* tex, vec2 pos, vec2 size, vec3 color);
+void ui_draw_tex(sbox_t* sbox, ui_t* ui,
+    texture_t* texture,
+    vec2 dest_pos, vec2 dest_size,
+    vec2 src_pos, vec2 src_size,
+    vec4 color);
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer);
 
 void r_init(sbox_t* sbox, renderer_t* renderer);

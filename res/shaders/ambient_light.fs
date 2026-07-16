@@ -21,7 +21,7 @@ struct GBuffer {
     sampler2D depth;
 };
 
-struct GBufferSample {
+struct MaterialSample {
     vec3 position;
     vec3 normal;
     vec3 albedo;
@@ -33,7 +33,7 @@ struct GBufferSample {
 uniform GBuffer gbuffer;
 
 void main() {
-    GBufferSample sample;
+    MaterialSample sample;
     sample.position = texture(gbuffer.position, vs_uv).rgb;
     sample.normal = texture(gbuffer.normal, vs_uv).rgb;
     sample.albedo = pow(texture(gbuffer.albedo_roughness, vs_uv).rgb, vec3(GAMMA));

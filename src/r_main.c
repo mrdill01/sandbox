@@ -25,12 +25,14 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "sun_shadow", "res/shaders/sun_shadow.vs", "res/shaders/sun_shadow.fs");
     renderer->point_light_shader = shader_load(sbox,
         "point_light", "res/shaders/point_light.vs", "res/shaders/point_light.fs"); 
-    renderer->translucent_shader = shader_load(sbox,
-        "translucent", "res/shaders/translucent.vs", "res/shaders/translucent.fs");
+    renderer->forward_shader = shader_load(sbox,
+        "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
     renderer->skybox_shader = shader_load(sbox,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");  
     renderer->screen_shader = shader_load(sbox,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
+    renderer->line_shader = shader_load(sbox,
+        "line", "res/shaders/line.vs", "res/shaders/line.fs");
     renderer->active_shader = NULL;
     
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
@@ -40,7 +42,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/materials/default.png",
         "res/textures/materials/default_r.png",
         "res/textures/materials/default_n.png",
-        1, 1, false, PHYSMAT_METAL);
+        1, 1, false, PHYS_MAT_METAL);
 
     renderer->gbuffer = NULL;
     renderer->screen_buffer = NULL;
@@ -50,6 +52,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
 
+    line_init(sbox, renderer);
     ui_init(sbox, &renderer->ui);
     info(sbox, "renderer initialized!");
 }
@@ -122,8 +125,8 @@ static int comp_distance(const void* a_ptr, const void* b_ptr) {
 }
 
 void r_tick(sbox_t* sbox, renderer_t* renderer) {
-    for (size_t i = 0; i < renderer->ndrawcalls; i++) {
-        drawcall_t* drawcall = &renderer->drawcalls[i];
+    for (size_t i = 0; i < renderer->ntranslucent_drawcalls; i++) {
+        drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
 
 		vec3 center;
 		bbox_get_center(&drawcall->mesh->bbox, center);
@@ -133,14 +136,15 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
 	}
 
-	qsort(renderer->drawcalls, renderer->ndrawcalls, sizeof(drawcall_t), comp_distance);
+	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,
+        sizeof(drawcall_t), comp_distance);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
         material_t* material = drawcall->materials[0];
         if (strcmp(material->name, "water") == 0) {
-            material->scrollx += material->scroll_speed * sbox->time;
-            material->scrolly += material->scroll_speed * sbox->time;
+            material->scrollx += material->scroll_speed * sbox->dt;
+            material->scrolly += material->scroll_speed * sbox->dt;
         }
     }
 
@@ -148,8 +152,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
         material_t* material = drawcall->materials[0];
         if (strcmp(material->name, "water") == 0) {
-            material->scrollx += material->scroll_speed * sbox->time;
-            material->scrolly += material->scroll_speed * sbox->time;
+            material->scrollx += material->scroll_speed * sbox->dt;
+            material->scrolly += material->scroll_speed * sbox->dt;
         }
     }
 }
@@ -267,8 +271,8 @@ void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer) {
 static int get_uniform(sbox_t* sbox, renderer_t* renderer, const char* name) {
     GLint location = glGetUniformLocation(renderer->active_shader->id, name);
     if (location == -1) {
-        info(sbox, "[%s] glGetUniformLocation returned -1 for %s",
-            renderer->active_shader->name, name);
+        //info(sbox, "[%s] glGetUniformLocation returned -1 for %s",
+        //    renderer->active_shader->name, name);
         return -1;
     }
 

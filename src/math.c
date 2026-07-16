@@ -29,6 +29,13 @@ float random(float start, float end) {
 	return start + scale * (end - start);
 }
 
+bbox_t bbox_new(vec3 min, vec3 max) {
+    bbox_t bbox;
+    glm_vec3_copy(min, bbox.min);
+    glm_vec3_copy(max, bbox.max);
+    return bbox;
+}
+
 void bbox_get_center(const bbox_t* bbox, vec3 center) {
     if (!center) return;
 

@@ -19,8 +19,7 @@
 #include <SDL2/SDL.h>
 
 #define SANDBOX_VERSION "sbox 1.0"
-#define SANDBOX_DEBUG
-
+//#define SANDBOX_DEBUG
 //#define SANDBOX_NO_AUDIO
 
 #ifdef SANDBOX_DEBUG
@@ -63,6 +62,7 @@ extern cvar_t r_height;
 extern cvar_t r_scale;
 extern cvar_t r_fov;
 extern cvar_t r_shadow_res;
+extern cvar_t r_debug_draw_colliders;
 extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
@@ -71,9 +71,6 @@ void sbox_init(sbox_t* sbox);
 void sbox_free(sbox_t* sbox);
 void sbox_tick(sbox_t* sbox);
 void sbox_reload_resources(sbox_t* sbox);
-
-void cfg_write(sbox_t* sbox, const char* path);
-void cfg_read(sbox_t* sbox, const char* path);
 
 void info(sbox_t* sbox, const char* msg, ...);
 void error(sbox_t* sbox, const char* msg, ...);

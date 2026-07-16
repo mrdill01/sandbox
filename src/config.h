@@ -21,6 +21,10 @@ typedef struct cvar_t {
 void cvar_register(sbox_t* sbox, cvar_t* cvar, on_change_t on_change);
 void cvar_set(sbox_t* sbox, const char* name, const char* value);
 void cvar_set_value(sbox_t* sbox, const char* name, float value);
+void cvar_toggle(sbox_t* sbox, const char* name);
 cvar_t* cvar_find(sbox_t* sbox, const char* name);
+
+void cfg_write(sbox_t* sbox, const char* path);
+void cfg_read(sbox_t* sbox, const char* path);
 
 #endif

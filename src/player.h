@@ -8,6 +8,10 @@ typedef struct sbox_t sbox_t;
 typedef struct camera_t camera_t;
 typedef struct entlist_t entlist_t;
 
+#define PLAYER_BUTTON_JUMP 1
+#define PLAYER_BUTTON_CROUCH 2
+#define PLAYER_BUTTON_FIRE 4
+
 typedef enum {
     MOVE_WALK,
     MOVE_SPRINT,
@@ -19,6 +23,7 @@ typedef struct player_t {
     vec3 position;
     vec3 velocity;
     vec3 move_input;
+    uint32_t buttons;
     float target_speed;
     bool is_grounded;
     bool is_jumping;
@@ -26,7 +31,7 @@ typedef struct player_t {
     float fall_distance;
     float water_level;
     float last_step_time;
-    bool pressed_jump;
+    bool head_blocked;
     bool is_thirdperson;
     float height;
 } player_t;

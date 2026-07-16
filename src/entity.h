@@ -8,7 +8,7 @@
 
 typedef enum {
     ENTITY_PROP,
-    ENTITY_DIR_LIGHT,
+    ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
 } entity_type_t;
 
@@ -22,8 +22,9 @@ typedef struct {
 } entity_prop_t;
 
 typedef struct {
-    vec3 color;
     vec3 direction;
+    vec3 color;
+    mat4 matrix;
 } entity_sun_light_t;
 
 typedef struct {

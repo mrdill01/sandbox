@@ -14,5 +14,5 @@ uniform mat4 inv_projection;
 void main() {
     gl_Position = vec4(((gl_VertexID & 1) << 2) - 1.0f, (gl_VertexID & 2) * 2.0f - 1.0f, 0.0f, 1.0f);
     vs_sample_dir = mat3(inv_view) * (inv_projection * gl_Position).xyz;
-    vs_uv = a_uv;
+    vs_uv = a_position.xy;
 }
