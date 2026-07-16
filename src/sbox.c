@@ -85,7 +85,7 @@ void sbox_reload_resources(sbox_t* sbox) {
 
 	free(sbox->renderer.screen_shader);
 	sbox->renderer.screen_shader = shader_load(sbox,
-        "res/shaders/screen.vs", "res/shaders/screen.fs");
+        "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
 	
 	map_free(sbox, &sbox->map);
 	map_load(sbox, &sbox->map);

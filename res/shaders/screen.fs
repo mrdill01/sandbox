@@ -10,6 +10,7 @@ in float vs_visibility;
 
 uniform sampler2D screen;
 uniform sampler2D depth;
+uniform sampler2D debug;
 uniform vec3 view_direction;
 uniform vec3 sun_direction;
 
@@ -36,7 +37,6 @@ void main() {
     float depth = texture(depth, vs_uv).r;
     vec3 color = texture(screen, vs_uv).rgb;
     color = vignette(color, vs_uv, 0.5f, 0.25f);
-
     color = add_fog(color, depth);
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / 2.2f)); 

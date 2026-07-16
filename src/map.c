@@ -171,7 +171,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/cactus.png",
         "res/textures/materials/cactus_r.png",
         "res/textures/materials/cactus_n.png",
-        3, 3, false, PHYSMAT_VEGETATION);
+        3, 3, false, PHYSMAT_GRASS);
 
     material_t* rock = material_load(sbox,
         "rock",
@@ -192,9 +192,16 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/water.png",
         "res/textures/materials/water_r.png",
         "res/textures/materials/water_n.png",
-        1, 1, false, PHYSMAT_WATER);
+        1, 1, true, PHYSMAT_WATER);
     water->is_water = true;
     water->scroll_speed = 0.000025f;
+
+    material_t* sand = material_load(sbox,
+        "sand",
+        "res/textures/materials/sand.png",
+        "res/textures/materials/sand_r.png",
+        "res/textures/materials/sand_n.png",
+        1, 1, false, PHYSMAT_SAND);
 
     material_t* light = material_load(sbox,
         "light",
@@ -295,7 +302,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, wood4, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "metal panel", -1.275f, -0.5f, 3.0f, metal_panel_mesh, &entity);
+    entity_init_prop(sbox, "metal panel", -1.1f, -0.5f, 3.0f, metal_panel_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal3, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -504,7 +511,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "underwater", 0.0f, -2.4f, 0.0f, water_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_prop_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "ship", 0.0f, -0.5f, -32.0f, ship_mesh, &entity);

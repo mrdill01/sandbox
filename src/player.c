@@ -14,6 +14,7 @@
 #define P_STOPSPEED 2.5f
 #define P_AIR_STOPSPEED 2.0f
 #define P_FRICTION 5.0f
+#define P_FRICTION_WATER 2.0f
 #define P_AIR_CONTROL 0.0f
 #define P_THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
 #define P_MAX_STEP_DOWN 0.5f
@@ -117,7 +118,7 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
     }
 }
 
-void apply_friction(sbox_t* sbox, player_t* player) {
+static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
     float speed = sqrt(player->velocity[0] * player->velocity[0] +
         player->velocity[1] * player->velocity[1] +
         player->velocity[2] * player->velocity[2]);
@@ -129,7 +130,7 @@ void apply_friction(sbox_t* sbox, player_t* player) {
     }
 
     float control = (speed < P_STOPSPEED) ? P_STOPSPEED : speed;
-    float drop = control * P_FRICTION * sbox->dt;
+    float drop = control * friction * sbox->dt;
 
     float new_speed = speed - drop;
     if (new_speed < 0.0f)
@@ -142,7 +143,7 @@ void apply_friction(sbox_t* sbox, player_t* player) {
     player->velocity[2] *= new_speed;
 }
 
-void accelerate(sbox_t* sbox, player_t* player, float target_speed, float accel) {
+static void accelerate(sbox_t* sbox, player_t* player, float target_speed, float accel) {
     float current_speed = glm_vec3_dot(player->velocity, player->move_input);
     float add_speed = target_speed - current_speed;
     if (add_speed <= 0)
@@ -156,9 +157,22 @@ void accelerate(sbox_t* sbox, player_t* player, float target_speed, float accel)
     player->velocity[2] += accel_speed * player->move_input[2];
 }
 
-void move_ground(sbox_t* sbox, player_t* player) {
+static void move_water(sbox_t* sbox, player_t* player) {
+    if (player->is_grounded)
+        player->velocity[1] = 0.0f;
+    
+    apply_friction(sbox, player, P_FRICTION_WATER);
+    accelerate(sbox, player, player->target_speed, P_ACCEL);
+
+    if (player->pressed_jump && player->is_grounded) {
+        player->velocity[1] = P_JUMPFORCE;
+        player->is_jumping = true;
+    }
+}
+
+static void move_ground(sbox_t* sbox, player_t* player) {
     player->velocity[1] = 0.0f;
-    apply_friction(sbox, player);
+    apply_friction(sbox, player, P_FRICTION);
     accelerate(sbox, player, player->target_speed, P_ACCEL);
 
     if (player->pressed_jump) {
@@ -167,7 +181,7 @@ void move_ground(sbox_t* sbox, player_t* player) {
     }
 }
 
-void air_control(sbox_t* sbox, player_t* player, float target_speed) {
+static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     if (fabs(target_speed) < 0.001f)
         return;
     
@@ -190,7 +204,7 @@ void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     player->velocity[2] *= speed;
 }
 
-void move_air(sbox_t* sbox, player_t* player) {
+static void move_air(sbox_t* sbox, player_t* player) {
     float accel;
     if (glm_vec3_dot(player->velocity, player->move_input) < 0.0f)
         accel = P_AIR_STOPSPEED;
@@ -267,12 +281,11 @@ static void trace_suction(sbox_t* sbox, player_t* player, entlist_t* entlist, bo
     float max_distance = P_MAX_STEP_DOWN;
     trace_result_t trace;
     
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+    if (phys_line_trace(start, dir, max_distance, entlist, &trace))
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
-    }
 }
 
-void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     for (int i = 0; i < 3; i++)
         player->position[i] += player->velocity[i] * sbox->dt;
     
@@ -355,7 +368,9 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
         player->target_speed *= get_max_speed(sbox, player);
     }
 
-    if (player->is_grounded)
+    if (player->water_level > 0.0f)
+        move_water(sbox, player);
+    else if (player->is_grounded)
         move_ground(sbox, player);
     else
         move_air(sbox, player);

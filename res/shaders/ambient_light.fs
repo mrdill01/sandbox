@@ -31,7 +31,6 @@ struct GBufferSample {
 };
 
 uniform GBuffer gbuffer;
-uniform vec3 view_position;
 
 void main() {
     GBufferSample sample;
@@ -41,10 +40,8 @@ void main() {
     sample.roughness = texture(gbuffer.albedo_roughness, vs_uv).a;
     sample.metallic = 0.0f;
     sample.ao = 1.0f;
-    vec3 view_dir = normalize(view_position - sample.position);
 
     vec3 ambient = vec3(0.4) * sample.albedo * sample.ao;
-    
     frag_color = vec4(ambient, 1.0f);
 
     #if VISUALIZE == -1

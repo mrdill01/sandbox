@@ -11,7 +11,8 @@ typedef enum phys_material_t {
     PHYSMAT_METAL,
     PHYSMAT_WOOD,
     PHYSMAT_STONE,
-    PHYSMAT_VEGETATION,
+    PHYSMAT_GRASS,
+    PHYSMAT_SAND,
     PHYSMAT_WATER,
     PHYSMAT_MAX,
 } phys_material_t;

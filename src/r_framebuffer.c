@@ -34,7 +34,9 @@ void framebuffer_add_texture(
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + (framebuffer->ntextures - 1),
+        (format == TEX_FORMAT_DEPTH) ?
+            GL_DEPTH_ATTACHMENT :
+            GL_COLOR_ATTACHMENT0 + (framebuffer->ntextures - 1),
         GL_TEXTURE_2D,
         texture->id,
         0);
@@ -61,8 +63,13 @@ void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
 
     uint32_t* attachments = malloc(sizeof(uint32_t) * framebuffer->ntextures);
-    for (size_t i = 0; i < framebuffer->ntextures; i++)
-        attachments[i] = GL_COLOR_ATTACHMENT0 + i;
+    for (size_t i = 0; i < framebuffer->ntextures; i++) {
+        const texture_t* texture = framebuffer->textures[i];
+        if (texture->format == TEX_FORMAT_DEPTH)
+            attachments[i] = GL_DEPTH_ATTACHMENT;
+        else
+            attachments[i] = GL_COLOR_ATTACHMENT0 + i;
+    }
     glDrawBuffers(framebuffer->ntextures, attachments);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)

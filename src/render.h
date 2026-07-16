@@ -26,6 +26,7 @@ typedef struct camera_t {
 } camera_t;
 
 typedef struct shader_t {
+    char* name;
     uint32_t id;
     const char* vs_path;
     const char* fs_path;
@@ -110,15 +111,16 @@ typedef struct {
     size_t ntranslucent_drawcalls;
     drawcall_t* translucent_drawcalls;
 
-    shader_t* world_shader;
+    shader_t* gbuffer_shader;
     shader_t* viewmodel_shader;
     shader_t* ambient_light_shader;
     shader_t* sun_light_shader;
     shader_t* sun_shadow_shader;
     shader_t* point_light_shader;
+    shader_t* translucent_shader;
     shader_t* skybox_shader;
     shader_t* screen_shader;
-    shader_t* current_shader;
+    shader_t* active_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
     material_t* default_material;
@@ -141,8 +143,11 @@ void camera_add_roll(camera_t* camera, float roll);
 void camera_get_projection_matrix(camera_t* camera, int width, int height, mat4 proj);
 void camera_get_view_matrix(camera_t* camera, mat4 view);
 
-shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char* fs, const char* fname);
-shader_t* shader_load(sbox_t* sbox, const char* vpath, const char* fpath);
+shader_t* shader_new(sbox_t* sbox,
+    const char* name,
+    const char* vs, const char* vname,
+    const char* fs, const char* fname);
+shader_t* shader_load(sbox_t* sbox, const char* name, const char* vpath, const char* fpath);
 void shader_free(sbox_t* sbox, shader_t* shader);
 
 mesh_t* mesh_new(sbox_t* sbox,
@@ -189,15 +194,15 @@ void r_clear_drawcalls(renderer_t* renderer);
 
 void r_set_shader(renderer_t* renderer, shader_t* shader);
 void r_set_texture(renderer_t* renderer, texture_t* texture, int slot);
-void r_set_material(renderer_t* renderer, const material_t* material, int slot);
+void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot);
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer);
 
-void r_set_int(renderer_t* renderer, const char* name, int i);
-void r_set_float(renderer_t* renderer, const char* name, float f);
-void r_set_vec2(renderer_t* renderer, const char* name, vec2 v);
-void r_set_vec3(renderer_t* renderer, const char* name, vec3 v);
-void r_set_vec4(renderer_t* renderer, const char* name, vec4 v);
-void r_set_mat4(renderer_t* renderer, const char* name, mat4 m);
+void r_set_int(sbox_t* sbox, renderer_t* renderer, const char* name, int i);
+void r_set_float(sbox_t* sbox, renderer_t* renderer, const char* name, float f);
+void r_set_vec2(sbox_t* sbox, renderer_t* renderer, const char* name, vec2 v);
+void r_set_vec3(sbox_t* sbox, renderer_t* renderer, const char* name, vec3 v);
+void r_set_vec4(sbox_t* sbox, renderer_t* renderer, const char* name, vec4 v);
+void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m);
 
 void r_draw_mesh(const mesh_t* mesh);
 void r_render(sbox_t* sbox, renderer_t* renderer);

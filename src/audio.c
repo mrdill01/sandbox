@@ -80,6 +80,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->step_sounds[PHYSMAT_METAL] = sound_load(sbox, audio, "res/sounds/step_metal.wav");
     audio->step_sounds[PHYSMAT_WOOD] = sound_load(sbox, audio, "res/sounds/step_wood.wav");
     audio->step_sounds[PHYSMAT_STONE] = sound_load(sbox, audio, "res/sounds/step_stone.wav");
+    audio->step_sounds[PHYSMAT_SAND] = sound_load(sbox, audio, "res/sounds/step_sand.wav");
     audio->step_sounds[PHYSMAT_WATER] = sound_load(sbox, audio, "res/sounds/step_water.wav");
 
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");

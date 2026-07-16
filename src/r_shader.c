@@ -22,7 +22,10 @@ static int64_t compile_shader(sbox_t* sbox, const char* src, const char* name, i
     return id;
 }
 
-shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char* fs, const char* fname) {
+shader_t* shader_new(sbox_t* sbox,
+    const char* name,
+    const char* vs, const char* vname,
+    const char* fs, const char* fname) {
     uint32_t vertex_shader = compile_shader(sbox, vs, vname, GL_VERTEX_SHADER);
     uint32_t fragment_shader = compile_shader(sbox, fs, fname, GL_FRAGMENT_SHADER);
 
@@ -44,6 +47,11 @@ shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char
     glDeleteShader(fragment_shader);
 
     shader_t* shader = malloc(sizeof(shader_t));
+    size_t len = strlen(name);
+    shader->name = malloc(len + 1);
+    strcpy(shader->name, name);
+    shader->name[len] = '\0';
+
     shader->id = id;
     shader->vs_path = vname;
     shader->fs_path = fname;
@@ -53,15 +61,16 @@ shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char
     return shader;
 }
 
-shader_t* shader_load(sbox_t* sbox, const char* vpath, const char* fpath) {
-    info(sbox, "loading shaders %s and %s", vpath, fpath);
+shader_t* shader_load(sbox_t* sbox, const char* name, const char* vpath, const char* fpath) {
+    info(sbox, "loading shader %s (%s + %s)", name, vpath, fpath);
     const char* vs = load_file(sbox, vpath);
     const char* fs = load_file(sbox, fpath);
-    return shader_new(sbox, vs, vpath, fs, fpath);
+    return shader_new(sbox, name, vs, vpath, fs, fpath);
 }
 
 void shader_free(sbox_t* sbox, shader_t* shader) {
     if (!shader) return;
+    free(shader->name);
     glDeleteProgram(shader->id);
     free(shader);
 }
