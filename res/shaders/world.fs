@@ -22,6 +22,8 @@ struct Material {
     sampler2D normal;
     float tilex;
     float tiley;
+    float scrollx;
+    float scrolly;
 };
 
 uniform Material materials[MAX_MATERIALS];
@@ -45,11 +47,13 @@ mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
 vec3 perturb_normal(vec3 normal, vec3 view_dir, vec2 uv) {
     mat3 tbn = cotangent_frame(normal, -view_dir, uv);
     vec3 map = texture2D(materials[vs_mat].normal, uv).xyz;
+    map.y = 1.0f - map.y;
     return normalize(tbn * map);
 }
 
 void main() {
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
+    uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
     vec3 view_dir = normalize(view_position - vs_frag_position);
 
     g_position = vs_frag_position;

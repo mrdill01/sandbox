@@ -4,7 +4,7 @@
 #include "../include/gl.h"
 
 void r_init(sbox_t* sbox, renderer_t* renderer) {
-    info(sbox, "initializing renderer...");
+    info(sbox, "r_init()...");
 
     camera_init(sbox, &renderer->camera);
 
@@ -19,20 +19,25 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/shaders/viewmodel.vs", "res/shaders/viewmodel.fs"); 
     renderer->ambient_light_shader = shader_load(sbox,
         "res/shaders/ambient_light.vs", "res/shaders/ambient_light.fs"); 
-    renderer->direct_light_shader = shader_load(sbox,
-        "res/shaders/direct_light.vs", "res/shaders/direct_light.fs"); 
+    renderer->sun_light_shader = shader_load(sbox,
+        "res/shaders/sun_light.vs", "res/shaders/sun_light.fs");
+    renderer->sun_shadow_shader = shader_load(sbox,
+        "res/shaders/sun_shadow.vs", "res/shaders/sun_shadow.fs");
+    renderer->point_light_shader = shader_load(sbox,
+        "res/shaders/point_light.vs", "res/shaders/point_light.fs"); 
     renderer->skybox_shader = shader_load(sbox,
         "res/shaders/skybox.vs", "res/shaders/skybox.fs");  
     renderer->screen_shader = shader_load(sbox,
         "res/shaders/screen.vs", "res/shaders/screen.fs");
-    renderer->ui_shader = shader_load(sbox,
-        "res/shaders/ui.vs", "res/shaders/ui.fs");
+    renderer->current_shader = NULL;
+    
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
     renderer->sphere_mesh = mesh_load(sbox, "res/meshes/sphere.obj");
     renderer->default_material = material_load(sbox,
-        "res/textures/default.png",
-        "res/textures/default_r.png",
-        "res/textures/default_n.png",
+        "default",
+        "res/textures/materials/default.png",
+        "res/textures/materials/default_r.png",
+        "res/textures/materials/default_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     renderer->gbuffer = NULL;
@@ -42,16 +47,16 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
 
-    renderer->ui.font = texture_load(sbox, "res/textures/font.png");
-
+    ui_init(sbox, &renderer->ui);
     info(sbox, "renderer initialized!");
 }
 
 void r_free(sbox_t* sbox, renderer_t* renderer) {
-    info(sbox, "shutting down renderer...");
+    info(sbox, "r_free()...");
 
     framebuffer_free(renderer->gbuffer);
     framebuffer_free(renderer->screen_buffer);
+    framebuffer_free(renderer->sun_shadow_buffer);
 
     int n = 0;
     shader_t* shader = sbox->shaders;
@@ -61,6 +66,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         shader = next;
         n++;
     }
+    sbox->shaders = NULL;
 
     info(sbox, "released %d shaders", n);
 
@@ -72,6 +78,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         mesh = next;
         n++;
     }
+    sbox->meshes = NULL;
 
     info(sbox, "released %d meshes", n);
 
@@ -83,6 +90,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         texture = next;
         n++;
     }
+    sbox->textures = NULL;
 
     info(sbox, "released %d textures", n);
 
@@ -94,6 +102,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
         material = next;
         n++;
     }
+    sbox->materials = NULL;
 
     info(sbox, "released %d materials", n);
 
@@ -122,6 +131,27 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 	}
 
 	qsort(renderer->drawcalls, renderer->ndrawcalls, sizeof(drawcall_t), comp_distance);
+
+    for (int i = 0; i < renderer->ndrawcalls; i++) {
+        drawcall_t* drawcall = &renderer->drawcalls[i];
+
+        material_t* material = drawcall->materials[0];
+        if (strcmp(material->name, "water") == 0) {
+            material->scrollx += material->scroll_speed * sbox->time;
+            material->scrolly += material->scroll_speed * sbox->time;
+        }
+    }
+
+    for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
+        drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
+
+        material_t* material = drawcall->materials[0];
+        if (strcmp(material->name, "water") == 0) {
+            material->scrollx += material->scroll_speed * sbox->time;
+            material->scrolly += material->scroll_speed * sbox->time;
+            printf("%g\n", material->scrollx);
+        }
+    }
 }
 
 void r_on_resize(sbox_t* sbox) {
@@ -135,17 +165,22 @@ void r_on_resize(sbox_t* sbox) {
     int height = r_height.value * r_scale.value;
     
     renderer->gbuffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
     framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
     framebuffer_finish(sbox, renderer->gbuffer);
 
     renderer->screen_buffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->screen_buffer, width, height);
+    framebuffer_add_texture(sbox, renderer->screen_buffer, width, height, TEX_FORMAT_RGBA_F16);
     framebuffer_add_depth_buffer(sbox, renderer->screen_buffer, width, height);
     framebuffer_finish(sbox, renderer->screen_buffer);
+
+    /*renderer->sun_shadow_buffer = framebuffer_new(sbox);
+    framebuffer_add_texture(sbox, renderer->sun_shadow_buffer,
+        r_shadow_res.value, r_shadow_res.value, TEX_FORMAT_DEPTH);
+    framebuffer_finish(sbox, renderer->sun_shadow_buffer);*/
 }
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {
@@ -167,11 +202,12 @@ void r_clear_drawcalls(renderer_t* renderer) {
     renderer->drawcalls = NULL;
 }
 
-void r_set_shader(shader_t* shader) {
-    glUseProgram(shader->id);
+void r_set_shader(renderer_t* renderer, shader_t* shader) {
+    glUseProgram((shader) ? shader->id : 0);
+    renderer->current_shader = shader;
 }
 
-void r_set_texture(texture_t* texture, int slot) {
+void r_set_texture(renderer_t* renderer, texture_t* texture, int slot) {
     if (!texture) return;
     glActiveTexture(GL_TEXTURE0 + slot);
 
@@ -182,40 +218,72 @@ void r_set_texture(texture_t* texture, int slot) {
     glBindTexture(type, texture->id);
 }
 
-void r_set_material(renderer_t* renderer, shader_t* shader, const material_t* material, int slot) {
+void r_set_material(renderer_t* renderer, const material_t* material, int slot) {
     if (!material) return;
+    const int nmaterial_textures = 3;
 
     char slot_name[32];
     snprintf(slot_name, 32, "materials[%d].albedo", slot);
-    shader_set_int(shader, slot_name, 3 * slot + 0);
-    r_set_texture(
+    r_set_int(renderer, slot_name, nmaterial_textures * slot + 0);
+    r_set_texture(renderer,
         (material->albedo) ?
             material->albedo :
-            renderer->default_material->albedo, 3 * slot + 0);
+            renderer->default_material->albedo, nmaterial_textures * slot + 0);
     
     snprintf(slot_name, 32, "materials[%d].roughness", slot);
-    shader_set_int(shader, slot_name, 3 * slot + 1);
-    r_set_texture(
+    r_set_int(renderer, slot_name, nmaterial_textures * slot + 1);
+    r_set_texture(renderer,
         (material->roughness) ?
             material->roughness :
-            renderer->default_material->roughness, 3 * slot + 1);
+            renderer->default_material->roughness, nmaterial_textures * slot + 1);
 
     snprintf(slot_name, 32, "materials[%d].normal", slot);
-    shader_set_int(shader, slot_name, 3 * slot + 2);
-    r_set_texture(
+    r_set_int(renderer, slot_name, nmaterial_textures * slot + 2);
+    r_set_texture(renderer,
         (material->normal) ?
             material->normal :
-            renderer->default_material->normal, 3 * slot + 2);
+            renderer->default_material->normal, nmaterial_textures * slot + 2);
 
     snprintf(slot_name, 32, "materials[%d].tilex", slot);
-    shader_set_float(shader, slot_name, material->tilex);
+    r_set_float(renderer, slot_name, material->tilex);
 
     snprintf(slot_name, 32, "materials[%d].tiley", slot);
-    shader_set_float(shader, slot_name, material->tiley);
+    r_set_float(renderer, slot_name, material->tiley);
+
+    snprintf(slot_name, 32, "materials[%d].scrollx", slot);
+    r_set_float(renderer, slot_name, material->scrollx);
+
+    snprintf(slot_name, 32, "materials[%d].scrolly", slot);
+    r_set_float(renderer, slot_name, material->scrolly);
 }
 
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, (framebuffer) ? framebuffer->id : 0);
+}
+
+void r_set_int(renderer_t* renderer, const char* name, int i) {
+    glUniform1i(glGetUniformLocation(renderer->current_shader->id, name), i);
+}
+
+void r_set_float(renderer_t* renderer, const char* name, float f) {
+    glUniform1f(glGetUniformLocation(renderer->current_shader->id, name), f);
+}
+
+void r_set_vec2(renderer_t* renderer, const char* name, vec2 v) {
+    glUniform2fv(glGetUniformLocation(renderer->current_shader->id, name), 1, &v[0]);
+}
+
+void r_set_vec3(renderer_t* renderer, const char* name, vec3 v) {
+    glUniform3fv(glGetUniformLocation(renderer->current_shader->id, name), 1, &v[0]);
+}
+
+void r_set_vec4(renderer_t* renderer, const char* name, vec4 v) {
+    glUniform4fv(glGetUniformLocation(renderer->current_shader->id, name), 1, &v[0]);
+}
+
+void r_set_mat4(renderer_t* renderer, const char* name, mat4 m) {
+    glUniformMatrix4fv(glGetUniformLocation(renderer->current_shader->id, name),
+        1, GL_FALSE, &m[0][0]);
 }
 
 void r_draw_mesh(const mesh_t* mesh) {

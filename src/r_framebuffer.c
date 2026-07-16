@@ -18,7 +18,9 @@ framebuffer_t* framebuffer_new(sbox_t* sbox) {
     return framebuffer;
 }
 
-void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height) {
+void framebuffer_add_texture(
+    sbox_t* sbox, framebuffer_t* framebuffer, int width, int height, texture_format_t format)
+{
     if (framebuffer->ntextures >= MAX_ATTACHMENTS) {
         error(sbox, "too many framebuffer attachments (max is %d)", MAX_ATTACHMENTS);
         return;
@@ -27,26 +29,20 @@ void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer, int width
     framebuffer->textures = realloc(framebuffer->textures,
         sizeof(texture_t*) * (framebuffer->ntextures + 1));
 
-    texture_t* texture = texture_new(sbox, width, height, NULL);
+    texture_t* texture = texture_new(sbox, width, height, NULL, format);
     framebuffer->textures[framebuffer->ntextures++] = texture;
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
-    glBindTexture(GL_TEXTURE_2D, texture->id);
-    glTexImage2D(GL_TEXTURE_2D,
-        0,
-        GL_RGBA16F,
-        width,
-        height,
-        0,
-        GL_RGBA,
-        GL_FLOAT,
-        NULL);
-    
     glFramebufferTexture2D(GL_FRAMEBUFFER,
         GL_COLOR_ATTACHMENT0 + (framebuffer->ntextures - 1),
         GL_TEXTURE_2D,
         texture->id,
         0);
+
+    if (format == TEX_FORMAT_DEPTH) {
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

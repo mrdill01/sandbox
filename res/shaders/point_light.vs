@@ -13,5 +13,5 @@ uniform mat4 projection;
 
 void main() {
     gl_Position =  vec4(a_position, 1.0);
-    vs_uv = a_uv;
+    vs_uv = a_position.xy * 0.5f + 0.5f;
 }

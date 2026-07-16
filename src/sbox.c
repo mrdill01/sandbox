@@ -12,8 +12,10 @@
 cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
 cvar_t r_scale = {"r_scale", "1.0f", true};
+cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
 cvar_t r_fov = {"r_fov", "75.0f", true};
-cvar_t a_volume = {"a_volume", "0.0f", true};
+cvar_t a_device = {"a_device", "(null)", true};
+cvar_t a_volume = {"a_volume", "0.5f", true};
 cvar_t m_sens = {"m_sens", "5.0f", true};
 
 void sbox_init(sbox_t* sbox) {
@@ -33,9 +35,13 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_width, NULL);
     cvar_register(sbox, &r_height, NULL);
     cvar_register(sbox, &r_scale, NULL);
+    cvar_register(sbox, &r_shadow_res, NULL);
     cvar_register(sbox, &r_fov, NULL);
+    cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
+
+	cfg_write(sbox, DEFAULT_CFG_PATH);
 
 	sbox->running = true;
 	sbox->now = SDL_GetPerformanceCounter();
@@ -70,7 +76,68 @@ void sbox_tick(sbox_t* sbox) {
 
 	a_tick(sbox, &sbox->audio, &sbox->player, &sbox->renderer.camera);
     map_tick(sbox, &sbox->map);
+	r_tick(sbox, &sbox->renderer);
     player_tick(sbox, &sbox->player, &sbox->renderer.camera, &sbox->map.entlist);
+}
+
+void sbox_reload_resources(sbox_t* sbox) {
+	info(sbox, "reloading resources...");
+
+	free(sbox->renderer.screen_shader);
+	sbox->renderer.screen_shader = shader_load(sbox,
+        "res/shaders/screen.vs", "res/shaders/screen.fs");
+	
+	map_free(sbox, &sbox->map);
+	map_load(sbox, &sbox->map);
+
+	info(sbox, "resources reloaded!");
+}
+
+void cfg_write(sbox_t* sbox, const char* path) {
+	info(sbox, "writing config to %s", path);
+	clear_file(sbox, path);
+
+	FILE* fp = fopen(path, "a");
+	if (!fp) {
+		error(sbox, "failed to open %s for writing", path);
+		return;
+	}
+
+	cvar_t* cvar = sbox->cvars;
+	while (cvar) {
+		fprintf(fp, "%s %s\n", cvar->name, cvar->string);
+		cvar = cvar->next;
+	}
+
+	fclose(fp);
+}
+
+void cfg_read(sbox_t* sbox, const char* path) {
+	info(sbox, "reading config from %s", path);
+
+	char* text = load_file(sbox, path);
+	const char* delim = " \r\n";
+
+	const char* name;
+	const char* value;
+	bool first = true;
+
+	for (;;) {
+		name = strtok((first) ? text : NULL, delim);
+		if (!name)
+			break;
+
+		value = strtok(NULL, delim);
+		if (!value) {
+			error(sbox, "in %s: no value for key %s", path, name);
+			continue;
+		}
+
+		first = false;
+		cvar_set(sbox, name, value);
+	}
+
+	free(text);
 }
 
 void info(sbox_t* sbox, const char* msg, ...) {
@@ -99,7 +166,7 @@ void error(sbox_t* sbox, const char* msg, ...) {
 
 char* load_file(sbox_t* sbox, const char* path) {
 	FILE* fp = fopen(path, "r");
-	if (!fp) error(sbox, "failed to read %s", path);
+	if (!fp) error(sbox, "failed to open %s for reading", path);
 	
 	fseek(fp, 0, SEEK_END);
 	size_t len = ftell(fp);
@@ -110,4 +177,10 @@ char* load_file(sbox_t* sbox, const char* path) {
 	fclose(fp);
 	text[len] = '\0';
 	return text;
+}
+
+void clear_file(sbox_t* sbox, const char* path) {
+	FILE* fp = fopen(path, "w");
+	if (!fp) error(sbox, "failed to clear file %s", path);
+	fclose(fp);
 }

@@ -5,24 +5,26 @@
 
 #include <SDL2/SDL_audio.h>
 
+#ifndef SANDBOX_NO_AUDIO
+
 static void list_audio_devices(sbox_t* sbox, const ALCchar *devices) {
     const ALCchar* device = devices;
     const ALCchar* next = devices + 1;
     size_t len = 0;
     int num = 1;
 
-    info(sbox, "available audio devices:");
+    info(sbox, "available audio devices: ");
     while (device && *device != '\0' && next && *next != '\0') {
         info(sbox, "  %d. %s", num, device);
         len = strlen(device);
-        device += (len + 1);
-        next += (len + 2);
+        device += len + 1;
+        next += len + 2;
         num++;
     }
 }
 
 void a_init(sbox_t* sbox, audio_t* audio) {
-    info(sbox, "setting up audio...");
+    info(sbox, "a_init()...");
 
     alGetError();
     
@@ -34,7 +36,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
 
     ALCenum err;
 
-    audio->device = alcOpenDevice(NULL);
+    audio->device = alcOpenDevice((strcmp(a_device.string, "(null)") == 0) ? NULL : a_device.string);
     if (!audio->device || ((err = alcGetError(NULL)) != ALC_NO_ERROR)) {
         error(sbox, "failed to open audio device: %d", err);
         return;
@@ -78,12 +80,14 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->step_sounds[PHYSMAT_METAL] = sound_load(sbox, audio, "res/sounds/step_metal.wav");
     audio->step_sounds[PHYSMAT_WOOD] = sound_load(sbox, audio, "res/sounds/step_wood.wav");
     audio->step_sounds[PHYSMAT_STONE] = sound_load(sbox, audio, "res/sounds/step_stone.wav");
+    audio->step_sounds[PHYSMAT_WATER] = sound_load(sbox, audio, "res/sounds/step_water.wav");
 
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
+    audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");
 }
 
 void a_free(sbox_t* sbox, audio_t* audio) {
-    info(sbox, "shutting down audio...");
+    info(sbox, "a_free()...");
 
     int n = 0;
     sound_t* sound = audio->sounds;
@@ -214,3 +218,16 @@ void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound) {
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to delete audio buffer: %d", err);
 }
+
+#else
+
+
+void a_init(sbox_t* sbox, audio_t* audio) {}
+void a_free(sbox_t* sbox, audio_t* audio) {}
+void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {}
+void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch) {}
+
+sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {}
+void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound) {}
+
+#endif

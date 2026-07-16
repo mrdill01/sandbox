@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define DEFAULT_CFG_PATH "settings.txt"
+
 typedef struct sbox_t sbox_t;
 
 typedef void (*on_change_t)(sbox_t*);

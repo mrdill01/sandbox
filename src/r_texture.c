@@ -6,12 +6,50 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data) {
+static uint32_t get_internal_format(sbox_t* sbox, texture_format_t format) {
+    switch (format) {
+    case TEX_FORMAT_RGB: return GL_RGB;
+    case TEX_FORMAT_RGBA: return GL_RGBA;
+    case TEX_FORMAT_RGBA_F16: return GL_RGBA16F;
+    case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
+    default: unreachable(sbox);
+    }
+
+    return 0;
+}
+
+static uint32_t get_gl_format(sbox_t* sbox, texture_format_t format) {
+    switch (format) {
+    case TEX_FORMAT_RGB: return GL_RGB;
+    case TEX_FORMAT_RGBA: return GL_RGBA;
+    case TEX_FORMAT_RGBA_F16: return GL_RGBA;
+    case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
+    default: unreachable(sbox);
+    }
+
+    return 0;
+}
+
+texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, texture_format_t format) {
     uint32_t id;
     glGenTextures(1, &id);
 
     glBindTexture(GL_TEXTURE_2D, id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    uint32_t gl_internal_format = get_internal_format(sbox, format);
+    uint32_t gl_format = get_gl_format(sbox, format);
+    uint32_t gl_type = (format == TEX_FORMAT_RGBA_F16 ||
+        format == TEX_FORMAT_DEPTH) ? GL_FLOAT : GL_UNSIGNED_BYTE;
+    
+    glTexImage2D(GL_TEXTURE_2D,
+        0,
+        gl_internal_format,
+        width,
+        height,
+        0,
+        gl_format,
+        gl_type,
+        data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -23,6 +61,7 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data) {
     texture->type = TEX_2D;
     texture->width = width;
     texture->height = height;
+    texture->format = format;
 
     texture->next = sbox->textures;
     sbox->textures = texture;
@@ -39,7 +78,7 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
         return NULL;
     }
 
-    texture_t* texture = texture_new(sbox, width, height, data);
+    texture_t* texture = texture_new(sbox, width, height, data, TEX_FORMAT_RGBA);
     stbi_image_free(data);
     return texture;
 }

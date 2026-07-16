@@ -60,30 +60,6 @@ shader_t* shader_load(sbox_t* sbox, const char* vpath, const char* fpath) {
     return shader_new(sbox, vs, vpath, fs, fpath);
 }
 
-void shader_set_int(shader_t* shader, const char* name, int i) {
-    glUniform1i(glGetUniformLocation(shader->id, name), i);
-}
-
-void shader_set_float(shader_t* shader, const char* name, float f) {
-    glUniform1f(glGetUniformLocation(shader->id, name), f);
-}
-
-void shader_set_vec2(shader_t* shader, const char* name, vec2 v) {
-    glUniform2fv(glGetUniformLocation(shader->id, name), 1, &v[0]);
-}
-
-void shader_set_vec3(shader_t* shader, const char* name, vec3 v) {
-    glUniform3fv(glGetUniformLocation(shader->id, name), 1, &v[0]);
-}
-
-void shader_set_vec4(shader_t* shader, const char* name, vec4 v) {
-    glUniform4fv(glGetUniformLocation(shader->id, name), 1, &v[0]);
-}
-
-void shader_set_mat4(shader_t* shader, const char* name, mat4 m) {
-    glUniformMatrix4fv(glGetUniformLocation(shader->id, name), 1, GL_FALSE, &m[0][0]);
-}
-
 void shader_free(sbox_t* sbox, shader_t* shader) {
     if (!shader) return;
     glDeleteProgram(shader->id);

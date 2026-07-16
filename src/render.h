@@ -9,6 +9,8 @@
 #define R_GL_MIN 3
 #define MAX_MATERIALS 4
 
+#define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+
 typedef struct sbox_t sbox_t;
 typedef enum phys_material_t phys_material_t;
 
@@ -45,20 +47,32 @@ typedef enum {
     TEX_CUBE,
 } texture_type_t;
 
+typedef enum {
+    TEX_FORMAT_RGB,
+    TEX_FORMAT_RGBA,
+    TEX_FORMAT_RGBA_F16,
+    TEX_FORMAT_DEPTH,
+} texture_format_t;
+
 typedef struct texture_t {
     uint32_t id;
     texture_type_t type;
     int width;
     int height;
+    texture_format_t format;
     struct texture_t* next;
 } texture_t;
 
 typedef struct material_t {
+    char* name;
     texture_t* albedo;
     texture_t* roughness;
     texture_t* normal;
     float tilex;
     float tiley;
+    float scrollx;
+    float scrolly;
+    float scroll_speed;
     bool is_translucent;
     bool is_water;
     int phys_mat;
@@ -81,7 +95,10 @@ typedef struct {
 } drawcall_t;
 
 typedef struct {
+    shader_t* shader;
     texture_t* font;
+    mesh_t* quad;
+    mat4 projection;
 } ui_t;
 
 typedef struct {
@@ -96,16 +113,19 @@ typedef struct {
     shader_t* world_shader;
     shader_t* viewmodel_shader;
     shader_t* ambient_light_shader;
-    shader_t* direct_light_shader;
+    shader_t* sun_light_shader;
+    shader_t* sun_shadow_shader;
+    shader_t* point_light_shader;
     shader_t* skybox_shader;
     shader_t* screen_shader;
-    shader_t* ui_shader;
+    shader_t* current_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
     material_t* default_material;
 
     framebuffer_t* gbuffer;
     framebuffer_t* screen_buffer;
+    framebuffer_t* sun_shadow_buffer;
 
     mat4 projection;
     mat4 view;
@@ -123,12 +143,6 @@ void camera_get_view_matrix(camera_t* camera, mat4 view);
 
 shader_t* shader_new(sbox_t* sbox, const char* vs, const char* vname, const char* fs, const char* fname);
 shader_t* shader_load(sbox_t* sbox, const char* vpath, const char* fpath);
-void shader_set_int(shader_t* shader, const char* name, int i);
-void shader_set_float(shader_t* shader, const char* name, float f);
-void shader_set_vec2(shader_t* shader, const char* name, vec2 v);
-void shader_set_vec3(shader_t* shader, const char* name, vec3 v);
-void shader_set_vec4(shader_t* shader, const char* name, vec4 v);
-void shader_set_mat4(shader_t* shader, const char* name, mat4 m);
 void shader_free(sbox_t* sbox, shader_t* shader);
 
 mesh_t* mesh_new(sbox_t* sbox,
@@ -138,12 +152,13 @@ mesh_t* mesh_new(sbox_t* sbox,
 mesh_t* mesh_load(sbox_t* sbox, const char* path);
 void mesh_free(sbox_t* sbox, mesh_t* mesh);
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data);
+texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, texture_format_t format);
 texture_t* texture_load(sbox_t* sbox, const char* path);
 texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]);
 void texture_free(sbox_t* sbox, texture_t* texture);
 
 material_t* material_load(sbox_t* sbox,
+    const char* name,
     const char* albedo_path,
     const char* roughness_path,
     const char* normal_path,
@@ -154,10 +169,15 @@ material_t* material_load(sbox_t* sbox,
 void material_free(sbox_t* sbox, material_t* material);
 
 framebuffer_t* framebuffer_new(sbox_t* sbox);
-void framebuffer_add_texture(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height);
+void framebuffer_add_texture(
+    sbox_t* sbox, framebuffer_t* framebuffer, int width, int height, texture_format_t format);
 void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height);
 void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer);
 void framebuffer_free(framebuffer_t* framebuffer);
+
+void ui_init(sbox_t* sbox, ui_t* ui);
+void ui_draw_tex(sbox_t* sbox, ui_t* ui, texture_t* tex, vec2 pos, vec2 size, vec3 color);
+void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer);
 
 void r_init(sbox_t* sbox, renderer_t* renderer);
 void r_free(sbox_t* sbox, renderer_t* renderer);
@@ -167,10 +187,18 @@ void r_on_resize(sbox_t* sbox);
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);
 
-void r_set_shader(shader_t* shader);
-void r_set_texture(texture_t* texture, int slot);
-void r_set_material(renderer_t* renderer, shader_t* shader, const material_t* material, int slot);
+void r_set_shader(renderer_t* renderer, shader_t* shader);
+void r_set_texture(renderer_t* renderer, texture_t* texture, int slot);
+void r_set_material(renderer_t* renderer, const material_t* material, int slot);
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer);
+
+void r_set_int(renderer_t* renderer, const char* name, int i);
+void r_set_float(renderer_t* renderer, const char* name, float f);
+void r_set_vec2(renderer_t* renderer, const char* name, vec2 v);
+void r_set_vec3(renderer_t* renderer, const char* name, vec3 v);
+void r_set_vec4(renderer_t* renderer, const char* name, vec4 v);
+void r_set_mat4(renderer_t* renderer, const char* name, mat4 m);
+
 void r_draw_mesh(const mesh_t* mesh);
 void r_render(sbox_t* sbox, renderer_t* renderer);
 

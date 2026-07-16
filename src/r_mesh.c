@@ -94,7 +94,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     }
 
     int stride = 9;
-    int num_vertices = attrib.num_faces * stride;
+    int num_vertices = attrib.num_faces * 9;
     float* vertices = malloc(num_vertices * sizeof(float));
     int num_indices = attrib.num_faces;
     uint32_t* indices = malloc(num_indices * sizeof(uint32_t));
@@ -149,6 +149,8 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         num_materials = 1;
 
     tinyobj_attrib_free(&attrib);
+    tinyobj_shapes_free(shapes, num_shapes);
+    tinyobj_materials_free(materials, num_materials);
     return mesh_new(sbox, vertices, num_vertices, indices, num_indices, num_materials, bbox);
 }
 

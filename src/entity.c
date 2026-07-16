@@ -25,6 +25,7 @@ void entity_init_prop(sbox_t* sbox,
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.prop.materials[i] = NULL;
 	}
+	entity->data.prop.is_visible = true;
 	entity->data.prop.is_viewmodel = false;
 	entity->data.prop.is_pickup = false;
 	entity->data.prop.collision_enabled = true;
@@ -32,14 +33,30 @@ void entity_init_prop(sbox_t* sbox,
     *out = entity;
 }
 
-void entity_init_light(sbox_t* sbox,
+void entity_init_sun_light(sbox_t* sbox,
+    const char* name,
+    float x, float y, float z,
+    vec3 dir, vec3 color, entity_t** out)
+{
+	if (!out) return;
+
+	entity_t* entity = NULL;
+	init_common(name, ENTITY_DIR_LIGHT, x, y, z, &entity);
+	glm_vec3_copy(color, entity->data.point_light.color);
+	glm_vec3_copy(dir, entity->data.sun_light.direction);
+	glm_vec3_norm(entity->data.sun_light.direction);
+
+	*out = entity;
+}
+
+void entity_init_point_light(sbox_t* sbox,
     const char* name, float x, float y, float z, vec3 color, entity_t** out)
 {
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	init_common(name, ENTITY_LIGHT, x, y, z, &entity);
-	glm_vec3_copy(color, entity->data.light.color);
+	init_common(name, ENTITY_POINT_LIGHT, x, y, z, &entity);
+	glm_vec3_copy(color, entity->data.point_light.color);
 
 	*out = entity;
 }
@@ -54,6 +71,8 @@ void entity_prop_set_material(sbox_t* sbox,
     material_t* material,
     int slot)
 {
+	if (!entity) return;
+	
 	if (slot >= MAX_MATERIALS) {
 		error(sbox, "material limit per entity reached (%d)", MAX_MATERIALS);
 		return;

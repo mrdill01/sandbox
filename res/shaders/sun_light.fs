@@ -24,7 +24,7 @@ struct GBufferSample {
 };
 
 struct Light {
-    vec3 position;
+    vec3 direction;
     vec3 color;
 };
 
@@ -64,27 +64,26 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
 }
 
 vec3 draw_light(vec3 view_dir, vec3 f0, GBufferSample sample) {
-    vec3 L = normalize(light.position - sample.position);
-    vec3 H = normalize(view_dir + L);
-    float distance = length(light.position - sample.position);
-    float attenuation = 1.0 / (distance * distance);
+    vec3 l = -light.direction;
+    vec3 h = normalize(view_dir + l);
+    float attenuation = 1.0;
     vec3 radiance = light.color * attenuation;
 
-    float NDF = distribution_ggx(sample.normal, H, sample.roughness);   
-    float G = geometry_smith(sample.normal, view_dir, L, sample.roughness);      
-    vec3 F = fresnel_schlick(max(dot(H, view_dir), 0.0), f0);
+    float ndf = distribution_ggx(sample.normal, h, sample.roughness);   
+    float g = geometry_smith(sample.normal, view_dir, l, sample.roughness);      
+    vec3 f = fresnel_schlick(max(dot(h, view_dir), 0.0), f0);
         
-    vec3 numerator = NDF * G * F; 
+    vec3 numerator = ndf * g * f; 
     float denominator = 4.0 * max(dot(sample.normal, view_dir), 0.0) *
-        max(dot(sample.normal, L), 0.0) + 0.0001;
+        max(dot(sample.normal, l), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
     
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - sample.metallic;	  
+    vec3 ks = f;
+    vec3 kd = vec3(1.0) - ks;
+    kd *= 1.0 - sample.metallic;	  
 
-    float NdotL = max(dot(sample.normal, L), 0.0);        
-    return (kD * sample.albedo / PI + specular) * radiance * NdotL;
+    float n_dot_l = max(dot(sample.normal, l), 0.0);        
+    return (kd * sample.albedo / PI + specular) * radiance * n_dot_l;
 }
 
 void main() {

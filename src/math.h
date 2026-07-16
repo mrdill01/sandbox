@@ -31,6 +31,7 @@ float interp_to(float current, float target, float speed, float dt);
 float random(float start, float end);
 
 void bbox_get_center(const bbox_t* bbox, vec3 center);
+void bbox_get_size(const bbox_t* bbox, vec3 size);
 bbox_t bbox_translate(bbox_t* bbox, vec3 position);
 bbox_t bbox_scale(bbox_t* bbox, vec3 scale);
 bool bbox_point_intersects(const bbox_t* bbox, vec3 point);

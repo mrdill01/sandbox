@@ -8,12 +8,14 @@
 
 typedef enum {
     ENTITY_PROP,
-    ENTITY_LIGHT,
+    ENTITY_DIR_LIGHT,
+    ENTITY_POINT_LIGHT,
 } entity_type_t;
 
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    bool is_visible;
     bool is_viewmodel;
     bool is_pickup;
     bool collision_enabled;
@@ -21,7 +23,12 @@ typedef struct {
 
 typedef struct {
     vec3 color;
-} entity_light_t;
+    vec3 direction;
+} entity_sun_light_t;
+
+typedef struct {
+    vec3 color;
+} entity_point_light_t;
 
 typedef struct {
     const char* name;
@@ -32,7 +39,8 @@ typedef struct {
 
     union {
         entity_prop_t prop;
-        entity_light_t light;
+        entity_sun_light_t sun_light;
+        entity_point_light_t point_light;
     } data;
 } entity_t;
 
@@ -43,7 +51,11 @@ typedef struct entlist_t {
 
 void entity_init_prop(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
-void entity_init_light(sbox_t* sbox,
+void entity_init_sun_light(sbox_t* sbox,
+    const char* name,
+    float x, float y, float z,
+    vec3 dir, vec3 color, entity_t** out);
+void entity_init_point_light(sbox_t* sbox,
     const char* name, float x, float y, float z, vec3 color, entity_t** out);
 void entity_free(sbox_t* sbox, entity_t* entity);
 

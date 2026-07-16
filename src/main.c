@@ -125,6 +125,11 @@ void tick(sbox_t* sbox) {
 
     if (sbox->keys[SDL_SCANCODE_ESCAPE])
         sbox->running = false;
+
+    if (sbox->keys[SDL_SCANCODE_F2]) {
+        sbox->keys[SDL_SCANCODE_F2] = false;
+        sbox_reload_resources(sbox);
+    }
 }
 
 void shutdown(sbox_t* sbox) {

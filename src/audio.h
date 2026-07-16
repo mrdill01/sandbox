@@ -25,6 +25,7 @@ typedef struct {
     sound_t* jump_land_sounds[PHYSMAT_MAX];
     sound_t* step_sounds[PHYSMAT_MAX];
     sound_t* enter_water_sound;
+    sound_t* exit_water_sound;
 } audio_t;
 
 void a_init(sbox_t* sbox, audio_t* audio);

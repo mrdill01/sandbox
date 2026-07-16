@@ -1,8 +1,11 @@
 #include "player.h"
 #include "sbox.h"
+#include "entity.h"
 
+#define P_HEIGHT 1.5f
+#define P_HEIGHT_CROUCH 0.75f
 #define P_GRAVITY 9.81f
-#define P_JUMPFORCE 3.2f
+#define P_JUMPFORCE 3.5f
 #define P_MAXSPEED_WALK 3.2f
 #define P_MAXSPEED_SPRINT 16.0f
 #define P_MAXSPEED_CROUCH 1.8f
@@ -12,6 +15,8 @@
 #define P_AIR_STOPSPEED 2.0f
 #define P_FRICTION 5.0f
 #define P_AIR_CONTROL 0.0f
+#define P_THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
+#define P_MAX_STEP_DOWN 0.5f
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
@@ -23,9 +28,13 @@ void player_init(sbox_t* sbox, player_t* player) {
     glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->move_input);
     player->target_speed = get_max_speed(sbox, player);
     player->is_grounded = true;
+    player->is_jumping = false;
     player->ground_mat = PHYSMAT_NONE;
+    player->fall_distance = 0.0f;
     player->water_level = 0.0f;
     player->last_step_time = 0.0f;
+    player->pressed_jump = false;
+    player->is_thirdperson = false;
     player->height = get_height(sbox, player);
 }
 
@@ -48,8 +57,8 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
 static float get_height(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
     case MOVE_WALK:
-    case MOVE_SPRINT: return 1.6f;
-    case MOVE_CROUCH: return 0.8f;
+    case MOVE_SPRINT: return P_HEIGHT;
+    case MOVE_CROUCH: return P_HEIGHT_CROUCH;
     default: unreachable(sbox);
     }
 
@@ -76,10 +85,10 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
         camera_add_pitch(camera, m_sens.value);
 
     if (sbox->keys[SDL_SCANCODE_LEFT])
-        camera_add_yaw(camera, m_sens.value);
+        camera_add_yaw(camera, -m_sens.value);
 
     if (sbox->keys[SDL_SCANCODE_RIGHT])
-        camera_add_yaw(camera, -m_sens.value);
+        camera_add_yaw(camera, m_sens.value);
     
     set_move_mode(player, MOVE_WALK);
 
@@ -95,12 +104,17 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
         glm_vec3_sub(player->move_input, camera->forward, player->move_input);
 
     if (sbox->keys[SDL_SCANCODE_D])
-        glm_vec3_add(player->move_input, camera->right, player->move_input);
-
-    if (sbox->keys[SDL_SCANCODE_A])
         glm_vec3_sub(player->move_input, camera->right, player->move_input);
 
+    if (sbox->keys[SDL_SCANCODE_A])
+        glm_vec3_add(player->move_input, camera->right, player->move_input);
+
     player->pressed_jump = sbox->keys[SDL_SCANCODE_SPACE];
+
+    if (sbox->keys[SDL_SCANCODE_C]) {
+        sbox->keys[SDL_SCANCODE_C] = false;
+        player->is_thirdperson = !player->is_thirdperson;
+    }
 }
 
 void apply_friction(sbox_t* sbox, player_t* player) {
@@ -149,6 +163,7 @@ void move_ground(sbox_t* sbox, player_t* player) {
 
     if (player->pressed_jump) {
         player->velocity[1] = P_JUMPFORCE;
+        player->is_jumping = true;
     }
 }
 
@@ -194,6 +209,8 @@ static void hit_ground(sbox_t* sbox, player_t* player) {
     sound_t* sound = sbox->audio.jump_land_sounds[player->ground_mat];
     a_play(sbox, &sbox->audio, sound, random(0.85f, 1.15f));
     player->last_step_time = sbox->time;
+    player->fall_distance = 0.0f;
+    player->is_jumping = false;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
@@ -206,20 +223,16 @@ static void enter_water(sbox_t* sbox, player_t* player) {
 }
 
 static void exit_water(sbox_t* sbox, player_t* player) {
-    
+    a_play(sbox, &sbox->audio, sbox->audio.exit_water_sound, random(0.9f, 1.1f));
 }
 
-void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
-    for (int i = 0; i < 3; i++)
-        player->position[i] += player->velocity[i] * sbox->dt;
-
+static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, -1.0f, 0.0f};
     float max_distance = get_height(sbox, player);
     trace_result_t trace;
     
-    bool was_grounded = player->is_grounded;
     bool was_in_water = player->water_level > 0.0f;
 
     if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
@@ -245,6 +258,32 @@ void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     }
 }
 
+static void trace_suction(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
+    if (player->is_jumping || player->fall_distance >= P_MAX_STEP_DOWN) return;
+    
+    vec3 start;
+    player_get_bottom_position(sbox, player, start);
+    vec3 dir = {0.0f, -1.0f, 0.0f};
+    float max_distance = P_MAX_STEP_DOWN;
+    trace_result_t trace;
+    
+    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+        player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
+    }
+}
+
+void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+    for (int i = 0; i < 3; i++)
+        player->position[i] += player->velocity[i] * sbox->dt;
+    
+    if (!player->is_grounded && player->velocity[1] < 0.0f)
+        player->fall_distance += player->velocity[1] * sbox->dt;
+
+    bool was_grounded = player->is_grounded;
+    trace_ground(sbox, player, entlist, was_grounded);
+    trace_suction(sbox, player, entlist, was_grounded);
+}
+
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     player->height = get_height(sbox, player) / 2.0f;
 
@@ -252,7 +291,35 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera->position[1] = player->position[1] + player->height;
     camera->position[2] = player->position[2];
 
+    if (player->is_thirdperson) {
+        vec3 dir;
+        glm_vec3_copy(camera->forward, dir);
+        glm_vec3_inv(dir);
+
+        float camera_distance = P_THIRDPERSON_CAMERA_BOOM_LENGTH;
+        trace_result_t trace;
+
+        if (phys_line_trace(camera->position, dir, camera_distance, &sbox->map.entlist, &trace)) {
+            camera_distance = trace.distance - 0.1f;
+        }
+
+        vec3 offset;
+        glm_vec3_copy(camera->forward, offset);
+        glm_vec3_scale(offset, -camera_distance, offset);
+        glm_vec3_add(camera->position, offset, camera->position);
+    }
+
     camera_tick(sbox, camera);
+}
+
+static void tick_mesh(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+    entity_t* mesh = entlist_find_by_name(sbox, entlist, "player_thirdperson");
+    mesh->data.prop.is_visible = player->is_thirdperson;
+    mesh->position[0] = player->position[0];
+    mesh->position[1] = player->position[1] - get_height(sbox, player) / 2.0f;
+    mesh->position[2] = player->position[2];
+
+    glm_quat(mesh->rotation, rad(-sbox->renderer.camera.angles[1]), 0.0f, 1.0f, 0.0f);
 }
 
 static void tick_step_sounds(sbox_t* sbox, player_t* player) {
@@ -268,6 +335,12 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     if (play_sound) {        
         sound_t* sound = sbox->audio.step_sounds[player->ground_mat];
         a_play(sbox, &sbox->audio, sound, random(0.85f, 1.15f));
+
+        if (player->water_level > 0.0f) {
+            sound = sbox->audio.step_sounds[PHYSMAT_WATER];
+            a_play(sbox, &sbox->audio, sound, random(0.85f, 1.15f));
+        }
+
         player->last_step_time = sbox->time;
     }
 }
@@ -276,8 +349,11 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     tick_input(sbox, player, camera);
     move_and_collide(sbox, player, entlist);
 
-    player->target_speed = glm_vec3_norm(player->move_input);
-    player->target_speed *= get_max_speed(sbox, player);
+    player->target_speed = 0.0f;
+    if (glm_vec3_dot(player->move_input, player->move_input) > 0.0f) {
+        player->target_speed = glm_vec3_norm(player->move_input);
+        player->target_speed *= get_max_speed(sbox, player);
+    }
 
     if (player->is_grounded)
         move_ground(sbox, player);
@@ -285,6 +361,7 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
         move_air(sbox, player);
 
     tick_camera(sbox, player, camera);
+    tick_mesh(sbox, player, entlist);
     tick_step_sounds(sbox, player);
 }
 

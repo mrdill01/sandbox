@@ -11,6 +11,8 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* crate3_mesh = mesh_load(sbox, "res/meshes/crate3.obj");
     mesh_t* crate4_mesh = mesh_load(sbox, "res/meshes/crate4.obj");
     mesh_t* wood_panel_mesh = mesh_load(sbox, "res/meshes/wood_panel.obj");
+    mesh_t* wood_frame_mesh = mesh_load(sbox, "res/meshes/wood_frame.obj");
+    mesh_t* wood_frame_doorway_mesh = mesh_load(sbox, "res/meshes/wood_frame_doorway.obj");
     mesh_t* metal_panel_mesh = mesh_load(sbox, "res/meshes/metal_panel.obj");
     mesh_t* barrel_mesh = mesh_load(sbox, "res/meshes/barrel.obj");
     mesh_t* cactus_mesh = mesh_load(sbox, "res/meshes/cactus.obj");
@@ -25,146 +27,180 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* water_mesh = mesh_load(sbox, "res/meshes/water.obj");
     mesh_t* car_mesh = mesh_load(sbox, "res/meshes/car.obj");
     mesh_t* helicopter_mesh = mesh_load(sbox, "res/meshes/helicopter.obj");
+    mesh_t* ship_mesh = mesh_load(sbox, "res/meshes/ship.obj");
+    mesh_t* dock_mesh = mesh_load(sbox, "res/meshes/dock.obj");
     mesh_t* tommy_gun_mesh = mesh_load(sbox, "res/meshes/tommy_gun.obj");
     mesh_t* vinyl_mesh = mesh_load(sbox, "res/meshes/vinyl.obj");
+    mesh_t* player_mesh = mesh_load(sbox, "res/meshes/player.obj");
     
     material_t* crate = material_load(sbox,
-        "res/textures/crate.png",
-        "res/textures/crate_r.png",
-        "res/textures/crate_n.png",
+        "crate",
+        "res/textures/materials/crate.png",
+        "res/textures/materials/crate_r.png",
+        "res/textures/materials/crate_n.png",
         1, 1, false, PHYSMAT_WOOD);
 
     material_t* crate2 = material_load(sbox,
-        "res/textures/crate2.png",
-        "res/textures/crate2_r.png",
-        "res/textures/crate2_n.png",
+        "crate2",
+        "res/textures/materials/crate2.png",
+        "res/textures/materials/crate2_r.png",
+        "res/textures/materials/crate2_n.png",
         1, 1, false, PHYSMAT_WOOD);
 
     material_t* container = material_load(sbox,
-        "res/textures/container.png",
-        "res/textures/container_r.png",
-        "res/textures/container_n.png",
+        "container",
+        "res/textures/materials/container.png",
+        "res/textures/materials/container_r.png",
+        "res/textures/materials/container_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     material_t* chainlink = material_load(sbox,
-        "res/textures/chainlink.png",
-        "res/textures/chainlink_r.png",
-        "res/textures/chainlink_n.png",
+        "chainlink",
+        "res/textures/materials/chainlink.png",
+        "res/textures/materials/chainlink_r.png",
+        "res/textures/materials/chainlink_n.png",
         20, 20, true, PHYSMAT_METAL);
 
     material_t* metal = material_load(sbox,
-        "res/textures/metal.png",
-        "res/textures/metal_r.png",
-        "res/textures/metal_n.png",
+        "metal",
+        "res/textures/materials/metal.png",
+        "res/textures/materials/metal_r.png",
+        "res/textures/materials/metal_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     material_t* metal2 = material_load(sbox,
-        "res/textures/metal2.png",
-        "res/textures/metal2_r.png",
-        "res/textures/metal2_n.png",
+        "metal2",
+        "res/textures/materials/metal2.png",
+        "res/textures/materials/metal2_r.png",
+        "res/textures/materials/metal2_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     material_t* metal3 = material_load(sbox,
-        "res/textures/metal3.png",
-        "res/textures/metal3_r.png",
-        "res/textures/metal3_n.png",
+        "metal3",
+        "res/textures/materials/metal3.png",
+        "res/textures/materials/metal3_r.png",
+        "res/textures/materials/metal3_n.png",
         1, 1, false, PHYSMAT_METAL);
 
+    material_t* concrete = material_load(sbox,
+        "concrete",
+        "res/textures/materials/concrete.png",
+        "res/textures/materials/concrete_r.png",
+        "res/textures/materials/concrete_n.png",
+        1, 1, false, PHYSMAT_STONE);
+
     material_t* barrel = material_load(sbox,
-        "res/textures/barrel.png",
-        "res/textures/barrel_r.png",
-        "res/textures/barrel_n.png",
+        "barrel",
+        "res/textures/materials/barrel.png",
+        "res/textures/materials/barrel_r.png",
+        "res/textures/materials/barrel_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     material_t* barrel_top = material_load(sbox,
-        "res/textures/barrel_top.png",
-        "res/textures/barrel_top_r.png",
-        "res/textures/barrel_top_n.png",
+        "barrel_top",
+        "res/textures/materials/barrel_top.png",
+        "res/textures/materials/barrel_top_r.png",
+        "res/textures/materials/barrel_top_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     material_t* wood = material_load(sbox,
-        "res/textures/wood.png",
-        "res/textures/wood_r.png",
-        "res/textures/wood_n.png",
+        "wood",
+        "res/textures/materials/wood.png",
+        "res/textures/materials/wood_r.png",
+        "res/textures/materials/wood_n.png",
         1, 1, false, PHYSMAT_WOOD);
 
     material_t* wood2 = material_load(sbox,
-        "res/textures/wood2.png",
-        "res/textures/wood2_r.png",
-        "res/textures/wood2_n.png",
+        "wood2",
+        "res/textures/materials/wood2.png",
+        "res/textures/materials/wood2_r.png",
+        "res/textures/materials/wood2_n.png",
         2, 2, false, PHYSMAT_WOOD);
 
     material_t* wood3 = material_load(sbox,
-        "res/textures/wood3.png",
-        "res/textures/wood3_r.png",
-        "res/textures/wood3_n.png",
+        "wood3",
+        "res/textures/materials/wood3.png",
+        "res/textures/materials/wood3_r.png",
+        "res/textures/materials/wood3_n.png",
         1, 1, false, PHYSMAT_WOOD);
 
     material_t* wood4 = material_load(sbox,
-        "res/textures/wood4.png",
-        "res/textures/wood4_r.png",
-        "res/textures/wood4_n.png",
+        "wood4",
+        "res/textures/materials/wood4.png",
+        "res/textures/materials/wood4_r.png",
+        "res/textures/materials/wood4_n.png",
         2, 2, false, PHYSMAT_METAL);
 
     material_t* wood5 = material_load(sbox,
-        "res/textures/wood5.png",
-        "res/textures/wood5_r.png",
-        "res/textures/wood5_n.png",
+        "wood5",
+        "res/textures/materials/wood5.png",
+        "res/textures/materials/wood5_r.png",
+        "res/textures/materials/wood5_n.png",
         1, 1, false, PHYSMAT_WOOD);
 
     material_t* brick = material_load(sbox,
-        "res/textures/brick.png",
-        "res/textures/brick_r.png",
-        "res/textures/brick_n.png",
+        "brick",
+        "res/textures/materials/brick.png",
+        "res/textures/materials/brick_r.png",
+        "res/textures/materials/brick_n.png",
         6, 6, false, PHYSMAT_STONE);
 
     material_t* brick2 = material_load(sbox,
-        "res/textures/brick2.png",
-        "res/textures/brick2_r.png",
-        "res/textures/brick2_n.png",
+        "brick2",
+        "res/textures/materials/brick2.png",
+        "res/textures/materials/brick2_r.png",
+        "res/textures/materials/brick2_n.png",
         4, 4, false, PHYSMAT_STONE);
 
     material_t* tile = material_load(sbox,
-        "res/textures/tile.png",
-        "res/textures/tile_r.png",
-        "res/textures/tile_n.png",
+        "tile",
+        "res/textures/materials/tile.png",
+        "res/textures/materials/tile_r.png",
+        "res/textures/materials/tile_n.png",
         2, 2, false, PHYSMAT_STONE);
 
     material_t* tile2 = material_load(sbox,
-        "res/textures/tile2.png",
-        "res/textures/tile2_r.png",
-        "res/textures/tile2_n.png",
+        "tile2",
+        "res/textures/materials/tile2.png",
+        "res/textures/materials/tile2_r.png",
+        "res/textures/materials/tile2_n.png",
         1, 1, false, PHYSMAT_STONE);
 
     material_t* cactus = material_load(sbox,
-        "res/textures/cactus.png",
-        "res/textures/cactus_r.png",
-        "res/textures/cactus_n.png",
+        "cactus",
+        "res/textures/materials/cactus.png",
+        "res/textures/materials/cactus_r.png",
+        "res/textures/materials/cactus_n.png",
         3, 3, false, PHYSMAT_VEGETATION);
 
     material_t* rock = material_load(sbox,
-        "res/textures/rock.png",
-        "res/textures/rock_r.png",
-        "res/textures/rock_n.png",
+        "rock",
+        "res/textures/materials/rock.png",
+        "res/textures/materials/rock_r.png",
+        "res/textures/materials/rock_n.png",
         1, 1, false, PHYSMAT_STONE);
 
     material_t* stone = material_load(sbox,
-        "res/textures/stone.png",
-        "res/textures/stone_r.png",
-        "res/textures/stone_n.png",
+        "stone",
+        "res/textures/materials/stone.png",
+        "res/textures/materials/stone_r.png",
+        "res/textures/materials/stone_n.png",
         1, 1, false, PHYSMAT_STONE);
 
     material_t* water = material_load(sbox,
-        "res/textures/water.png",
-        "res/textures/water_r.png",
-        "res/textures/water_n.png",
+        "water",
+        "res/textures/materials/water.png",
+        "res/textures/materials/water_r.png",
+        "res/textures/materials/water_n.png",
         1, 1, false, PHYSMAT_WATER);
     water->is_water = true;
+    water->scroll_speed = 0.000025f;
 
     material_t* light = material_load(sbox,
-        "res/textures/light.png",
-        "res/textures/light_r.png",
-        "res/textures/light_n.png",
+        "light",
+        "res/textures/materials/light.png",
+        "res/textures/materials/light_r.png",
+        "res/textures/materials/light_n.png",
         1, 1, false, PHYSMAT_METAL);
 
     entity_t* entity;
@@ -184,19 +220,31 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(5)", 16.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_prop(sbox, "floor(5)", 24.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(6)", 8.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_init_prop(sbox, "floor(6)", 24.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood2, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(7)", 16.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(8)", 24.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(9)", 8.0f, -0.5f, -8.0f, floor_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(7)", 8.0f, -0.5f, 0.0f,floor_mesh,  &entity);
+    entity_init_prop(sbox, "floor(10)", 8.0f, -0.5f, 0.0f,floor_mesh,  &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(8)", 8.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_init_prop(sbox, "floor(11)", 8.0f, -0.5f, 8.0f, floor_mesh, &entity);
     entity_prop_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -283,6 +331,115 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(-45.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
+    entity_init_prop(sbox, "wood frame", 16.0f + 9.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -5.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(3)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(4)", 16.0f + 9.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(5)", 16.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(6)", 16.0f, -0.5f, -5.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame doorway", 16.0f, -0.5f, -2.0f,
+        wood_frame_doorway_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(8)", 16.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+    
+    entity_init_prop(sbox, "wood frame(9)", 17.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(9)", 20.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(9)", 23.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(9)", 17.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame doorway(2)", 20.5f, -0.5f, -9.5f,
+        wood_frame_doorway_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "wood frame(9)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_prop_set_material(sbox, entity, wood5, 1);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entity->data.prop.collision_enabled = false;
+    entlist_add(sbox, &map->entlist, entity);
+
+    for (double x = 16.5f + 1.5f + 1.0f; x < 24.0f + 1.5f + 1.0f; x += 3.0f) {
+        for (double z = -9.5f + 1.5f; z < 2.5f + 1.5f; z += 3.0f) {
+            entity_init_prop(sbox, "wood frame(ceiling)", x, 2.5f, z,
+                wood_frame_mesh, &entity);
+            entity_prop_set_material(sbox, entity, wood, 0);
+            entity_prop_set_material(sbox, entity, wood5, 1);
+            glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
+            glm_quat(entity->rotation, rad(90.0f), 0.0f, 0.0f, 1.0f);
+            entity->data.prop.collision_enabled = false;
+            entlist_add(sbox, &map->entlist, entity);
+        }
+    }
+
     entity_init_prop(sbox, "stone wall", 12.0f, -0.5f, -11.0f, stone_wall_mesh, &entity);
     entity_prop_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
@@ -346,8 +503,16 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, water, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "underwater", 0.0f, -2.5f, 0.0f, water_mesh, &entity);
+    entity_init_prop(sbox, "underwater", 0.0f, -2.4f, 0.0f, water_mesh, &entity);
     entity_prop_set_material(sbox, entity, tile, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "ship", 0.0f, -0.5f, -32.0f, ship_mesh, &entity);
+    entity_prop_set_material(sbox, entity, metal, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "dock", 4.0f, -1.5f, -12.0f, dock_mesh, &entity);
+    entity_prop_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "tommy gun", 1.5f, 0.7f, 0.0f, tommy_gun_mesh, &entity);
@@ -360,30 +525,33 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity->data.prop.is_pickup = true;
     entlist_add(sbox, &map->entlist, entity);
 
-    vec3 color = {32.0f, 32.0f, 32.0f};
-    entity_init_light(sbox, "point light", 0.0f, 1.5f, -2.5f, color, &entity);
+    vec3 sun_dir = {-0.6f, -0.6f, 0.4f};
+    vec3 sun_color = {6.0f, 3.0f, 2.0f};
+    entity_init_sun_light(sbox, "sun", 0.0f, 0.0f, 0.0f, sun_dir, sun_color, &entity);
     entlist_add(sbox, &map->entlist, entity);
+
+    /*vec3 color = {32.0f, 32.0f, 32.0f};
+    entity_init_point_light(sbox, "point light", 0.0f, 1.5f, -2.5f, color, &entity);
+    entlist_add(sbox, &map->entlist, entity);*/
 
     entity_init_prop(sbox, "streetlight", 0.0f, -0.5f, -2.5f, streetlight_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
     entity_prop_set_material(sbox, entity, light, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    vec3 color2 = {0.0f, 32.0f, 32.0f};
-    entity_init_light(sbox, "point light(2)", 8.0f, 3.5f, 8.0f, color2, &entity);
-    entlist_add(sbox, &map->entlist, entity);
-
-    vec3 color3 = {32.0f, 32.0f, 0.0f};
-    entity_init_light(sbox, "point light(3)", 0.0f, 1.5f, -8.0f, color3, &entity);
+    entity_init_prop(sbox, "player_thirdperson", 0.0f, 0.0f, 0.0f, player_mesh, &entity);
+    entity_prop_set_material(sbox, entity, cactus, 0);
+    entity->data.prop.is_visible = false;
+    entity->data.prop.collision_enabled = false;
     entlist_add(sbox, &map->entlist, entity);
 
     const char* paths[6] = {
-        "res/textures/sky_right.png",
-        "res/textures/sky_left.png",
-        "res/textures/sky_top.png",
-        "res/textures/sky_bottom.png",
-        "res/textures/sky_front.png",
-        "res/textures/sky_back.png",
+        "res/textures/skies/sky_right.png",
+        "res/textures/skies/sky_left.png",
+        "res/textures/skies/sky_top.png",
+        "res/textures/skies/sky_bottom.png",
+        "res/textures/skies/sky_front.png",
+        "res/textures/skies/sky_back.png",
     };
     map->skybox = texture_load_cubemap(sbox, paths);
 }
@@ -396,6 +564,7 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
         if (entity->type != ENTITY_PROP) continue;
+        if (!entity->data.prop.is_visible) continue;
         if (entity->data.prop.is_viewmodel) continue;
 
         drawcall_t drawcall;
