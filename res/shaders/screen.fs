@@ -32,7 +32,7 @@ vec3 add_fog(vec3 color, float depth) {
 }
 
 vec3 vignette(vec3 color, vec2 uv, float radius, float smoothness) {
-	float difference = radius - distance(uv, vec2(0.5, 0.5));
+	float difference = radius - distance(uv, vec2(0.5f, 0.5f));
 	float vignette = smoothstep(-smoothness, smoothness, difference);
     return mix(color, color * vec3(vignette), 0.5f);
 }

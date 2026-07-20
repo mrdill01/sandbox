@@ -20,6 +20,10 @@ float clip(float x, float a, float b) {
     return min(max(x, a), b);
 }
 
+float lerp(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
 float interp_to(float current, float target, float speed, float dt) {
     return current + (target - current) * (speed * dt);
 }

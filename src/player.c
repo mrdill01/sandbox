@@ -18,6 +18,7 @@
 #define P_FRICTION_WATER 2.0f
 #define P_AIR_CONTROL 0.0f
 #define P_THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
+#define P_INTERP_HEIGHT_SPEED 5.5f
 #define P_MAX_INTERACT_DISTANCE 8.0f
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
@@ -40,6 +41,7 @@ void player_init(sbox_t* sbox, player_t* player) {
     player->head_blocked = false;
     player->is_thirdperson = false;
     player->height = get_height(sbox, player);
+    inventory_init(sbox, &player->inventory);
     edit_init(sbox, &player->editor);
 }
 
@@ -82,7 +84,17 @@ static float get_step_rate(sbox_t* sbox, player_t* player) {
     return speed;
 }
 
+static void reset_input(sbox_t* sbox, player_t* player) {
+    glm_vec3_zero(player->move_input);
+    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->target_dir);
+    player->buttons = 0;
+}
+
 static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
+    reset_input(sbox, player);
+    if (sbox->ui_state != UI_STATE_IN_GAME)
+        return;
+    
     if (sbox->keys[SDL_SCANCODE_Z])
         camera_add_pitch(camera, -m_sens.value);
 
@@ -95,7 +107,11 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
     if (sbox->keys[SDL_SCANCODE_RIGHT])
         camera_add_yaw(camera, m_sens.value);
 
-    glm_vec3_zero(player->move_input);
+    /*if (sbox->mxdt != 0.0f)
+        camera_add_yaw(camera, sbox->mxdt * m_sens.value);
+
+    if (sbox->mydt != 0.0f)
+        camera_add_pitch(camera, sbox->mydt * -m_sens.value);*/
     
     if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP]) {
         player->move_input[2] += 1.0f;
@@ -134,6 +150,31 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
     if (sbox->keys[SDL_SCANCODE_C]) {
         sbox->keys[SDL_SCANCODE_C] = false;
         player->is_thirdperson = !player->is_thirdperson;
+    }
+
+    if (sbox->keys[SDL_SCANCODE_1]) {
+        sbox->keys[SDL_SCANCODE_1] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 0);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_2]) {
+        sbox->keys[SDL_SCANCODE_2] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 1);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_3]) {
+        sbox->keys[SDL_SCANCODE_3] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 2);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_4]) {
+        sbox->keys[SDL_SCANCODE_4] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 3);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_I]) {
+        sbox->keys[SDL_SCANCODE_I] = false;
+        inventory_toggle(sbox, &player->inventory);
     }
 
     if (sbox->keys[SDL_SCANCODE_F3]) {
@@ -210,7 +251,9 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     
     float y_speed = player->velocity[1];
     player->velocity[1] = 0.0f;
-    float speed = glm_vec3_norm(player->velocity);
+    float speed = 0.0f;
+    if (glm_vec3_dot(player->velocity, player->velocity) > 0.0f)
+        speed = glm_vec3_norm(player->velocity);
 
     float dot = glm_vec3_dot(player->velocity, player->target_dir);
     float k = 32;
@@ -252,6 +295,7 @@ static void hit_ground(sbox_t* sbox, player_t* player) {
     player->last_step_time = sbox->time;
     player->fall_distance = 0.0f;
     player->is_jumping = false;
+    player->height -= 0.3f;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
@@ -367,7 +411,8 @@ static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist)
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera_tick(sbox, camera);
 
-    player->height = get_height(sbox, player) / 2.0f;
+    player->height = interp_to(player->height,
+        get_height(sbox, player) / 2.0f, P_INTERP_HEIGHT_SPEED, sbox->dt);
 
     camera->position[0] = player->position[0];
     camera->position[1] = player->position[1] + player->height;
@@ -460,11 +505,6 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     }
 }
 
-static void reset_input(sbox_t* sbox, player_t* player) {
-    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->target_dir);
-    player->buttons = 0;
-}
-
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
     tick_input(sbox, player, camera);
 
@@ -472,10 +512,8 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     else set_move_mode(player, MOVE_WALK);
 
     player->target_speed = 0.0f;
-    if (glm_vec3_dot(player->target_dir, player->target_dir) > 0.0f) {
-        player->target_speed = glm_vec3_norm(player->target_dir);
-        player->target_speed *= get_max_speed(sbox, player);
-    }
+    if (glm_vec3_dot(player->target_dir, player->target_dir) > 0.0f)
+        player->target_speed = glm_vec3_norm(player->target_dir) * get_max_speed(sbox, player);
 
     move_and_collide(sbox, player, entlist);
 

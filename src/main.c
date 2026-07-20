@@ -90,6 +90,11 @@ bool init(sbox_t* sbox) {
 }
 
 void tick(sbox_t* sbox) {
+    for (int i = 0; i < NUM_BUTTONS; i++)
+        sbox->prev_buttons[i] = sbox->buttons[i];
+    sbox->mxdt = 0.0f;
+    sbox->mydt = 0.0f;
+
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
@@ -114,8 +119,18 @@ void tick(sbox_t* sbox) {
             break;
         }
         case SDL_MOUSEMOTION: {
+            sbox->mx = e.motion.x;
+            sbox->my = e.motion.y;
             sbox->mxdt = e.motion.xrel;
             sbox->mydt = e.motion.yrel;
+            break;
+        }
+        case SDL_MOUSEBUTTONDOWN: {
+            sbox->buttons[e.button.button] = true;
+            break;
+        }
+        case SDL_MOUSEBUTTONUP: {
+            sbox->buttons[e.button.button] = false;
             break;
         }
         }
@@ -123,8 +138,11 @@ void tick(sbox_t* sbox) {
 
     sbox_tick(sbox);
 
-    if (sbox->keys[SDL_SCANCODE_ESCAPE])
-        sbox->running = false;
+    if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
+        sbox->keys[SDL_SCANCODE_ESCAPE] = false;
+        if (sbox->ui_state == UI_STATE_IN_GAME) sbox->ui_state = UI_STATE_PAUSE_MENU;
+        else sbox->ui_state = UI_STATE_IN_GAME;
+    }
 
     if (sbox->keys[SDL_SCANCODE_F2]) {
         sbox->keys[SDL_SCANCODE_F2] = false;

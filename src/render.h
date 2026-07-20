@@ -12,6 +12,7 @@
 #define FPS_SAMPLE_RATE 45
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+#define COLOR_BLACK (vec4){0.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_MAGENTA (vec4){1.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_RED (vec4){1.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_YELLOW (vec4){1.0f, 1.0f, 0.0f, 1.0f}
@@ -105,10 +106,19 @@ typedef struct {
 } line_t;
 
 typedef struct {
+    vec3 position;
+    mesh_t* mesh;
+} particle_t;
+
+typedef struct {
     shader_t* shader;
     texture_t* font;
     texture_t* button;
+    texture_t* button_pressed;
     texture_t* crosshair;
+    texture_t* item_slot;
+    texture_t* item_slot_active;
+    texture_t* pixel;
     mesh_t* quad;
     mat4 projection;
 } ui_t;
@@ -123,6 +133,13 @@ typedef struct {
     float dist_to_camera;
     bool is_translucent;
 } drawcall_t;
+
+typedef struct {
+    int draw_calls;
+    int tris;
+    int textures;
+    int materials;
+} render_stats_t;
 
 typedef struct {
     camera_t camera;
@@ -145,6 +162,7 @@ typedef struct {
     shader_t* point_light_shader;
     shader_t* forward_shader;
     shader_t* skybox_shader;
+    shader_t* partfx_shader;
     shader_t* screen_shader;
     shader_t* line_shader;
     shader_t* active_shader;
@@ -162,6 +180,8 @@ typedef struct {
     line_t lines[MAX_LINES];
 
     ui_t ui;
+
+    render_stats_t stats;
 } renderer_t;
 
 void camera_init(sbox_t* sbox, camera_t* camera);
@@ -217,16 +237,25 @@ void line_add_box(sbox_t* sbox,
 void line_render(sbox_t* sbox, renderer_t* renderer);
 
 void ui_init(sbox_t* sbox, ui_t* ui);
+
 void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
-    texture_t* texture,
+    const texture_t* texture,
     vec2 dest_pos, vec2 dest_size,
     vec2 src_pos, vec2 src_size,
     vec4 color);
-void ui_draw_texture(sbox_t* sbox, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color);
+void ui_draw_texture(
+    sbox_t* sbox, ui_t* ui, const texture_t* texture, vec2 pos, vec2 size, vec4 color);
+
 void ui_draw_text(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
 void ui_draw_text_shadow(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
+void ui_draw_text_thick(
+    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, int w, vec4 color);
+float ui_measure_text(const char* message, float size);
+
+bool ui_draw_button(
+    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, vec2 size);
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer);
 
 void r_init(sbox_t* sbox, renderer_t* renderer);
@@ -252,7 +281,8 @@ void r_set_vec3(sbox_t* sbox, renderer_t* renderer, const char* name, vec3 v);
 void r_set_vec4(sbox_t* sbox, renderer_t* renderer, const char* name, vec4 v);
 void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m);
 
-void r_draw_mesh(const mesh_t* mesh);
+void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh);
 void r_render(sbox_t* sbox, renderer_t* renderer);
+void r_reset_stats(sbox_t* sbox, renderer_t* renderer);
 
 #endif

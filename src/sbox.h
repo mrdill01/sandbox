@@ -28,7 +28,13 @@
 #define unreachable(sbox) (void)sbox
 #endif 
 
+typedef enum {
+    UI_STATE_IN_GAME,
+    UI_STATE_PAUSE_MENU,
+} ui_state_t;
+
 #define NUM_KEYS 512
+#define NUM_BUTTONS 3
 
 typedef struct sbox_t {
     cvar_t* cvars;
@@ -40,6 +46,10 @@ typedef struct sbox_t {
     double time;
 
     bool keys[NUM_KEYS];
+    bool buttons[NUM_BUTTONS];
+    bool prev_buttons[NUM_BUTTONS];
+    float mx;
+    float my;
     float mxdt;
     float mydt;
 
@@ -52,6 +62,8 @@ typedef struct sbox_t {
     material_t* materials;
 
     audio_t audio;
+
+    ui_state_t ui_state;
 
     map_t map;
     player_t player;

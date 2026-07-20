@@ -89,6 +89,9 @@ void a_init(sbox_t* sbox, audio_t* audio) {
 
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
     audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");
+    audio->inventory_open_sound = sound_load(sbox, audio, "res/sounds/inventory_open.wav");
+    audio->inventory_close_sound = sound_load(sbox, audio, "res/sounds/inventory_close.wav");
+    audio->hotbar_select_sound = sound_load(sbox, audio, "res/sounds/hotbar_select.wav");
 }
 
 void a_free(sbox_t* sbox, audio_t* audio) {

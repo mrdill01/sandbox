@@ -27,6 +27,7 @@ float deg(float radians);
 float min(float a, float b);
 float max(float a, float b);
 float clip(float x, float a, float b);
+float lerp(float a, float b, float t);
 float interp_to(float current, float target, float speed, float dt);
 float random(float start, float end);
 

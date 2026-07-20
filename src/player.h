@@ -4,6 +4,7 @@
 #include "math.h"
 #include "physics.h"
 #include "edit.h"
+#include "item.h"
 
 typedef struct sbox_t sbox_t;
 typedef struct camera_t camera_t;
@@ -42,6 +43,7 @@ typedef struct player_t {
     bool head_blocked;
     bool is_thirdperson;
     float height;
+    inventory_t inventory;
     editor_t editor;
 } player_t;
 

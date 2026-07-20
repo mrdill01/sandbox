@@ -29,18 +29,11 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
         frustum.min[2], frustum.max[2],
         projection);
 
-    vec3 position = {-2.0f, 4.0f, -1.0f};
-    //bbox_get_center(&frustum, position);
-    //position[1] += 20.0f;
+    vec3 position;
+    glm_vec3_copy(GLM_VEC3_ZERO, position);
 
-    vec3 target = {0.0f, 0.0f, 0.0f};
-    //glm_vec3_copy(position, target);
-
-    //vec3 dir;
-    //glm_vec3_copy(sun_light->direction, dir);
-    //glm_vec3_inv(dir);
-
-    //glm_vec3_add(target, dir, target);
+    vec3 target;
+    glm_vec3_copy(sun_light->direction, target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);
@@ -55,7 +48,18 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
         r_set_mat4(sbox, renderer, "model", drawcall->model);
         if (drawcall->mesh)
-            r_draw_mesh(drawcall->mesh);
+            r_draw_mesh(renderer, drawcall->mesh);
+    }
+
+    for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
+        drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
+        r_set_mat4(sbox, renderer, "model", drawcall->model);
+
+        r_set_int(sbox, renderer, "albedo", 0);
+        r_set_texture(renderer, drawcall->materials[0]->albedo, 0);
+        
+        if (drawcall->mesh)
+            r_draw_mesh(renderer, drawcall->mesh);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -93,7 +97,7 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
         }
 
         if (drawcall->mesh)
-            r_draw_mesh(drawcall->mesh);
+            r_draw_mesh(renderer, drawcall->mesh);
 
         if (r_debug_draw_colliders.value) {
             bbox_t bbox = drawcall->mesh->bbox;
@@ -160,7 +164,7 @@ static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
     }
     
     if (entity->data.prop.mesh)
-        r_draw_mesh(entity->data.prop.mesh);
+        r_draw_mesh(renderer, entity->data.prop.mesh);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -181,7 +185,7 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_texture(renderer, renderer->gbuffer->textures[2], 2);
     r_set_texture(renderer, renderer->gbuffer->textures[3], 3);
 
-    r_draw_mesh(renderer->quad_mesh);
+    r_draw_mesh(renderer, renderer->quad_mesh);
     r_set_framebuffer(renderer, NULL);
 }
 
@@ -216,7 +220,7 @@ static void render_sun_lights(sbox_t* sbox, renderer_t* renderer) {
 
         r_set_mat4(sbox, renderer, "light.matrix", sun_light->matrix);
 
-        r_draw_mesh(renderer->quad_mesh);
+        r_draw_mesh(renderer, renderer->quad_mesh);
     }
 
     /*glDisable(GL_CULL_FACE);
@@ -269,7 +273,7 @@ static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
         glm_translate_make(model, entity->position);
         r_set_mat4(sbox, renderer, "model", model);
 
-        r_draw_mesh(renderer->quad_mesh);
+        r_draw_mesh(renderer, renderer->quad_mesh);
     }
 
     /*glDisable(GL_CULL_FACE);
@@ -326,7 +330,7 @@ static void render_translucent(sbox_t* sbox, renderer_t* renderer) {
         }
 
         if (drawcall->mesh)
-            r_draw_mesh(drawcall->mesh);
+            r_draw_mesh(renderer, drawcall->mesh);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -357,7 +361,7 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
     r_set_texture(renderer, sbox->map.skybox, 0);
     r_set_texture(renderer, renderer->gbuffer->textures[3], 1);
 
-    r_draw_mesh(renderer->quad_mesh);
+    r_draw_mesh(renderer, renderer->quad_mesh);
 
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
@@ -389,7 +393,7 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     }
     r_set_vec3(sbox, renderer, "sun_direction", sun_direction);
 
-    r_draw_mesh(renderer->quad_mesh);
+    r_draw_mesh(renderer, renderer->quad_mesh);
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
@@ -407,5 +411,6 @@ void r_render(sbox_t* sbox, renderer_t* renderer) {
     ui_render(sbox, &renderer->ui, renderer);
 
     r_clear_drawcalls(renderer);
+    r_reset_stats(sbox, renderer);
     SDL_GL_SwapWindow(sbox->window);
 }

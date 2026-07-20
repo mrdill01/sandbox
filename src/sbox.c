@@ -61,6 +61,12 @@ void sbox_init(sbox_t* sbox) {
 
 	for (int i = 0; i < NUM_KEYS; i++)
 		sbox->keys[i] = false;
+	for (int i = 0; i < NUM_BUTTONS; i++) {
+		sbox->buttons[i] = false;
+		sbox->prev_buttons[i] = false;
+	}
+	sbox->mx = 0.0f;
+	sbox->my = 0.0f;
 	sbox->mxdt = 0.0f;
 	sbox->mydt = 0.0f;
 
@@ -70,6 +76,8 @@ void sbox_init(sbox_t* sbox) {
 	sbox->meshes = NULL;
 	sbox->textures = NULL;
 	sbox->materials = NULL;
+
+	sbox->ui_state = UI_STATE_IN_GAME;
 
     player_init(sbox, &sbox->player);
 }

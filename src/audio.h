@@ -27,6 +27,9 @@ typedef struct {
     sound_t* step_sounds[PHYS_MAT_MAX];
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
+    sound_t* inventory_open_sound;
+    sound_t* inventory_close_sound;
+    sound_t* hotbar_select_sound;
 } audio_t;
 
 void a_init(sbox_t* sbox, audio_t* audio);

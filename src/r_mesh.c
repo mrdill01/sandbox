@@ -141,6 +141,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
             vertices[len++] = 0.0f;
         else
             vertices[len++] = attrib.material_ids[i];
+        vertices[len - 1] = 0.0f;
 
         indices[i] = i;
     }

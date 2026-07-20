@@ -28,7 +28,9 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     renderer->forward_shader = shader_load(sbox,
         "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
     renderer->skybox_shader = shader_load(sbox,
-        "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");  
+        "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs"); 
+    renderer->partfx_shader = shader_load(sbox,
+        "partfx", "res/shaders/partfx.vs", "res/shaders/partfx.fs"); 
     renderer->screen_shader = shader_load(sbox,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
     renderer->line_shader = shader_load(sbox,
@@ -54,6 +56,8 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
 
     line_init(sbox, renderer);
     ui_init(sbox, &renderer->ui);
+
+    r_reset_stats(sbox, renderer);
     info(sbox, "renderer initialized!");
 }
 
@@ -257,6 +261,8 @@ void r_set_shader(renderer_t* renderer, shader_t* shader) {
 
 void r_set_texture(renderer_t* renderer, texture_t* texture, int slot) {
     if (!texture) return;
+    renderer->stats.textures++;
+
     glActiveTexture(GL_TEXTURE0 + slot);
 
     int type = GL_TEXTURE_2D;
@@ -268,6 +274,7 @@ void r_set_texture(renderer_t* renderer, texture_t* texture, int slot) {
 
 void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot) {
     if (!material) return;
+    renderer->stats.materials++;
     const int nmaterial_textures = 3;
 
     char slot_name[32];
@@ -344,7 +351,16 @@ void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m) {
     glUniformMatrix4fv(get_uniform(sbox, renderer, name), 1, GL_FALSE, &m[0][0]);
 }
 
-void r_draw_mesh(const mesh_t* mesh) {
+void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
     glBindVertexArray(mesh->vao);
     glDrawElements(GL_TRIANGLES, mesh->ntris, GL_UNSIGNED_INT, 0);
+    renderer->stats.draw_calls++;
+    renderer->stats.tris += mesh->ntris;
+}
+
+void r_reset_stats(sbox_t* sbox, renderer_t* renderer) {
+    renderer->stats.draw_calls = 0;
+    renderer->stats.tris = 0;
+    renderer->stats.textures = 0;
+    renderer->stats.materials = 0;
 }
