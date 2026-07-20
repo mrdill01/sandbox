@@ -9,12 +9,15 @@
 #define R_GL_MIN 3
 #define MAX_MATERIALS 4
 #define MAX_LINES 2048
+#define FPS_SAMPLE_RATE 45
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
 #define COLOR_MAGENTA (vec4){1.0f, 0.0f, 1.0f, 1.0f}
+#define COLOR_RED (vec4){1.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_YELLOW (vec4){1.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_GREEN (vec4){0.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_BLUE (vec4){0.0f, 0.0f, 1.0f, 1.0f}
+#define COLOR_LIGHT_BLUE (vec4){0.0f, 0.5f, 1.0f, 1.0f}
 
 typedef struct sbox_t sbox_t;
 typedef enum phys_material_t phys_material_t;
@@ -94,16 +97,6 @@ typedef struct {
 
 typedef struct {
     const mesh_t* mesh;
-    const material_t* materials[MAX_MATERIALS];
-    vec3 position;
-    vec3 scale;
-    mat4 model;
-    float dist_to_camera;
-    bool is_translucent;
-} drawcall_t;
-
-typedef struct {
-    const mesh_t* mesh;
     vec3 start;
     vec3 end;
     vec4 color;
@@ -114,12 +107,29 @@ typedef struct {
 typedef struct {
     shader_t* shader;
     texture_t* font;
+    texture_t* button;
+    texture_t* crosshair;
     mesh_t* quad;
     mat4 projection;
 } ui_t;
 
 typedef struct {
+    const mesh_t* mesh;
+    const material_t* materials[MAX_MATERIALS];
+    vec3 position;
+    vec3 scale;
+    mat4 rotation;
+    mat4 model;
+    float dist_to_camera;
+    bool is_translucent;
+} drawcall_t;
+
+typedef struct {
     camera_t camera;
+
+    float fps;
+    float fps_samples[FPS_SAMPLE_RATE];
+    int nfps_samples;
 
     size_t ndrawcalls;
     drawcall_t* drawcalls;
@@ -207,17 +217,25 @@ void line_add_box(sbox_t* sbox,
 void line_render(sbox_t* sbox, renderer_t* renderer);
 
 void ui_init(sbox_t* sbox, ui_t* ui);
-void ui_draw_tex(sbox_t* sbox, ui_t* ui,
+void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
     texture_t* texture,
     vec2 dest_pos, vec2 dest_size,
     vec2 src_pos, vec2 src_size,
     vec4 color);
+void ui_draw_texture(sbox_t* sbox, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color);
+void ui_draw_text(
+    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
+void ui_draw_text_shadow(
+    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer);
 
 void r_init(sbox_t* sbox, renderer_t* renderer);
 void r_free(sbox_t* sbox, renderer_t* renderer);
 void r_tick(sbox_t* sbox, renderer_t* renderer);
+
+void r_reload(sbox_t* sbox, renderer_t* renderer);
 void r_on_resize(sbox_t* sbox);
+void r_on_toggle_fullscreen(sbox_t* sbox);
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);

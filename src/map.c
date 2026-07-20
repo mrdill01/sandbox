@@ -34,6 +34,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* vinyl_mesh = mesh_load(sbox, "res/meshes/vinyl.obj");
     mesh_t* player_mesh = mesh_load(sbox, "res/meshes/player.obj");
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
+    mesh_t* bush_mesh = mesh_load(sbox, "res/meshes/nature/bush.obj");
     mesh_t* pipe_mesh = mesh_load(sbox, "res/meshes/pipe.obj");
     mesh_t* pipe_bend_mesh = mesh_load(sbox, "res/meshes/pipe_bend.obj");
     
@@ -294,6 +295,10 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "floor(17)", 8.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, metal, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(18)", 8.0f, -0.5f, 16.0f, floor_mesh, &entity);
     entity_prop_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -393,7 +398,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         wood_frame_window_mesh, &entity);
     entity_prop_set_material(sbox, entity, wood, 0);
     entity_prop_set_material(sbox, entity, wood5, 1);
-    entity->data.prop.collision_enabled = false;
+    entity->data.prop.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
@@ -423,7 +428,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, wood, 0);
     entity_prop_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.prop.collision_enabled = false;
+    entity->data.prop.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "wood frame(6)", 16.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
@@ -461,7 +466,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, wood, 0);
     entity_prop_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.prop.collision_enabled = false;
+    entity->data.prop.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "wood frame(11)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
@@ -513,7 +518,7 @@ void map_load(sbox_t* sbox, map_t* map) {
 
     entity_init_prop(sbox, "container", -2.5f, -0.5f, -8.0f, container_mesh, &entity);
     entity_prop_set_material(sbox, entity, container, 0);
-    entity->data.prop.collision_enabled = false;
+    entity->data.prop.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "pipe bend", 32.0f, 0.5f, 10.0f, pipe_bend_mesh, &entity);
@@ -528,11 +533,13 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(3)", 32.0f, 0.5f, -2.0f, pipe_mesh, &entity);
+    entity_init_prop(sbox, "pipe bend(2)", 32.0f, 0.5f, -2.0f, pipe_bend_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 0.0f, 1.0f);
+    glm_quat(entity->rotation, rad(180.0f), 1.0f, 0.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe bend(2)", 34.0f, 1.5f, 10.0f, pipe_bend_mesh, &entity);
+    entity_init_prop(sbox, "pipe bend(3)", 34.0f, 1.5f, 10.0f, pipe_bend_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -549,8 +556,10 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(7)", 34.0f, 1.5f, -2.0f, pipe_mesh, &entity);
+    entity_init_prop(sbox, "pipe bend(4)", 34.0f, 1.5f, -2.0f, pipe_bend_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
+    glm_quat(entity->rotation, rad(180.0f), 0.0f, 0.0f, 1.0f);
+    glm_quat(entity->rotation, rad(180.0f), 1.0f, 0.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_prop(sbox, "table(2)", 9.0f, -0.5f, -7.0f, table2_mesh, &entity);
@@ -572,7 +581,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, metal, 2);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "helicopter", 8.0f, -0.5f, 8.0f, helicopter_mesh, &entity);
+    entity_init_prop(sbox, "helicopter", 8.0f, -0.5f, 16.0f, helicopter_mesh, &entity);
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
     entity_prop_set_material(sbox, entity, metal, 0);
     entity_prop_set_material(sbox, entity, wood, 1);
@@ -608,7 +617,8 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity->data.prop.is_pickup = true;
     entlist_add(sbox, &map->entlist, entity);
 
-    vec3 sun_dir = {-0.6f, -0.6f, 0.4f};
+    vec3 sun_dir = {-0.8f, -0.2f, 0.6f};
+    //vec3 sun_dir = {0.0f, -1.0f, 0.2f};
     vec3 sun_color = {8.0f, 6.0f, 6.0f};
     entity_init_sun_light(sbox, "sun", 0.0f, 0.0f, 0.0f, sun_dir, sun_color, &entity);
     entlist_add(sbox, &map->entlist, entity);
@@ -634,58 +644,67 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(4)", 24.5f, -0.5f, 8.0f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(4)", 24.5f, -0.5f, 10.0f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(5)", 24.5f, -0.5f, 10.0f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
-    entlist_add(sbox, &map->entlist, entity);
-
-    entity_init_prop(sbox, "hedge(7)", 23.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(5)", 23.0f, -0.5f, 4.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(8)", 21.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(6)", 21.0f, -0.5f, 4.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(9)", 19.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(7)", 19.0f, -0.5f, 4.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(9)", 17.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(8)", 17.0f, -0.5f, 4.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(10)", 23.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(9)", 23.0f, -0.5f, 11.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(11)", 21.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(10)", 21.0f, -0.5f, 11.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(12)", 19.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(11)", 19.0f, -0.5f, 11.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(13)", 17.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_init_prop(sbox, "hedge(12)", 17.0f, -0.5f, 11.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
+
+    for (int i = 0; i < 10; i++) {
+        vec3 min = {15.0f + 1.0f, -0.5f, 4.5f + 1.0f};
+        vec3 max = {24.5f - 1.0f, -0.5f, 11.5f - 1.0f};
+        vec3 pos = {random(min[0], max[0]), random(min[1], max[1]), random(min[2], max[2])};
+
+        entity_init_prop(sbox, "bush", pos[0], pos[1], pos[2], bush_mesh, &entity);
+        entity_prop_set_material(sbox, entity, leaves, 0);
+        glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
+        glm_vec3_scale(entity->scale, random(1.0f, 4.0f), entity->scale);
+        entity->data.prop.enable_collision = false;
+        entlist_add(sbox, &map->entlist, entity);
+    }
 
     entity_init_prop(sbox, "player_thirdperson", 0.0f, 0.0f, 0.0f, player_mesh, &entity);
     entity_prop_set_material(sbox, entity, cactus, 0);
     entity->data.prop.is_visible = false;
-    entity->data.prop.collision_enabled = false;
+    entity->data.prop.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     const char* paths[6] = {
@@ -733,6 +752,7 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
 
         glm_vec3_copy(entity->position, drawcall.position);
         glm_vec3_copy(entity->scale, drawcall.scale);
+        glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, drawcall.rotation);
 
         drawcall.dist_to_camera = 0.0f;
 

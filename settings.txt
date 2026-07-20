@@ -1,9 +1,13 @@
+edit_snap_size 0.2f
+edit_mode 1.0f
 m_sens 5.0f
 a_volume 0.5f
 a_device (null)
-r_debug_draw_colliders 1.0f
-r_fov 75.0f
+r_debug_draw_colliders 0
 r_shadow_res 1024.0
+r_fov 75.0f
+r_vsync 0
+r_fullscreen 0
 r_scale 1.0f
 r_height 540.0f
 r_width 960.0f

@@ -131,9 +131,25 @@ void tick(sbox_t* sbox) {
         sbox_reload_resources(sbox);
     }
 
+    if (sbox->keys[SDL_SCANCODE_F3]) {
+        sbox->keys[SDL_SCANCODE_F3] = false;
+        printf("%g %g %g\n",
+            sbox->player.position[0],
+            sbox->player.position[1],
+            sbox->player.position[2]);
+    }
+
     if (sbox->keys[SDL_SCANCODE_F4]) {
         sbox->keys[SDL_SCANCODE_F4] = false;
         cvar_toggle(sbox, "r_debug_draw_colliders");
+    }
+
+    if (sbox->keys[SDL_SCANCODE_F11] ||
+        (sbox->keys[SDL_SCANCODE_LALT] && sbox->keys[SDL_SCANCODE_RETURN]))
+    {
+        sbox->keys[SDL_SCANCODE_F11] = false;
+        sbox->keys[SDL_SCANCODE_RETURN] = false;
+        cvar_toggle(sbox, "r_fullscreen");
     }
 }
 

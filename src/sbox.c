@@ -12,12 +12,16 @@
 cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
 cvar_t r_scale = {"r_scale", "1.0f", true};
-cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
+cvar_t r_fullscreen = {"r_fullscreen", "0", true};
+cvar_t r_vsync = {"r_vsync", "0", true};
 cvar_t r_fov = {"r_fov", "75.0f", true};
-cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "1.0f", true};
+cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
+cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true};
 cvar_t a_device = {"a_device", "(null)", true};
 cvar_t a_volume = {"a_volume", "0.5f", true};
 cvar_t m_sens = {"m_sens", "5.0f", true};
+cvar_t edit_mode = {"edit_mode", "1.0f", true};
+cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true};
 
 void sbox_init(sbox_t* sbox) {
 	info(sbox, "%s", SANDBOX_VERSION);
@@ -36,12 +40,16 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_width, NULL);
     cvar_register(sbox, &r_height, NULL);
     cvar_register(sbox, &r_scale, NULL);
-    cvar_register(sbox, &r_shadow_res, NULL);
+    cvar_register(sbox, &r_fullscreen, r_on_toggle_fullscreen);
+    cvar_register(sbox, &r_vsync, NULL);
     cvar_register(sbox, &r_fov, NULL);
+    cvar_register(sbox, &r_shadow_res, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
+    cvar_register(sbox, &edit_mode, NULL);
+    cvar_register(sbox, &edit_snap_size, NULL);
 
 	cfg_write(sbox, DEFAULT_CFG_PATH);
 
@@ -77,9 +85,9 @@ void sbox_tick(sbox_t* sbox) {
 	sbox->time += sbox->dt;
 
 	a_tick(sbox, &sbox->audio, &sbox->player, &sbox->renderer.camera);
+    player_tick(sbox, &sbox->player, &sbox->renderer.camera, &sbox->map.entlist);
     map_tick(sbox, &sbox->map);
 	r_tick(sbox, &sbox->renderer);
-    player_tick(sbox, &sbox->player, &sbox->renderer.camera, &sbox->map.entlist);
 }
 
 void sbox_reload_resources(sbox_t* sbox) {
@@ -88,6 +96,14 @@ void sbox_reload_resources(sbox_t* sbox) {
 	free(sbox->renderer.screen_shader);
 	sbox->renderer.screen_shader = shader_load(sbox,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
+
+	free(sbox->renderer.screen_shader);
+	sbox->renderer.forward_shader = shader_load(sbox,
+        "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
+
+	free(sbox->renderer.skybox_shader);
+	sbox->renderer.skybox_shader = shader_load(sbox,
+        "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");
 	
 	map_free(sbox, &sbox->map);
 	map_load(sbox, &sbox->map);

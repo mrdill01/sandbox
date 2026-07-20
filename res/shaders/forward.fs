@@ -137,6 +137,6 @@ void main() {
     direct += draw_light(view_dir, f0, sample);
 
     vec3 ambient = vec3(0.4) * sample.albedo.rgb * sample.ao;
-    
+
     frag_color = vec4(direct + ambient, sample.albedo.a);
 }

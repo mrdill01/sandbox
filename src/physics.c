@@ -1,6 +1,8 @@
 #include "physics.h"
 #include "sbox.h"
 
+#define PHYS_TRACE_STEP 0.01
+
 bool phys_line_trace(
     vec3 start, vec3 dir, double max_distance, entlist_t* entlist, trace_result_t* out)
 {
@@ -19,15 +21,23 @@ bool phys_line_trace(
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
             if (entity->type != ENTITY_PROP) continue;
-            if (!entity->data.prop.collision_enabled) continue;
+            if (!entity->data.prop.enable_collision) continue;
             
-            bbox_t bbox = bbox_translate(&entity->data.prop.mesh->bbox, entity->position);
-
-            if (bbox_point_intersects(&bbox, trace.point)) {
+            if (bbox_point_intersects(&entity->bbox, trace.point)) {
                 if (entity->data.prop.materials[0]->is_water) {
                     trace.water_level = trace.distance / max_distance;
                     continue;
                 }
+
+                /*if (dist[0] > dist[1] && dist[0] > dist[2]) {
+                    printf("X\n");
+                } else if (dist[1] > dist[0] && dist[1] > dist[2]) {
+                    printf("Y\n");
+                } else {
+                    printf("Z\n");
+                }*/
+
+                glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, trace.normal);
 
                 hit = true;
                 trace.entity = entity;

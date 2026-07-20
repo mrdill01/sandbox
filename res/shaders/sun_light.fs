@@ -86,16 +86,28 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     kd *= 1.0 - sample.metallic;	  
 
     float n_dot_l = max(dot(sample.normal, l), 0.0);        
-    return (kd * sample.albedo / PI + specular) * radiance * n_dot_l;
+    return (kd * sample.albedo / PI + specular) * radiance * n_dot_l * (1.0f - sample.shadow);
 }
 
-float compute_shadow(vec4 frag_pos_light_space) {
+float compute_shadow(vec4 frag_pos_light_space, vec3 normal) {
     vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
     proj_coords = proj_coords * 0.5f + 0.5f;
     float closest_depth = texture(light.shadow, proj_coords.xy).r;
     float current_depth = proj_coords.z;
-    float shadow = (current_depth > closest_depth) ? 1.0f : 0.0f;
-    if (current_depth > 1.0f)
+    vec3 light_dir = light.direction;
+    float bias = max(0.005 * (1.0 - dot(normal, light_dir)), 0.0005);
+
+    float shadow = 0.0f;
+    vec2 texel_size = 1.0f / textureSize(light.shadow, 0);
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            float depth = texture(light.shadow, proj_coords.xy + vec2(x, y) * texel_size).r; 
+            shadow += (current_depth - bias) > depth  ? 1.0f : 0.0f;        
+        }
+    }
+    shadow /= 9.0;
+
+    if (proj_coords.z > 1.0f)
         shadow = 0.0f;
     return shadow;
 }
@@ -108,14 +120,14 @@ void main() {
     sample.roughness = texture(gbuffer.albedo_roughness, vs_uv).a;
     sample.metallic = 0.0f;
     sample.ao = 1.0f;
-    sample.shadow = compute_shadow(light.matrix * vec4(sample.position, 1.0f));
+    sample.shadow = compute_shadow(light.matrix * vec4(sample.position, 1.0f), sample.normal);
     vec3 view_dir = normalize(view_position - sample.position);
 
     vec3 f0 = vec3(0.04); 
     f0 = mix(f0, sample.albedo, sample.metallic);
 
     vec3 direct = vec3(0.0);
-    direct += draw_light(view_dir, f0, sample) * (1.0f - sample.shadow);
+    direct += draw_light(view_dir, f0, sample);
 
     frag_color = vec4(direct, 0.5f);
 }

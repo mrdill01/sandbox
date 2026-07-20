@@ -4,8 +4,6 @@
 #include "math.h"
 #include "entity.h"
 
-#define PHYS_TRACE_STEP 0.005
-
 typedef enum phys_material_t {
     PHYS_MAT_NONE,
     PHYS_MAT_METAL,
@@ -19,6 +17,7 @@ typedef enum phys_material_t {
 
 typedef struct {
     vec3 point;
+    vec3 normal;
     float distance;
     float water_level;
     entity_t* entity;

@@ -115,7 +115,16 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
     info(sbox, "renderer shut down!");
 }
 
-static int comp_distance(const void* a_ptr, const void* b_ptr) {
+static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
+	drawcall_t* a = (drawcall_t*)a_ptr;
+	drawcall_t* b = (drawcall_t*)b_ptr;
+	if (a->dist_to_camera == -1.0f) return -1;
+	if (b->dist_to_camera == -1.0f) return 1;
+	if (a->dist_to_camera > b->dist_to_camera) return 1;
+	return -1;
+}
+
+static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
 	if (a->dist_to_camera == -1.0f) return -1;
@@ -125,6 +134,33 @@ static int comp_distance(const void* a_ptr, const void* b_ptr) {
 }
 
 void r_tick(sbox_t* sbox, renderer_t* renderer) {
+    SDL_GL_SetSwapInterval(r_vsync.value);
+
+    if (renderer->nfps_samples < FPS_SAMPLE_RATE) {
+        renderer->fps_samples[renderer->nfps_samples++] = 1.0f / sbox->dt;
+    } else {
+        renderer->fps = 0.0f;
+        for (int i = 0; i < FPS_SAMPLE_RATE; i++) {
+            renderer->fps += renderer->fps_samples[i];
+        }
+        renderer->fps /= FPS_SAMPLE_RATE;
+        renderer->nfps_samples = 0;
+    }
+
+    for (size_t i = 0; i < renderer->ndrawcalls; i++) {
+        drawcall_t* drawcall = &renderer->drawcalls[i];
+
+		vec3 center;
+		bbox_get_center(&drawcall->mesh->bbox, center);
+
+		vec3 tmp;
+		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
+		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
+	}
+
+	qsort(renderer->drawcalls, renderer->ndrawcalls,
+        sizeof(drawcall_t), sort_front_to_back);
+
     for (size_t i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
 
@@ -137,7 +173,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 	}
 
 	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,
-        sizeof(drawcall_t), comp_distance);
+        sizeof(drawcall_t), sort_back_to_front);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -182,8 +218,13 @@ void r_on_resize(sbox_t* sbox) {
     framebuffer_finish(sbox, renderer->screen_buffer);
 
     renderer->sun_shadow_buffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->sun_shadow_buffer, width, height, TEX_FORMAT_DEPTH);
+    framebuffer_add_texture(sbox, renderer->sun_shadow_buffer,
+        r_shadow_res.value, r_shadow_res.value, TEX_FORMAT_DEPTH);
     framebuffer_finish(sbox, renderer->sun_shadow_buffer);
+}
+
+void r_on_toggle_fullscreen(sbox_t* sbox) {
+    SDL_SetWindowFullscreen(sbox->window, (r_fullscreen.value) ? SDL_WINDOW_FULLSCREEN : 0);
 }
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {

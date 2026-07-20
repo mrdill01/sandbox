@@ -63,6 +63,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->sounds = NULL;
 
     audio->jump_sound = sound_load(sbox, audio, "res/sounds/jump.wav");
+    audio->jump_land_base_sound = sound_load(sbox, audio, "res/sounds/jump_land_base.wav");
 
     for (int i = 0; i < PHYS_MAT_MAX; i++)
         audio->jump_land_sounds[i] = NULL;

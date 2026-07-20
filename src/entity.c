@@ -12,6 +12,7 @@ static void init_common(
 	glm_vec3_copy((vec3){x, y, z}, entity->position);
     glm_quat_copy(GLM_QUAT_IDENTITY, entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
+	entity->bbox = (bbox_t){0};
 
 	*out = entity;
 }
@@ -28,7 +29,7 @@ void entity_init_prop(sbox_t* sbox,
 	entity->data.prop.is_visible = true;
 	entity->data.prop.is_viewmodel = false;
 	entity->data.prop.is_pickup = false;
-	entity->data.prop.collision_enabled = true;
+	entity->data.prop.enable_collision = true;
 
     *out = entity;
 }
@@ -60,6 +61,15 @@ void entity_init_point_light(sbox_t* sbox,
 	glm_vec3_copy(color, entity->data.point_light.color);
 
 	*out = entity;
+}
+
+static void compute_bounding_box(entity_t* entity) {
+	if (entity->type != ENTITY_PROP) return;
+	
+	mat4 rotation;
+	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, rotation);
+	entity->bbox = bbox_rotate(&entity->data.prop.mesh->bbox, rotation);
+	entity->bbox = bbox_translate(&entity->bbox, entity->position);
 }
 
 void entity_free(sbox_t* sbox, entity_t* entity) {
@@ -97,6 +107,9 @@ void entlist_free(sbox_t* sbox, entlist_t* entlist) {
 void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
+		if (!entity) continue;
+		compute_bounding_box(entity);
+
 		switch (entity->type) {
 		case ENTITY_PROP: {
 			entity_prop_t* prop = &entity->data.prop;

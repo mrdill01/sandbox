@@ -21,24 +21,26 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     entity_sun_light_t* sun_light = &sun_entity->data.sun_light;
 
     float near = 1.0f;
-    float far = 10.0f;
-    bbox_t frustrum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
+    float far = 32.0f;
+    bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
     mat4 projection;
-    glm_ortho(frustrum.min[0], frustrum.max[0],
-        frustrum.min[1], frustrum.max[1],
-        frustrum.min[2], frustrum.max[2],
+    glm_ortho(frustum.min[0], frustum.max[0],
+        frustum.min[1], frustum.max[1],
+        frustum.min[2], frustum.max[2],
         projection);
 
-    vec3 position;
-    bbox_get_center(&frustrum, position);
+    vec3 position = {-2.0f, 4.0f, -1.0f};
+    //bbox_get_center(&frustum, position);
+    //position[1] += 20.0f;
 
-    vec3 target;
-    glm_vec3_copy(position, target);
+    vec3 target = {0.0f, 0.0f, 0.0f};
+    //glm_vec3_copy(position, target);
 
-    vec3 dir;
-    glm_vec3_copy(sun_light->direction, dir);
-    glm_vec3_inv(dir);
-    glm_vec3_add(target, dir, target);
+    //vec3 dir;
+    //glm_vec3_copy(sun_light->direction, dir);
+    //glm_vec3_inv(dir);
+
+    //glm_vec3_add(target, dir, target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);
@@ -47,7 +49,7 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     glm_mat4_mul(sun_light->matrix, projection, sun_light->matrix);
     glm_mat4_mul(sun_light->matrix, view, sun_light->matrix);
 
-    r_set_mat4(sbox, renderer, "light_space", sun_light->matrix);
+    r_set_mat4(sbox, renderer, "matrix", sun_light->matrix);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -69,9 +71,6 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
 
     glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    //glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -98,13 +97,13 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
 
         if (r_debug_draw_colliders.value) {
             bbox_t bbox = drawcall->mesh->bbox;
+            bbox = bbox_rotate(&bbox, drawcall->rotation);
             bbox = bbox_translate(&bbox, drawcall->position);
             bbox = bbox_scale(&bbox, drawcall->scale);
-            line_add_box(sbox, renderer, &bbox, COLOR_YELLOW, 2.0f);
+            line_add_box(sbox, renderer, &bbox, COLOR_LIGHT_BLUE, 2.0f);
         }
     }
 
-    glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     r_set_framebuffer(renderer, NULL);
@@ -296,7 +295,7 @@ static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
 static void render_translucent(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->forward_shader);
-    
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
@@ -340,10 +339,8 @@ static void render_translucent(sbox_t* sbox, renderer_t* renderer) {
 static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->skybox_shader);
-    glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
-    glClear(GL_DEPTH_BUFFER_BIT);
 
     mat4 projection;
     glm_mat4_copy(renderer->projection, projection);
@@ -362,7 +359,6 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
 
     r_draw_mesh(renderer->quad_mesh);
 
-    glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
     r_set_framebuffer(renderer, NULL);
@@ -373,11 +369,16 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 
     r_set_int(sbox, renderer, "screen", 0);
     r_set_int(sbox, renderer, "depth", 1);
+    r_set_int(sbox, renderer, "position", 2);
     r_set_int(sbox, renderer, "debug", 2);
     r_set_texture(renderer, renderer->screen_buffer->textures[0], 0);
     r_set_texture(renderer, renderer->gbuffer->textures[3], 1);
+    r_set_texture(renderer, renderer->gbuffer->textures[0], 2);
     r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 2);
 
+    r_set_mat4(sbox, renderer, "view", renderer->view);
+    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
     r_set_vec3(sbox, renderer, "view_direction", renderer->camera.forward);
 
     vec3 sun_direction = {0.0f, 0.0f, 0.0f};

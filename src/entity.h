@@ -18,7 +18,7 @@ typedef struct {
     bool is_visible;
     bool is_viewmodel;
     bool is_pickup;
-    bool collision_enabled;
+    bool enable_collision;
 } entity_prop_t;
 
 typedef struct {
@@ -37,6 +37,7 @@ typedef struct {
     vec3 position;
     quat rotation;
     vec3 scale;
+    bbox_t bbox;
 
     union {
         entity_prop_t prop;

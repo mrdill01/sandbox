@@ -62,10 +62,10 @@ void main() {
     g_albedo_roughness.a = texture(materials[vs_mat].roughness, uv).r;
 
     float depth = gl_FragCoord.z;
-    float ndc = depth * 2.0 - 1.0;
+    float ndc = depth * 2.0f - 1.0f;
     float near = 0.01f;
     float far = 100.0f;
-    float linear_depth = (2.0 * near * far) / (far + near - ndc * (far - near));	
+    float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
     linear_depth /= far; 
     g_depth.r = linear_depth;
 }

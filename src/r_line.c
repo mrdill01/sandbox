@@ -55,7 +55,7 @@ void line_add(sbox_t* sbox,
 void line_add_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
     vec3 pairs[] = {
         {bbox->min[0], bbox->min[1], bbox->min[2]}, {bbox->max[0], bbox->min[1], bbox->min[2]},
-        {bbox->min[0], bbox->max[1], bbox->min[2]}, {bbox->max[0], bbox->max[1], bbox->min[2]},
+        {bbox->min[0], bbox->min[1], bbox->max[2]}, {bbox->max[0], bbox->min[1], bbox->max[2]},
         {bbox->min[0], bbox->max[1], bbox->max[2]}, {bbox->max[0], bbox->max[1], bbox->max[2]},
         {bbox->min[0], bbox->min[1], bbox->min[2]}, {bbox->max[0], bbox->min[1], bbox->min[2]},
 
@@ -70,24 +70,9 @@ void line_add_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 c
         {bbox->min[0], bbox->max[1], bbox->min[2]}, {bbox->min[0], bbox->max[1], bbox->max[2]},
     };
 
-    /*min min min min
-    max min max min
-    max max max max
-    min min min min*/
-
-    /*min min min min
-    max min max min
-    max max max max
-    min max max max*/
-
-    /* min min min max
-    max min max min
-    max max max max
-    min max min max*/
-
     size_t len = sizeof(pairs) / sizeof(pairs[0]);
     for (size_t i = 0; i < len; i += 2) {
-        line_add(sbox, renderer, pairs[i], pairs[i + 1], COLOR_GREEN, decay_time);
+        line_add(sbox, renderer, pairs[i], pairs[i + 1], color, decay_time);
     }
 }
 

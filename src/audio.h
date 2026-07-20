@@ -22,6 +22,7 @@ typedef struct {
     sound_t* sounds;
 
     sound_t* jump_sound;
+    sound_t* jump_land_base_sound;
     sound_t* jump_land_sounds[PHYS_MAT_MAX];
     sound_t* step_sounds[PHYS_MAT_MAX];
     sound_t* enter_water_sound;

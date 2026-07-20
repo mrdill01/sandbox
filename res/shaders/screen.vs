@@ -7,6 +7,9 @@ layout (location = 3) in float a_mat;
 
 out vec2 vs_uv;
 
+uniform mat4 view;
+uniform mat4 projection;
+
 void main() {
     gl_Position = vec4(a_position, 1.0);
     vs_uv = a_position.xy * 0.5f + 0.5f;
