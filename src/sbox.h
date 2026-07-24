@@ -18,11 +18,11 @@
 
 #include <SDL2/SDL.h>
 
-#define SANDBOX_VERSION "sbox 1.0"
-#define SANDBOX_DEBUG
-//#define SANDBOX_NO_AUDIO
+#define SBOX_VERSION "sbox 1.0"
+#define SBOX_DEBUG
+//#define SBOX_NO_AUDIO
 
-#ifdef SANDBOX_DEBUG
+#ifdef SBOX_DEBUG
 #define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);
 #else
 #define unreachable(sbox) (void)sbox
@@ -76,6 +76,7 @@ extern cvar_t r_fullscreen;
 extern cvar_t r_vsync;
 extern cvar_t r_fov;
 extern cvar_t r_shadow_res;
+extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
 extern cvar_t a_device;
 extern cvar_t a_volume;

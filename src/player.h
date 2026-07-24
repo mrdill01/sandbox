@@ -13,6 +13,7 @@ typedef struct entlist_t entlist_t;
 #define PLAYER_BUTTON_JUMP 1
 #define PLAYER_BUTTON_CROUCH 2
 #define PLAYER_BUTTON_FIRE 4
+#define PLAYER_BUTTON_AIM 8
 
 typedef enum {
     MOVE_WALK,
@@ -44,11 +45,15 @@ typedef struct player_t {
     bool is_thirdperson;
     float height;
     inventory_t inventory;
+    vec3 item_position;
+    vec3 item_anim;
     editor_t editor;
 } player_t;
 
 void player_init(sbox_t* sbox, player_t* player);
+void player_free(sbox_t* sbox, player_t* player);
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist);
+void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
 void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);

@@ -16,7 +16,7 @@ float max(float a, float b) {
 	return (a > b) ? a : b;
 }
 
-float clip(float x, float a, float b) {
+float clamp(float x, float a, float b) {
     return min(max(x, a), b);
 }
 
@@ -25,7 +25,15 @@ float lerp(float a, float b, float t) {
 }
 
 float interp_to(float current, float target, float speed, float dt) {
-    return current + (target - current) * (speed * dt);
+    if (speed <= 0.0f)
+        return target;
+    
+    float dist = target - current;
+    if (dist * dist < 0.00001f)
+        return target;
+
+    float delta_move = clamp(speed * dt, 0.0f, 1.0f);
+    return current + dist * delta_move;
 }
 
 float random(float start, float end) {

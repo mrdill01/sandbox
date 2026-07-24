@@ -124,18 +124,19 @@ typedef struct {
 } ui_t;
 
 typedef struct {
-    const mesh_t* mesh;
-    const material_t* materials[MAX_MATERIALS];
+    mesh_t* mesh;
+    material_t* materials[MAX_MATERIALS];
     vec3 position;
     vec3 scale;
     mat4 rotation;
     mat4 model;
+    bbox_t world_bbox;
     float dist_to_camera;
     bool is_translucent;
 } drawcall_t;
 
 typedef struct {
-    int draw_calls;
+    int drawcalls;
     int tris;
     int textures;
     int materials;
@@ -239,12 +240,12 @@ void line_render(sbox_t* sbox, renderer_t* renderer);
 void ui_init(sbox_t* sbox, ui_t* ui);
 
 void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
-    const texture_t* texture,
+    texture_t* texture,
     vec2 dest_pos, vec2 dest_size,
     vec2 src_pos, vec2 src_size,
     vec4 color);
 void ui_draw_texture(
-    sbox_t* sbox, ui_t* ui, const texture_t* texture, vec2 pos, vec2 size, vec4 color);
+    sbox_t* sbox, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color);
 
 void ui_draw_text(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);

@@ -20,10 +20,10 @@ bool phys_line_trace(
 
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
-            if (entity->type != ENTITY_PROP) continue;
+            if (entity->type != ENTITY_MESH) continue;
             if (!entity->data.prop.enable_collision) continue;
             
-            if (bbox_point_intersects(&entity->bbox, trace.point)) {
+            if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
                 if (entity->data.prop.materials[0]->is_water) {
                     trace.water_level = trace.distance / max_distance;
                     continue;

@@ -54,9 +54,9 @@ void line_add(sbox_t* sbox,
 
 void line_add_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
     vec3 pairs[] = {
-        {bbox->min[0], bbox->min[1], bbox->min[2]}, {bbox->max[0], bbox->min[1], bbox->min[2]},
-        {bbox->min[0], bbox->min[1], bbox->max[2]}, {bbox->max[0], bbox->min[1], bbox->max[2]},
         {bbox->min[0], bbox->max[1], bbox->max[2]}, {bbox->max[0], bbox->max[1], bbox->max[2]},
+        {bbox->min[0], bbox->min[1], bbox->max[2]}, {bbox->max[0], bbox->min[1], bbox->max[2]},
+        {bbox->min[0], bbox->max[1], bbox->min[2]}, {bbox->max[0], bbox->max[1], bbox->min[2]},
         {bbox->min[0], bbox->min[1], bbox->min[2]}, {bbox->max[0], bbox->min[1], bbox->min[2]},
 
         {bbox->min[0], bbox->min[1], bbox->min[2]}, {bbox->min[0], bbox->max[1], bbox->min[2]},

@@ -11,11 +11,12 @@
 
 cvar_t r_width = {"r_width", "960.0f", true};
 cvar_t r_height = {"r_height", "540.0f", true};
-cvar_t r_scale = {"r_scale", "1.0f", true};
+cvar_t r_scale = {"r_scale", "0.35f", true};
 cvar_t r_fullscreen = {"r_fullscreen", "0", true};
 cvar_t r_vsync = {"r_vsync", "0", true};
 cvar_t r_fov = {"r_fov", "75.0f", true};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
+cvar_t r_debug_menu = {"r_debug_menu", "1", true};
 cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true};
 cvar_t a_device = {"a_device", "(null)", true};
 cvar_t a_volume = {"a_volume", "0.5f", true};
@@ -24,10 +25,10 @@ cvar_t edit_mode = {"edit_mode", "1.0f", true};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true};
 
 void sbox_init(sbox_t* sbox) {
-	info(sbox, "%s", SANDBOX_VERSION);
+	info(sbox, "%s", SBOX_VERSION);
 
-	#ifdef SANDBOX_DEBUG
-	info(sbox, "DEBUG BUILD (undefine SANDBOX_DEBUG for release)");
+	#ifdef SBOX_DEBUG
+	info(sbox, "DEBUG BUILD (undefine SBOX_DEBUG for release)");
 	#endif
 
     time_t current_time = time(NULL);
@@ -44,6 +45,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_vsync, NULL);
     cvar_register(sbox, &r_fov, NULL);
     cvar_register(sbox, &r_shadow_res, NULL);
+    cvar_register(sbox, &r_debug_menu, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
@@ -78,8 +80,6 @@ void sbox_init(sbox_t* sbox) {
 	sbox->materials = NULL;
 
 	sbox->ui_state = UI_STATE_IN_GAME;
-
-    player_init(sbox, &sbox->player);
 }
 
 void sbox_free(sbox_t* sbox) {
@@ -138,7 +138,7 @@ void error(sbox_t* sbox, const char* msg, ...) {
 
     printf("error: %s\n", buffer);
 
-	#ifdef SANDBOX_DEBUG
+	#ifdef SBOX_DEBUG
 	exit(EXIT_FAILURE);
 	#endif
 }

@@ -155,7 +155,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
 
 		vec3 center;
-		bbox_get_center(&drawcall->mesh->bbox, center);
+		bbox_get_center(&drawcall->world_bbox, center);
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
@@ -169,7 +169,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
 
 		vec3 center;
-		bbox_get_center(&drawcall->mesh->bbox, center);
+		bbox_get_center(&drawcall->world_bbox, center);
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
@@ -354,12 +354,12 @@ void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m) {
 void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
     glBindVertexArray(mesh->vao);
     glDrawElements(GL_TRIANGLES, mesh->ntris, GL_UNSIGNED_INT, 0);
-    renderer->stats.draw_calls++;
+    renderer->stats.drawcalls++;
     renderer->stats.tris += mesh->ntris;
 }
 
 void r_reset_stats(sbox_t* sbox, renderer_t* renderer) {
-    renderer->stats.draw_calls = 0;
+    renderer->stats.drawcalls = 0;
     renderer->stats.tris = 0;
     renderer->stats.textures = 0;
     renderer->stats.materials = 0;

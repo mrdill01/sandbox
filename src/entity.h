@@ -7,7 +7,7 @@
 #define PICKUP_SPIN_RATE 24.0f
 
 typedef enum {
-    ENTITY_PROP,
+    ENTITY_MESH,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
 } entity_type_t;
@@ -19,7 +19,7 @@ typedef struct {
     bool is_viewmodel;
     bool is_pickup;
     bool enable_collision;
-} entity_prop_t;
+} entity_mesh_t;
 
 typedef struct {
     vec3 direction;
@@ -37,10 +37,11 @@ typedef struct {
     vec3 position;
     quat rotation;
     vec3 scale;
-    bbox_t bbox;
+    bbox_t local_bbox;
+    bbox_t world_bbox;
 
     union {
-        entity_prop_t prop;
+        entity_mesh_t prop;
         entity_sun_light_t sun_light;
         entity_point_light_t point_light;
     } data;

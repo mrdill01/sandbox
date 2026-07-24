@@ -94,7 +94,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     }
 
     int stride = 9;
-    int num_vertices = attrib.num_faces * 9;
+    int num_vertices = attrib.num_faces * stride;
     float* vertices = malloc(num_vertices * sizeof(float));
     int num_indices = attrib.num_faces;
     uint32_t* indices = malloc(num_indices * sizeof(uint32_t));

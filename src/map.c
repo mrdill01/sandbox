@@ -30,7 +30,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* helicopter_mesh = mesh_load(sbox, "res/meshes/helicopter.obj");
     mesh_t* ship_mesh = mesh_load(sbox, "res/meshes/ship.obj");
     mesh_t* dock_mesh = mesh_load(sbox, "res/meshes/dock.obj");
-    mesh_t* tommy_gun_mesh = mesh_load(sbox, "res/meshes/tommy_gun.obj");
     mesh_t* vinyl_mesh = mesh_load(sbox, "res/meshes/vinyl.obj");
     mesh_t* player_mesh = mesh_load(sbox, "res/meshes/player.obj");
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
@@ -229,6 +228,13 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/light_n.png",
         1, 1, false, PHYS_MAT_METAL);
 
+    material_t* test = material_load(sbox,
+        "test",
+        "res/textures/materials/test.png",
+        "res/textures/materials/test_r.png",
+        "res/textures/materials/test_n.png",
+        2, 2, false, PHYS_MAT_METAL);
+
     entity_t* entity;
     entity_init_prop(sbox, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal, 0);
@@ -298,7 +304,17 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(18)", 8.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_init_prop(sbox, "floor(18)", 32.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, test, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(19)", 36.0f, 3.5f, 16.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, test, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 0.0f, 1.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(20)", 8.0f, -0.5f, 16.0f, floor_mesh, &entity);
     entity_prop_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -687,11 +703,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "tommy gun", 1.5f, 0.7f, 0.0f, tommy_gun_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity->data.prop.is_viewmodel = true;
-    entlist_add(sbox, &map->entlist, entity);
-
     entity_init_prop(sbox, "vinyl #1", 2.0f, 0.4f, 3.25f, vinyl_mesh, &entity);
     entity_prop_set_material(sbox, entity, water, 0);
     entity->data.prop.is_pickup = true;
@@ -804,7 +815,7 @@ void map_free(sbox_t* sbox, map_t* map) {
 static void send_to_renderer(sbox_t* sbox, map_t* map) {
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENTITY_PROP) continue;
+        if (entity->type != ENTITY_MESH) continue;
         if (!entity->data.prop.is_visible) continue;
         if (entity->data.prop.is_viewmodel) continue;
 
@@ -828,6 +839,7 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
         glm_translate(drawcall.model, entity->position);
         glm_scale(drawcall.model, entity->scale);
         glm_quat_rotate(drawcall.model, entity->rotation, drawcall.model);
+        drawcall.world_bbox = entity->world_bbox;
 
         glm_vec3_copy(entity->position, drawcall.position);
         glm_vec3_copy(entity->scale, drawcall.scale);

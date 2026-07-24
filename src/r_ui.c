@@ -21,7 +21,7 @@ void ui_init(sbox_t* sbox, ui_t* ui) {
 }
 
 void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
-    const texture_t* texture,
+    texture_t* texture,
     vec2 dest_pos, vec2 dest_size,
     vec2 src_pos, vec2 src_size,
     vec4 color)
@@ -45,7 +45,7 @@ void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
 }
 
 void ui_draw_texture(
-    sbox_t* sbox, ui_t* ui, const texture_t* texture, vec2 pos, vec2 size, vec4 color)
+    sbox_t* sbox, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color)
 {
     ui_draw_texture_ex(sbox, ui, texture, pos, size, (vec2){0.0f, 0.0f}, (vec2){1.0f, 1.0f}, color);
 }
@@ -123,10 +123,10 @@ bool ui_draw_button(
         size_copy[1] -= 8.0f;
     }
 
-    const texture_t* texture = (is_pressed) ? ui->button_pressed : ui->button;
+    texture_t* texture = (is_pressed) ? ui->button_pressed : ui->button;
     ui_draw_texture(sbox, ui, texture, position_copy, size_copy, COLOR_WHITE);
 
-    const float font_size = 40.0f;
+    const float font_size = (is_hovered) ? 30.0f : 34.0f;
     vec2 text_position = {
         position_copy[0] + size_copy[0] / 2.0f - ui_measure_text(message, font_size) / 2.0f,
         position_copy[1] + size_copy[1] / 2.0f - font_size / 2.0f};
@@ -153,7 +153,7 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
-    sprintf(text, "draw calls: %d", renderer->stats.draw_calls);
+    sprintf(text, "draw calls: %d", renderer->stats.drawcalls);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
@@ -175,7 +175,8 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
     vec2 position = {0.0f, r_height.value / 2.0f - size[1] / 2.0f};
 
     for (int i = 0; i < HOTBAR_SLOTS; i++) {
-        const texture_t* texture = (inventory->item_slot == i) ?
+        item_t* item = inventory->items[i];
+        texture_t* texture = (inventory->item_slot == i) ?
             ui->item_slot_active : ui->item_slot;
         ui_draw_texture(sbox, ui, texture, position, size, COLOR_WHITE);
 
@@ -184,6 +185,21 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
         vec4 color;
         glm_vec4_copy((inventory->item_slot == i) ? COLOR_BLACK : COLOR_WHITE, color);
         ui_draw_text_thick(sbox, ui, text, position, 24.0f, 4, color);
+
+        if (inventory->item_slot == i && sbox->time - inventory->last_switch < 4.0f) {
+            vec2 new_position;
+            new_position[0] = position[0] + size[0];
+            new_position[1] = position[1];
+
+            vec2 new_size = {128.0f, 48.0f};
+            float alpha = lerp(0.4f, 0.0f,
+                clamp(sbox->time - inventory->last_switch - 3.0f, 0.0f, 1.0f));
+            
+            ui_draw_texture(sbox, ui, ui->pixel,
+                new_position, new_size, (vec4){0.0f, 0.0f, 0.0f, alpha});
+
+            ui_draw_text_thick(sbox, ui, item->name, new_position, 24.0f, 4, COLOR_WHITE);
+        }
 
         position[1] += size[1];
     }
@@ -224,7 +240,7 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
         (vec2){r_width.value, r_height.value},
         (vec4){0.0f, 0.0f, 0.0f, 0.4f});
 
-    vec2 button_size = {256.0f, 64.0f};
+    vec2 button_size = {256.0f, 48.0f};
     vec2 position = {
         r_width.value / 2.0f - (button_size[0] / 2.0f) * 2.0f,
         r_height.value / 2.0f - (button_size[1] / 2.0f) * 2.0f};

@@ -23,6 +23,7 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     float near = 1.0f;
     float far = 32.0f;
     bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
+    frustum = bbox_translate(&frustum, renderer->camera.position);
     mat4 projection;
     glm_ortho(frustum.min[0], frustum.max[0],
         frustum.min[1], frustum.max[1],
@@ -30,10 +31,11 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
         projection);
 
     vec3 position;
-    glm_vec3_copy(GLM_VEC3_ZERO, position);
+    bbox_get_center(&frustum, position);
 
-    vec3 target;
-    glm_vec3_copy(sun_light->direction, target);
+    vec3 target = GLM_VEC3_ZERO_INIT;
+    glm_vec3_add(target, renderer->camera.position, target);
+    glm_vec3_add(target, sun_light->direction, target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);
@@ -100,71 +102,9 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
             r_draw_mesh(renderer, drawcall->mesh);
 
         if (r_debug_draw_colliders.value) {
-            bbox_t bbox = drawcall->mesh->bbox;
-            bbox = bbox_rotate(&bbox, drawcall->rotation);
-            bbox = bbox_translate(&bbox, drawcall->position);
-            bbox = bbox_scale(&bbox, drawcall->scale);
-            line_add_box(sbox, renderer, &bbox, COLOR_LIGHT_BLUE, 2.0f);
+            line_add_box(sbox, renderer, &drawcall->world_bbox, COLOR_LIGHT_BLUE, 2.0f);
         }
     }
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    r_set_framebuffer(renderer, NULL);
-}
-
-static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
-    entity_t* entity = entlist_find_by_name(sbox, &sbox->map.entlist, "tommy gun");
-    if (!entity) return;
-
-    r_set_framebuffer(renderer, renderer->gbuffer);
-    //glClear(GL_DEPTH_BUFFER_BIT);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-
-    r_set_shader(renderer, renderer->viewmodel_shader);
-    r_set_mat4(sbox, renderer, "view", renderer->view);
-    r_set_mat4(sbox, renderer, "projection", renderer->projection);
-    
-    r_set_vec3(sbox, renderer, "position", renderer->camera.position);
-
-    mat4 model;
-    glm_mat4_identity(model);
-
-    glm_vec3_copy(renderer->camera.position, entity->position);
-
-    vec3 forward;
-    glm_vec3_copy(renderer->camera.forward, forward);
-    glm_vec3_scale(forward, 0.35f, forward);
-    glm_vec3_add(entity->position, forward, entity->position);
-
-    vec3 right;
-    glm_vec3_copy(renderer->camera.right, right);
-    glm_vec3_scale(right, -0.15f, right);
-    glm_vec3_add(entity->position, right, entity->position);
-
-    vec3 up;
-    glm_vec3_copy(renderer->camera.up, up);
-    glm_vec3_scale(up, -0.1f, up);
-    glm_vec3_add(entity->position, up, entity->position);
-    
-    glm_translate(model, entity->position);
-
-    glm_quat(entity->rotation, rad(renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
-    glm_quat(entity->rotation, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
-    glm_quat_rotate(model, entity->rotation, model);
-
-    r_set_mat4(sbox, renderer, "model", model);
-
-    for (int i = 0; i < MAX_MATERIALS; i++) {
-        const material_t* material = entity->data.prop.materials[i];
-        if (!material) continue;
-        r_set_material(sbox, renderer, material, i);
-    }
-    
-    if (entity->data.prop.mesh)
-        r_draw_mesh(renderer, entity->data.prop.mesh);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -174,7 +114,7 @@ static void render_viewmodel(sbox_t* sbox, renderer_t* renderer) {
 static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->ambient_light_shader);
-    glViewport(0, 0, r_width.value, r_height.value);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     r_set_int(sbox, renderer, "gbuffer.position", 0);
     r_set_int(sbox, renderer, "gbuffer.albedo_roughness", 1);
@@ -192,7 +132,7 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
 static void render_sun_lights(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->sun_light_shader);
-    glViewport(0, 0, r_width.value, r_height.value);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
@@ -236,7 +176,7 @@ static void render_sun_lights(sbox_t* sbox, renderer_t* renderer) {
 static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->point_light_shader);
-    glViewport(0, 0, r_width.value, r_height.value);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     //glEnable(GL_CULL_FACE);
     //glCullFace(GL_FRONT);
@@ -296,9 +236,10 @@ static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-static void render_translucent(sbox_t* sbox, renderer_t* renderer) {
+static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->forward_shader);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -370,6 +311,7 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
 
 static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->screen_shader);
+    glViewport(0, 0, r_width.value, r_height.value);
 
     r_set_int(sbox, renderer, "screen", 0);
     r_set_int(sbox, renderer, "depth", 1);
@@ -403,10 +345,10 @@ void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_sun_lights(sbox, renderer);
     render_point_lights(sbox, renderer);
     copy_depth(sbox, renderer);
-    render_translucent(sbox, renderer);
+    player_render(sbox, &sbox->player, renderer);
+    render_forward(sbox, renderer);
     render_skybox(sbox, renderer);
     render_screen(sbox, renderer);
-
     line_render(sbox, renderer);
     ui_render(sbox, &renderer->ui, renderer);
 

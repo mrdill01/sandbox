@@ -1,6 +1,8 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include "render.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -12,24 +14,34 @@
 typedef struct sbox_t sbox_t;
 
 typedef struct {
-    bool is_free;
-    const char* name;
+    char* name;
     int count;
+    mesh_t* mesh;
+    material_t* materials[MAX_MATERIALS];
 } item_t;
 
 typedef struct {
-    item_t items[INVENTORY_SLOTS];
+    item_t* items[INVENTORY_SLOTS];
     size_t item_slot;
     bool is_open;
     float last_switch;
 } inventory_t;
 
+item_t* item_new(sbox_t* sbox,
+    const char* name,
+    mesh_t* mesh,
+    material_t* materials[MAX_MATERIALS]);
+void item_free(sbox_t* sbox, item_t* item);
+
 void inventory_init(sbox_t* sbox, inventory_t* inventory);
+void inventory_free(sbox_t* sbox, inventory_t* inventory);
+void inventory_give_item(sbox_t* sbox, inventory_t* inventory, item_t* item);
 void inventory_select_hotbar_slot(sbox_t* sbox, inventory_t* inventory, int slots);
 void inventory_open(sbox_t* sbox, inventory_t* inventory);
 void inventory_close(sbox_t* sbox, inventory_t* inventory);
 void inventory_toggle(sbox_t* sbox, inventory_t* inventory);
 
-void inventory_set_item(sbox_t* sbox, inventory_t* inventory, int slot, item_t item);
+void inventory_set_item(sbox_t* sbox, inventory_t* inventory, int slot, item_t* item);
+item_t* inventory_get_item(sbox_t* sbox, inventory_t* inventory);
 
 #endif

@@ -48,7 +48,7 @@ bool init(sbox_t* sbox) {
 
     info(sbox, "creating window...");
 
-    sbox->window = SDL_CreateWindow("sandbox",
+    sbox->window = SDL_CreateWindow("sbox",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         r_width.value,
@@ -85,6 +85,7 @@ bool init(sbox_t* sbox) {
 
     r_init(sbox, &sbox->renderer);
     a_init(sbox, &sbox->audio);
+    player_init(sbox, &sbox->player);
 
     return true;
 }
@@ -151,10 +152,7 @@ void tick(sbox_t* sbox) {
 
     if (sbox->keys[SDL_SCANCODE_F3]) {
         sbox->keys[SDL_SCANCODE_F3] = false;
-        printf("%g %g %g\n",
-            sbox->player.position[0],
-            sbox->player.position[1],
-            sbox->player.position[2]);
+        cvar_toggle(sbox, "r_debug_menu");
     }
 
     if (sbox->keys[SDL_SCANCODE_F4]) {
@@ -176,6 +174,8 @@ void shutdown(sbox_t* sbox) {
 
     r_free(sbox, &sbox->renderer);
     a_free(sbox, &sbox->audio);
+    player_free(sbox, &sbox->player);
+    
     SDL_GL_DeleteContext(sbox->gl_context);
     SDL_DestroyWindow(sbox->window);
     SDL_Quit();

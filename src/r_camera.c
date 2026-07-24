@@ -30,7 +30,7 @@ void camera_tick(sbox_t* sbox, camera_t* camera) {
 
 void camera_add_pitch(camera_t* camera, float pitch) {
     camera->angles[0] += pitch;
-    camera->angles[0] = clip(camera->angles[0], -PITCH_LIMIT, PITCH_LIMIT);        
+    camera->angles[0] = clamp(camera->angles[0], -PITCH_LIMIT, PITCH_LIMIT);        
 }
 
 void camera_add_yaw(camera_t* camera, float yaw) {

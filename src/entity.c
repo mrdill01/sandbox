@@ -12,7 +12,8 @@ static void init_common(
 	glm_vec3_copy((vec3){x, y, z}, entity->position);
     glm_quat_copy(GLM_QUAT_IDENTITY, entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
-	entity->bbox = (bbox_t){0};
+	entity->local_bbox = (bbox_t){0};
+	entity->world_bbox = (bbox_t){0};
 
 	*out = entity;
 }
@@ -21,7 +22,7 @@ void entity_init_prop(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
-	init_common(name, ENTITY_PROP, x, y, z, &entity);
+	init_common(name, ENTITY_MESH, x, y, z, &entity);
     entity->data.prop.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.prop.materials[i] = NULL;
@@ -64,12 +65,16 @@ void entity_init_point_light(sbox_t* sbox,
 }
 
 static void compute_bounding_box(entity_t* entity) {
-	if (entity->type != ENTITY_PROP) return;
+	if (entity->type != ENTITY_MESH) return;
 	
+	entity->local_bbox = entity->data.prop.mesh->bbox;
+
 	mat4 rotation;
 	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, rotation);
-	entity->bbox = bbox_rotate(&entity->data.prop.mesh->bbox, rotation);
-	entity->bbox = bbox_translate(&entity->bbox, entity->position);
+	entity->world_bbox = entity->local_bbox;
+	entity->world_bbox = bbox_rotate(&entity->world_bbox, rotation);
+	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
+	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
 }
 
 void entity_free(sbox_t* sbox, entity_t* entity) {
@@ -111,8 +116,8 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		compute_bounding_box(entity);
 
 		switch (entity->type) {
-		case ENTITY_PROP: {
-			entity_prop_t* prop = &entity->data.prop;
+		case ENTITY_MESH: {
+			entity_mesh_t* prop = &entity->data.prop;
 			if (prop->is_pickup) {
     			glm_quat(entity->rotation, rad(sbox->time * PICKUP_SPIN_RATE), 0.0f, 1.0f, 0.0f);
 			}

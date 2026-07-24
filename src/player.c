@@ -2,24 +2,27 @@
 #include "sbox.h"
 #include "entity.h"
 
-#define P_HEIGHT 1.5f
-#define P_HEIGHT_CROUCH 0.75f
-#define P_RADIUS 0.5f
-#define P_GRAVITY 9.81f
-#define P_JUMPFORCE 3.5f
-#define P_MAX_STEP_DOWN 0.5f
-#define P_MAX_SPEED_WALK 3.2f
-#define P_MAX_SPEED_CROUCH 1.8f
-#define P_ACCEL 10.0f
-#define P_AIR_ACCEL 2.0f
-#define P_STOPSPEED 2.5f
-#define P_AIR_STOPSPEED 2.0f
-#define P_FRICTION 5.0f
-#define P_FRICTION_WATER 2.0f
-#define P_AIR_CONTROL 0.0f
-#define P_THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
-#define P_INTERP_HEIGHT_SPEED 5.5f
-#define P_MAX_INTERACT_DISTANCE 8.0f
+#define HEIGHT 1.5f
+#define HEIGHT_CROUCH 0.75f
+#define RADIUS 0.5f
+#define GRAVITY 9.81f
+#define JUMPFORCE 3.5f
+#define MAX_STEDOWN 0.5f
+#define MAX_SPEED_WALK 3.2f
+#define MAX_SPEED_CROUCH 1.8f
+#define ACCEL 10.0f
+#define AIR_ACCEL 2.0f
+#define STOPSPEED 2.5f
+#define AIR_STOPSPEED 2.0f
+#define FRICTION 5.0f
+#define FRICTION_WATER 2.0f
+#define AIR_CONTROL 0.0f
+#define THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
+#define INTERP_HEIGHT_SPEED 5.5f
+#define MAX_INTERACT_DISTANCE 8.0f
+#define VIEWMODEL_POS_X -0.05f
+#define VIEWMODEL_POS_Y -0.1f
+#define VIEWMODEL_POS_Z 0.35f
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
@@ -42,7 +45,13 @@ void player_init(sbox_t* sbox, player_t* player) {
     player->is_thirdperson = false;
     player->height = get_height(sbox, player);
     inventory_init(sbox, &player->inventory);
+    glm_vec3_zero(player->item_position);
+    glm_vec3_zero(player->item_anim);
     edit_init(sbox, &player->editor);
+}
+
+void player_free(sbox_t* sbox, player_t* player) {
+    inventory_free(sbox, &player->inventory);
 }
 
 static void set_move_mode(player_t* player, move_mode_t new_mode) {
@@ -55,8 +64,8 @@ static void set_move_mode(player_t* player, move_mode_t new_mode) {
 static float get_max_speed(sbox_t* sbox, player_t* player) {
     float speed;
     switch (player->move_mode) {
-    case MOVE_WALK: speed = P_MAX_SPEED_WALK; break;
-    case MOVE_CROUCH: speed = P_MAX_SPEED_CROUCH; break;
+    case MOVE_WALK: speed = MAX_SPEED_WALK; break;
+    case MOVE_CROUCH: speed = MAX_SPEED_CROUCH; break;
     default: unreachable(sbox);
     }
     
@@ -65,8 +74,8 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
 
 static float get_height(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
-    case MOVE_WALK: return P_HEIGHT;
-    case MOVE_CROUCH: return P_HEIGHT_CROUCH;
+    case MOVE_WALK: return HEIGHT;
+    case MOVE_CROUCH: return HEIGHT_CROUCH;
     default: unreachable(sbox);
     }
 
@@ -147,6 +156,10 @@ static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
         player->buttons |= PLAYER_BUTTON_FIRE;
     }
 
+    if (sbox->keys[SDL_SCANCODE_LALT]) {
+        player->buttons |= PLAYER_BUTTON_AIM;
+    }
+
     if (sbox->keys[SDL_SCANCODE_C]) {
         sbox->keys[SDL_SCANCODE_C] = false;
         player->is_thirdperson = !player->is_thirdperson;
@@ -193,7 +206,7 @@ static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
         return;
     }
 
-    float control = (speed < P_STOPSPEED) ? P_STOPSPEED : speed;
+    float control = (speed < STOPSPEED) ? STOPSPEED : speed;
     float drop = control * friction * sbox->dt;
 
     float new_speed = speed - drop;
@@ -225,22 +238,22 @@ static void move_water(sbox_t* sbox, player_t* player) {
     if (player->is_grounded)
         player->velocity[1] = 0.0f;
     
-    apply_friction(sbox, player, P_FRICTION_WATER);
-    accelerate(sbox, player, player->target_speed, P_ACCEL);
+    apply_friction(sbox, player, FRICTION_WATER);
+    accelerate(sbox, player, player->target_speed, ACCEL);
 
     if ((player->buttons & PLAYER_BUTTON_JUMP) && player->is_grounded && !player->head_blocked) {
-        player->velocity[1] = P_JUMPFORCE;
+        player->velocity[1] = JUMPFORCE;
         player->is_jumping = true;
     }
 }
 
 static void move_ground(sbox_t* sbox, player_t* player) {
     player->velocity[1] = 0.0f;
-    apply_friction(sbox, player, P_FRICTION);
-    accelerate(sbox, player, player->target_speed, P_ACCEL);
+    apply_friction(sbox, player, FRICTION);
+    accelerate(sbox, player, player->target_speed, ACCEL);
 
     if ((player->buttons & PLAYER_BUTTON_JUMP) && !player->head_blocked) {
-        player->velocity[1] = P_JUMPFORCE;
+        player->velocity[1] = JUMPFORCE;
         player->is_jumping = true;
     }
 }
@@ -257,7 +270,7 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
 
     float dot = glm_vec3_dot(player->velocity, player->target_dir);
     float k = 32;
-    k *= P_AIR_CONTROL * dot * dot * sbox->dt;
+    k *= AIR_CONTROL * dot * dot * sbox->dt;
 
     if (dot > 0.0f) {
         for (int i = 0; i < 3; i++)
@@ -273,16 +286,16 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
 static void move_air(sbox_t* sbox, player_t* player) {
     float accel;
     if (glm_vec3_dot(player->velocity, player->target_dir) < 0.0f)
-        accel = P_AIR_STOPSPEED;
+        accel = AIR_STOPSPEED;
     else
-        accel = P_AIR_ACCEL;
+        accel = AIR_ACCEL;
     
     accelerate(sbox, player, player->target_speed, accel);
 
-    if (P_AIR_CONTROL > 0.0f)
+    if (AIR_CONTROL > 0.0f)
         air_control(sbox, player, player->target_speed);
 
-    player->velocity[1] -= P_GRAVITY * sbox->dt;
+    player->velocity[1] -= GRAVITY * sbox->dt;
 }
 
 static void hit_ground(sbox_t* sbox, player_t* player) {
@@ -296,6 +309,7 @@ static void hit_ground(sbox_t* sbox, player_t* player) {
     player->fall_distance = 0.0f;
     player->is_jumping = false;
     player->height -= 0.3f;
+    player->item_anim[1] -= 0.075f;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
@@ -344,12 +358,12 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
 }
 
 static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
-    if (player->is_jumping || player->fall_distance >= P_MAX_STEP_DOWN) return;
+    if (player->is_jumping || player->fall_distance >= MAX_STEDOWN) return;
     
     vec3 start;
     player_get_bottom_position(sbox, player, start);
     vec3 dir = {0.0f, -1.0f, 0.0f};
-    float max_distance = P_MAX_STEP_DOWN;
+    float max_distance = MAX_STEDOWN;
     trace_result_t trace;
     
     if (phys_line_trace(start, dir, max_distance, entlist, &trace))
@@ -360,7 +374,7 @@ static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, 1.0f, 0.0f};
-    float max_distance = P_HEIGHT / 2.0f;
+    float max_distance = HEIGHT / 2.0f;
     trace_result_t trace;
     
     player->head_blocked = false;
@@ -411,8 +425,12 @@ static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist)
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera_tick(sbox, camera);
 
+    camera->fov = interp_to(camera->fov, r_fov.value, 8.0f, sbox->dt);
+    if (player->buttons & PLAYER_BUTTON_AIM)
+        camera->fov = interp_to(camera->fov, r_fov.value * 0.75f, 8.0f, sbox->dt);
+
     player->height = interp_to(player->height,
-        get_height(sbox, player) / 2.0f, P_INTERP_HEIGHT_SPEED, sbox->dt);
+        get_height(sbox, player) / 2.0f, INTERP_HEIGHT_SPEED, sbox->dt);
 
     camera->position[0] = player->position[0];
     camera->position[1] = player->position[1] + player->height;
@@ -423,7 +441,7 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
         glm_vec3_copy(camera->forward, dir);
         glm_vec3_inv(dir);
 
-        float camera_distance = P_THIRDPERSON_CAMERA_BOOM_LENGTH;
+        float camera_distance = THIRDPERSON_CAMERA_BOOM_LENGTH;
         trace_result_t trace;
 
         if (phys_line_trace(camera->position, dir, camera_distance, &sbox->map.entlist, &trace))
@@ -442,7 +460,7 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
-    float max_distance = P_MAX_INTERACT_DISTANCE;
+    float max_distance = MAX_INTERACT_DISTANCE;
     trace_result_t trace;
 
     if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
@@ -458,17 +476,16 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
         }
 
         if (player->editor.selection) {
-            /* vec3 half_size;
-            bbox_get_half_size(&player->editor.selection->bbox, half_size);
-            
-            vec3 normal_offset;
-            glm_vec3_copy(player->editor.selection_trace.normal, normal_offset);
-            glm_vec3_mul(normal_offset, half_size, normal_offset);
+            vec3 half_size;
+            bbox_get_half_size(&player->editor.selection->local_bbox, half_size);
 
+            vec3 center;
+            bbox_get_center(&player->editor.selection->world_bbox, center);
+
+            float diff = player->editor.selection->world_bbox.min[1];
+            diff = center[1] - diff;
+            trace.point[1] += diff;
             glm_vec3_copy(trace.point, player->editor.selection_position);
-            glm_vec3_add(player->editor.selection_position,
-                normal_offset,
-                player->editor.selection_position);*/
         }
     }
 }
@@ -480,6 +497,44 @@ static void tick_mesh(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     mesh->position[1] = player->position[1] - get_height(sbox, player) / 2.0f;
     mesh->position[2] = player->position[2];
     glm_quat(mesh->rotation, rad(-sbox->renderer.camera.angles[1]), 0.0f, 1.0f, 0.0f);
+}
+
+static void tick_item_position(sbox_t* sbox, player_t* player) {
+    vec3 target;
+    if (player->buttons & PLAYER_BUTTON_AIM) {
+        target[0] = 0.0f;
+        target[1] = 0.0f;
+        target[2] = 0.2f;
+    } else {
+        target[0] = VIEWMODEL_POS_X;
+        target[1] = VIEWMODEL_POS_Y;
+        target[2] = VIEWMODEL_POS_Z;
+    }
+
+    float aim_speed = 18.0f;
+    player->item_position[0] = interp_to(player->item_position[0], target[0], aim_speed, sbox->dt);
+    player->item_position[1] = interp_to(player->item_position[1], target[1], aim_speed, sbox->dt);
+    player->item_position[2] = interp_to(player->item_position[2], target[2], aim_speed, sbox->dt);
+}
+
+static void tick_item_anim(sbox_t* sbox, player_t* player) {
+    if (player->target_speed < 1.0f || !player->is_grounded) {
+        float reset_speed = 5.0f;
+        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
+        player->item_anim[1] = interp_to(player->item_anim[1], 0.0f, reset_speed, sbox->dt);
+        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, sbox->dt);
+        return;
+    }
+
+    vec3 anim;
+    anim[0] = sin(sbox->time * 2.5f) * 0.01f * (1.0f - (player->buttons & PLAYER_BUTTON_AIM));
+    anim[1] = sin(sbox->time * 10.0f) * 0.025f * (1.0f - (player->buttons & PLAYER_BUTTON_AIM));
+    anim[2] = sin(sbox->time * 5.0f) * 0.025f * (1.0f - (player->buttons & PLAYER_BUTTON_AIM));
+
+    float set_speed = 6.5f;
+    player->item_anim[0] = interp_to(player->item_anim[0], anim[0], set_speed, sbox->dt);
+    player->item_anim[1] = interp_to(player->item_anim[1], anim[1], set_speed, sbox->dt);
+    player->item_anim[2] = interp_to(player->item_anim[2], anim[2], set_speed, sbox->dt);
 }
 
 static void tick_step_sounds(sbox_t* sbox, player_t* player) {
@@ -527,9 +582,63 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     tick_camera(sbox, player, camera);
     trace_look_ray(sbox, player, camera, entlist);
     tick_mesh(sbox, player, entlist);
+    tick_item_position(sbox, player);
+    tick_item_anim(sbox, player);
     tick_step_sounds(sbox, player);
     edit_tick(sbox, &player->editor);
     reset_input(sbox, player);
+}
+
+void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
+    if (player->is_thirdperson) return;
+
+    item_t* item = inventory_get_item(sbox, &player->inventory);
+    if (!item) return;
+
+    drawcall_t drawcall;
+    drawcall.mesh = item->mesh;
+    memcpy(drawcall.materials, item->materials, sizeof(material_t*) * MAX_MATERIALS);
+
+    vec3 position;
+    glm_vec3_copy(renderer->camera.position, position);
+
+    vec3 forward;
+    glm_vec3_copy(renderer->camera.forward, forward);
+    glm_vec3_scale(forward, player->item_position[2] + player->item_anim[2], forward);
+    glm_vec3_add(position, forward, position);
+    
+    vec3 right;
+    glm_vec3_copy(renderer->camera.right, right);
+    glm_vec3_scale(right, player->item_position[0] + player->item_anim[0], right);
+    glm_vec3_add(position, right, position);
+
+    vec3 up;
+    glm_vec3_copy(renderer->camera.up, up);
+    glm_vec3_scale(up, player->item_position[1] + player->item_anim[1], up);
+    glm_vec3_add(position, up, position);
+
+    vec3 scale = {1.0f, 1.0f, 1.0f};
+
+    quat rotation;
+    glm_quat_identity(rotation);
+    glm_quat(rotation, rad(renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
+    glm_quat(rotation, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+
+    bbox_t bbox = {0};
+
+    glm_mat4_identity(drawcall.model);
+    glm_translate(drawcall.model, position);
+    glm_scale(drawcall.model, scale);
+    glm_quat_rotate(drawcall.model, rotation, drawcall.model);
+    drawcall.world_bbox = bbox;
+
+    glm_vec3_copy(position, drawcall.position);
+    glm_vec3_copy(scale, drawcall.scale);
+    glm_quat_rotate(GLM_MAT4_IDENTITY, rotation, drawcall.rotation);
+
+    drawcall.dist_to_camera = 0.0f;
+    drawcall.is_translucent = true;
+    r_add_drawcall(renderer, drawcall);
 }
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position) {

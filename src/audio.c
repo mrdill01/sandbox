@@ -5,7 +5,7 @@
 
 #include <SDL2/SDL_audio.h>
 
-#ifndef SANDBOX_NO_AUDIO
+#ifndef SBOX_NO_AUDIO
 
 static void list_audio_devices(sbox_t* sbox, const ALCchar *devices) {
     const ALCchar* device = devices;
