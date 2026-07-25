@@ -67,12 +67,14 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         line->decay_time = 0.0f;
     }
 
+    renderer->p_smoke = texture_load(sbox, "res/textures/particles/p_smoke.png");
+    renderer->p_fire = texture_load(sbox, "res/textures/particles/p_fire.png");
+    renderer->p_bullet_hole = texture_load(sbox, "res/textures/particles/p_bullet_hole.png");
+
     for (int i = 0; i < MAX_PARTICLES; i++) {
         particle_t* particle = &renderer->particles[i];
         particle->is_free = true;
     }
-    renderer->particle_head = 0;
-    renderer->particle_tail = 0;
 
     r_reset_stats(sbox, renderer);
     info(sbox, "renderer initialized!");

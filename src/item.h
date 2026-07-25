@@ -22,6 +22,7 @@ typedef struct {
     sound_t* fire_sound;
     float fire_rate;
     float last_fire;
+    float spread;
 } weapon_t;
 
 typedef struct {

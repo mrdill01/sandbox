@@ -9,6 +9,7 @@ bool phys_line_trace(
     glm_vec3_copy(GLM_VEC3_ZERO, trace.normal);
     trace.water_level = 0.0f;
     trace.entity = NULL;
+    trace.material = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
     bool hit = false;
 
@@ -40,13 +41,14 @@ bool phys_line_trace(
                 float bias = 1.00001f;
                 if (fabsf(diff[0]) > half_size[0] * bias - 0.001f)
                     trace.normal[0] = sign(diff[0]);
-                if (fabsf(diff[1]) > half_size[1] * bias - 0.001f)
+                else if (fabsf(diff[1]) > half_size[1] * bias - 0.001f)
                     trace.normal[1] = sign(diff[1]);
-                if (fabsf(diff[2]) > half_size[2] * bias - 0.001f)
+                else if (fabsf(diff[2]) > half_size[2] * bias - 0.001f)
                     trace.normal[2] = sign(diff[2]);
 
                 hit = true;
                 trace.entity = entity;
+                trace.material = entity->data.prop.materials[0];
                 trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
                 goto on_hit;
             }

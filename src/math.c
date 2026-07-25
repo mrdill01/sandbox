@@ -48,6 +48,14 @@ float random(float start, float end) {
 	return start + scale * (end - start);
 }
 
+void random_in_cone(float angle, vec3 dir, vec3 cone) {
+    float theta = random(0.0f, angle);
+    float phi = random(0.0f, 2.0f * M_PI);
+
+    vec3 local = {cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta)};
+    cone = local;
+}
+
 bbox_t bbox_new(vec3 min, vec3 max) {
     bbox_t bbox;
     glm_vec3_copy(min, bbox.min);

@@ -125,11 +125,14 @@ typedef struct {
     bool is_free;
     vec3 position;
     vec3 velocity;
+    texture_t* texture;
+    float alpha;
     float size;
     float spawn_time;
     float lifetime;
     bool apply_gravity;
     mesh_t* mesh;
+    float dist_to_camera;
 } particle_t;
 
 typedef struct {
@@ -193,9 +196,11 @@ typedef struct {
 
     line_t lines[MAX_LINES];
 
+    texture_t* p_smoke;
+    texture_t* p_fire;
+    texture_t* p_bullet_hole;
+
     particle_t particles[MAX_PARTICLES];
-    int particle_head;
-    int particle_tail;
 
     render_stats_t stats;
 } renderer_t;
@@ -283,10 +288,18 @@ void r_render_lines(sbox_t* sbox, renderer_t* renderer);
 
 /* TODO: temporary */
 void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal);
-void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position);
+void r_add_partfx_shoot_beam(sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir);
+void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 
-particle_t* r_add_particle(sbox_t* sbox,
-    renderer_t* renderer, vec3 position, vec3 velocity, float size);
+particle_t* r_add_particle(
+    sbox_t* sbox,
+    renderer_t* renderer,
+    vec3 position,
+    vec3 velocity,
+    texture_t* texture,
+    float alpha,
+    float size,
+    float lifetime);
 void r_tick_particles(sbox_t* sbox, renderer_t* renderer);
 void r_render_particles(sbox_t* sbox, renderer_t* renderer);
 int r_get_particle_count(sbox_t* sbox, renderer_t* renderer);

@@ -14,22 +14,54 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, v
             random(-10.0f, 10.0f),
             random(-10.0f, 10.0f)};
         
-        particle_t* particle = r_add_particle(sbox, &sbox->renderer, position, velocity, 0.05f);
-        particle->apply_gravity = false;
+        r_add_particle(
+            sbox, &sbox->renderer, position, velocity, renderer->p_fire, 1.0f, 0.05f, 2.0f);
     }
+
+    vec3 bullet_hole_position;
+    glm_vec3_copy(position, bullet_hole_position);
+    
+    vec3 offset;
+    glm_vec3_copy(normal, offset);
+    glm_vec3_scale(offset, 0.05f, offset);
+
+    glm_vec3_add(bullet_hole_position, offset, bullet_hole_position);
+
+    r_add_particle(sbox, &sbox->renderer,
+        bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
+        1.0f, random(0.08f, 0.12f), 8.0f);
 }
 
-void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position) {
+void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material) {
     for (int i = 0; i < 20; i++) {
         vec3 velocity = {
             random(-10.0f, 10.0f),
-            random(10.0f, 40.0f),
+            random(2.0f, 15.0f),
             random(-10.0f, 10.0f)};
-        r_add_particle(sbox, &sbox->renderer, position, velocity, 0.05f);
+        particle_t* particle =
+            r_add_particle(sbox, &sbox->renderer, position, velocity, material->albedo,
+                0.75f, random(0.075f, 0.125f), 1.0f);
+        particle->apply_gravity = true;
+
+        vec3 smoke_position = {
+            position[0] + random(-0.35f, 0.35f),
+            position[1] + random(-0.35f, 0.35f),
+            position[2] + random(-0.35f, 0.35f)};
+        glm_vec3_zero(velocity);
+        r_add_particle(sbox, &sbox->renderer, smoke_position, velocity,
+            renderer->p_smoke, 0.5f, 0.4f, 2.0f);
     }
 }
 
-particle_t* r_add_particle(sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity, float size) {
+particle_t* r_add_particle(
+    sbox_t* sbox,
+    renderer_t* renderer,
+    vec3 position,
+    vec3 velocity,
+    texture_t* texture,
+    float alpha,
+    float size,
+    float lifetime) {
     particle_t* particle = NULL;
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (renderer->particles[i].is_free) {
@@ -44,12 +76,22 @@ particle_t* r_add_particle(sbox_t* sbox, renderer_t* renderer, vec3 position, ve
     particle->is_free = false;
     glm_vec3_copy(position, particle->position);
     glm_vec3_copy(velocity, particle->velocity);
+    particle->texture = texture;
+    particle->alpha = alpha;
     particle->size = size;
     particle->mesh = renderer->quad_mesh;
     particle->spawn_time = sbox->time;
-    particle->lifetime = 2.0f;
-    particle->apply_gravity = true;
+    particle->lifetime = lifetime;
+    particle->apply_gravity = false;
     return particle;
+}
+
+static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
+	particle_t* a = (particle_t*)a_ptr;
+	particle_t* b = (particle_t*)b_ptr;
+    if (!a || !b) return 0;
+	if (a->dist_to_camera < b->dist_to_camera) return 1;
+	return -1;
 }
 
 void r_tick_particles(sbox_t* sbox, renderer_t* renderer) {
@@ -70,13 +112,21 @@ void r_tick_particles(sbox_t* sbox, renderer_t* renderer) {
         glm_vec3_scale(move, sbox->dt, move);
 
         glm_vec3_add(particle->position, move, particle->position);
+
+        vec3 tmp;
+		glm_vec3_sub(particle->position, sbox->renderer.camera.position, tmp);
+		particle->dist_to_camera = glm_vec3_norm2(tmp);
     }
+
+	qsort(renderer->particles, MAX_PARTICLES, sizeof(particle_t), sort_back_to_front);
+
 }
 
 void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->partfx_shader);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
 
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
@@ -90,10 +140,15 @@ void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
         r_set_vec3(sbox, renderer, "camera_right", renderer->camera.right);
         r_set_vec3(sbox, renderer, "camera_up", renderer->camera.up);
 
+        r_set_int(sbox, renderer, "particle", 0);
+        r_set_texture(renderer, particle->texture, 0);
+        r_set_float(sbox, renderer, "alpha", particle->alpha);
+
         r_draw_mesh(renderer, particle->mesh);
     }
 
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
     r_set_framebuffer(renderer, NULL);
 }
 

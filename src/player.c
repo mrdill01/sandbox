@@ -304,7 +304,7 @@ static void move_air(sbox_t* sbox, player_t* player) {
     player->velocity[1] -= PHYS_GRAVITY * sbox->dt;
 }
 
-static void hit_ground(sbox_t* sbox, player_t* player) {
+static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     sound_t* sound = sbox->audio.jump_land_sounds[player->ground_mat];
     vec3 position;
     player_get_bottom_position(sbox, player, position);
@@ -316,7 +316,7 @@ static void hit_ground(sbox_t* sbox, player_t* player) {
     if (player->water_level == 0.0f) {
         vec3 position;
         player_get_bottom_position(sbox, player, position);
-        r_add_partfx_hit_ground(sbox, &sbox->renderer, position);
+        r_add_partfx_hit_ground(sbox, &sbox->renderer, position, trace.material);
     }
 
     player->last_step_time = sbox->time;
@@ -362,7 +362,7 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
 
         player->is_grounded = true;
         if (!was_grounded)
-            hit_ground(sbox, player);
+            hit_ground(sbox, player, trace);
 
         if (player->water_level > 0.0f && !was_in_water)
             enter_water(sbox, player);
@@ -535,6 +535,49 @@ static void tick_mesh(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     glm_quat(mesh->rotation, rad(-sbox->renderer.camera.angles[1]), 0.0f, 1.0f, 0.0f);
 }
 
+static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+    item_t* item = inventory_get_item(sbox, &player->inventory);
+    if (!item)
+        return;
+    
+    weapon_t* weapon = &item->data.weapon;
+
+    vec3 start;
+    start[0] = player->position[0];
+    start[1] = player->position[1] + get_height(sbox, player) / 2.0f;
+    start[2] = player->position[2];
+    
+    camera_t* camera = &sbox->renderer.camera;
+    vec3 dir;
+    glm_vec3_copy(camera->forward, dir);
+
+    vec3 spread;
+    random_in_cone(weapon->spread, dir, spread);
+
+    glm_vec3_add(dir, spread, dir);
+
+    float max_distance = 100.0f;
+    trace_result_t trace;
+
+    if (player->buttons & PLAYER_BUTTON_FIRE) {
+        if (sbox->time - weapon->last_fire < weapon->fire_rate)
+            return;
+        
+        weapon->last_fire = sbox->time;
+        a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
+        player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ? 0.02 : 0.12f;
+    
+        if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+            printf("%g %g %g\n", trace.normal[0], trace.normal[1], trace.normal[2]);
+
+            sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
+            a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
+
+            r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace.point, trace.normal);
+        }
+    }
+}
+
 static void tick_item_position(sbox_t* sbox, player_t* player) {
     vec3 target;
     if (player->buttons & PLAYER_BUTTON_AIM) {
@@ -627,6 +670,7 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     tick_camera(sbox, player, camera);
     trace_look_ray(sbox, player, camera, entlist);
     tick_mesh(sbox, player, entlist);
+    tick_item(sbox, player, entlist);
     tick_item_position(sbox, player);
     tick_item_anim(sbox, player);
     tick_step_sounds(sbox, player);

@@ -5,7 +5,7 @@
 #include "entity.h"
 
 #define PHYS_GRAVITY 9.81f
-#define PHYS_TRACE_STEP 0.01f
+#define PHYS_TRACE_STEP 0.005f
 
 typedef enum phys_material_t {
     PHYS_MAT_NONE,
@@ -24,6 +24,7 @@ typedef struct {
     float distance;
     float water_level;
     entity_t* entity;
+    material_t* material;
     phys_material_t phys_mat;
 } trace_result_t;
 
