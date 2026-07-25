@@ -9,20 +9,21 @@
 
 #define MAX_MSG_LEN 2048
 
-cvar_t r_width = {"r_width", "960.0f", true};
-cvar_t r_height = {"r_height", "540.0f", true};
-cvar_t r_scale = {"r_scale", "0.35f", true};
-cvar_t r_fullscreen = {"r_fullscreen", "0", true};
-cvar_t r_vsync = {"r_vsync", "0", true};
-cvar_t r_fov = {"r_fov", "75.0f", true};
-cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true};
-cvar_t r_debug_menu = {"r_debug_menu", "1", true};
-cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true};
-cvar_t a_device = {"a_device", "(null)", true};
-cvar_t a_volume = {"a_volume", "0.5f", true};
-cvar_t m_sens = {"m_sens", "5.0f", true};
-cvar_t edit_mode = {"edit_mode", "1.0f", true};
-cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true};
+cvar_t r_width = {"r_width", "960.0f", true, "Renderer width."};
+cvar_t r_height = {"r_height", "540.0f", true, "Renderer height."};
+cvar_t r_scale = {"r_scale", "0.35f", true, "Resolution scaling."};
+cvar_t r_fullscreen = {"r_fullscreen", "0", true, "Fullscreen."};
+cvar_t r_vsync = {"r_vsync", "0", true, "Vertical sync."};
+cvar_t r_fov = {"r_fov", "75.0f", true, "Field-of-view."};
+cvar_t r_shadows = {"r_shadows", "0.0f", true, "Enable shadows."};
+cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
+cvar_t r_debug_menu = {"r_debug_menu", "1", true, "Debug menu."};
+cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, "Draw colliders."};
+cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
+cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
+cvar_t m_sens = {"m_sens", "5.0f", true, "Mouse sensitivity."};
+cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
+cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
 
 void sbox_init(sbox_t* sbox) {
 	info(sbox, "%s", SBOX_VERSION);
@@ -44,6 +45,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_fullscreen, r_on_toggle_fullscreen);
     cvar_register(sbox, &r_vsync, NULL);
     cvar_register(sbox, &r_fov, NULL);
+    cvar_register(sbox, &r_shadows, NULL);
     cvar_register(sbox, &r_shadow_res, NULL);
     cvar_register(sbox, &r_debug_menu, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
@@ -101,15 +103,15 @@ void sbox_tick(sbox_t* sbox) {
 void sbox_reload_resources(sbox_t* sbox) {
 	info(sbox, "reloading resources...");
 
-	free(sbox->renderer.screen_shader);
+	sbox->renderer.gbuffer_shader = shader_load(sbox,
+        "gbuffer", "res/shaders/gbuffer.vs", "res/shaders/gbuffer.fs");
+
 	sbox->renderer.screen_shader = shader_load(sbox,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
 
-	free(sbox->renderer.screen_shader);
 	sbox->renderer.forward_shader = shader_load(sbox,
         "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
 
-	free(sbox->renderer.skybox_shader);
 	sbox->renderer.skybox_shader = shader_load(sbox,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");
 	

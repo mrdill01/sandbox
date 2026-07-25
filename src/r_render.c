@@ -9,6 +9,11 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     glViewport(0, 0, r_shadow_res.value, r_shadow_res.value);
     glClear(GL_DEPTH_BUFFER_BIT);
 
+    if (!r_shadows.value) {
+        r_set_framebuffer(renderer, NULL);
+        return;
+    }
+    
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -23,19 +28,24 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     float near = 1.0f;
     float far = 32.0f;
     bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
-    frustum = bbox_translate(&frustum, renderer->camera.position);
     mat4 projection;
     glm_ortho(frustum.min[0], frustum.max[0],
         frustum.min[1], frustum.max[1],
         frustum.min[2], frustum.max[2],
         projection);
 
-    vec3 position;
-    bbox_get_center(&frustum, position);
+    vec3 center;
+    bbox_get_center(&frustum, center);
 
-    vec3 target = GLM_VEC3_ZERO_INIT;
-    glm_vec3_add(target, renderer->camera.position, target);
-    glm_vec3_add(target, sun_light->direction, target);
+    vec3 dir;
+    glm_vec3_copy(sun_light->direction, dir);
+
+    vec3 position;
+    glm_vec3_copy(center, position);
+    
+    vec3 target;
+    glm_vec3_copy(center, target);
+    glm_vec3_add(target, dir, target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);
@@ -87,6 +97,7 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
         
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    r_set_float(sbox, renderer, "time", sbox->time);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -98,12 +109,13 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
             r_set_material(sbox, renderer, material, i);
         }
 
+        r_set_float(sbox, renderer, "hitbox_height", drawcall->local_bbox.max[1]);
+
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
 
-        if (r_debug_draw_colliders.value) {
-            line_add_box(sbox, renderer, &drawcall->world_bbox, COLOR_LIGHT_BLUE, 2.0f);
-        }
+        if (r_debug_draw_colliders.value)
+            r_add_line_box(sbox, renderer, &drawcall->world_bbox, COLOR_GREEN, 0.0f);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -158,7 +170,8 @@ static void render_sun_lights(sbox_t* sbox, renderer_t* renderer) {
         r_set_int(sbox, renderer, "light.shadow", 4);
         r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 4);
 
-        r_set_mat4(sbox, renderer, "light.matrix", sun_light->matrix);
+        r_set_mat4(sbox, renderer, "light.matrix",
+            (r_shadows.value) ? sun_light->matrix : GLM_MAT4_IDENTITY);
 
         r_draw_mesh(renderer, renderer->quad_mesh);
     }
@@ -203,7 +216,7 @@ static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
         entity_point_light_t* point_light = &entity->data.point_light;
 
         r_set_vec3(sbox, renderer, "light.position", entity->position);
-        r_set_vec3(sbox, renderer, "light.color", entity->data.point_light.color);
+        r_set_vec3(sbox, renderer, "light.color", point_light->color);
 
         float scale = 3.0f;
         
@@ -282,8 +295,10 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
 }
 
 static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
-    r_set_framebuffer(renderer, renderer->screen_buffer);
+    r_set_framebuffer(renderer, renderer->gbuffer);
     r_set_shader(renderer, renderer->skybox_shader);
+
+    glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
 
@@ -304,6 +319,7 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
 
     r_draw_mesh(renderer, renderer->quad_mesh);
 
+    glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LESS);
     r_set_framebuffer(renderer, NULL);
@@ -340,6 +356,7 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_shadows(sbox, renderer);
+    render_skybox(sbox, renderer);
     render_gbuffer(sbox, renderer);
     render_ambient_light(sbox, renderer);
     render_sun_lights(sbox, renderer);
@@ -347,9 +364,9 @@ void r_render(sbox_t* sbox, renderer_t* renderer) {
     copy_depth(sbox, renderer);
     player_render(sbox, &sbox->player, renderer);
     render_forward(sbox, renderer);
-    render_skybox(sbox, renderer);
+    r_render_particles(sbox, renderer);
     render_screen(sbox, renderer);
-    line_render(sbox, renderer);
+    r_render_lines(sbox, renderer);
     ui_render(sbox, &renderer->ui, renderer);
 
     r_clear_drawcalls(renderer);

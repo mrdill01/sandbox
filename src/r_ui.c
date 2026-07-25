@@ -136,6 +136,8 @@ bool ui_draw_button(
 }
 
 static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
+    if (!r_debug_menu.value) return;
+
     float font_size = 30.0f;
     float spacing = font_size * 0.65f;
 
@@ -150,6 +152,15 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
         sbox->player.position[0],
         sbox->player.position[1],
         sbox->player.position[2]);
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    vec3 velocity = {sbox->player.velocity[0], 0.0f, sbox->player.velocity[2]};
+    position[1] += spacing;
+    sprintf(text, "speed: %.2g", glm_vec3_dot(velocity, velocity));
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
+    sprintf(text, "water level: %g", sbox->player.water_level);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
@@ -167,9 +178,15 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     position[1] += spacing;
     sprintf(text, "materials: %d", renderer->stats.materials);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
+    sprintf(text, "particles: %d", r_get_particle_count(sbox, &sbox->renderer));
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 }
 
 static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
+    if (edit_mode.value) return;
+
     const inventory_t* inventory = &sbox->player.inventory;
     vec2 size = {48.0f, 48.0f};
     vec2 position = {0.0f, r_height.value / 2.0f - size[1] / 2.0f};
@@ -179,6 +196,12 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
         texture_t* texture = (inventory->item_slot == i) ?
             ui->item_slot_active : ui->item_slot;
         ui_draw_texture(sbox, ui, texture, position, size, COLOR_WHITE);
+
+        if (item) {
+            vec2 icon_position = {position[0] + 4.0f, position[1] + 4.0f};
+            vec2 icon_size = {size[0] - 8.0f, size[1] - 8.0f};
+            ui_draw_texture(sbox, ui, ui->pixel, icon_position, icon_size, COLOR_WHITE);
+        }
 
         char text[2];
         sprintf(text, "%d", i + 1);
@@ -193,12 +216,16 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 
             vec2 new_size = {128.0f, 48.0f};
             float alpha = lerp(0.4f, 0.0f,
-                clamp(sbox->time - inventory->last_switch - 3.0f, 0.0f, 1.0f));
+                clamp((sbox->time - inventory->last_switch) - 3.0f, 0.0f, 1.0f));
             
             ui_draw_texture(sbox, ui, ui->pixel,
                 new_position, new_size, (vec4){0.0f, 0.0f, 0.0f, alpha});
 
-            ui_draw_text_thick(sbox, ui, item->name, new_position, 24.0f, 4, COLOR_WHITE);
+            alpha = lerp(1.0f, 0.0f,
+                clamp((sbox->time - inventory->last_switch) - 3.0f, 0.0f, 1.0f));
+            vec4 new_color = {1.0f, 1.0f, 1.0f, alpha};
+            ui_draw_text_thick(sbox, ui,
+                (item) ? item->name : "none", new_position, 24.0f, 4, new_color);
         }
 
         position[1] += size[1];
@@ -207,7 +234,7 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 
 static void draw_inventory(sbox_t* sbox, ui_t* ui) {
     const inventory_t* inventory = &sbox->player.inventory;
-    if (!inventory->is_open) return;
+    if (!inventory->is_open || edit_mode.value) return;
 
     vec2 size = {48.0f, 48.0f};
     vec2 start = {size[0], r_height.value / 2.0f - size[1] / 2.0f};
@@ -224,12 +251,25 @@ static void draw_inventory(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_hud(sbox_t* sbox, ui_t* ui) {
-    vec2 position = {r_width.value / 2.0f - 20.0f / 2.0f, r_height.value / 2.0f - 20.0f / 2.0f};
-    vec2 size = {24.0f, 24.0f};
-    ui_draw_texture(sbox, ui, ui->crosshair, position, size, COLOR_WHITE);
+    if (!(sbox->player.buttons & PLAYER_BUTTON_AIM)) {
+        vec2 size = {20.0f, 20.0f};
+        vec2 position = {
+            r_width.value / 2.0f - size[0] / 2.0f,
+            r_height.value / 2.0f - size[1] / 2.0f};
+        ui_draw_texture(sbox, ui, ui->crosshair, position, size, COLOR_WHITE);
+    }
 
     draw_hotbar(sbox, ui);
     draw_inventory(sbox, ui);
+}
+
+static void draw_edit_mode(sbox_t* sbox, ui_t* ui) {
+    if (!edit_mode.value) return;
+
+    float font_size = 24.0f;
+    float width = ui_measure_text("EDIT MODE", font_size);
+    ui_draw_text(sbox, ui, "EDIT MODE",
+        (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, font_size, COLOR_WHITE);
 }
 
 static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
@@ -272,6 +312,7 @@ void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
     case UI_STATE_IN_GAME: {
         draw_debug_menu(sbox, renderer, ui);
         draw_hud(sbox, ui);
+        draw_edit_mode(sbox, ui);
         break;
     }
     case UI_STATE_PAUSE_MENU: {

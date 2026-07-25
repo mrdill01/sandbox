@@ -4,6 +4,9 @@
 #include "math.h"
 #include "entity.h"
 
+#define PHYS_GRAVITY 9.81f
+#define PHYS_TRACE_STEP 0.01f
+
 typedef enum phys_material_t {
     PHYS_MAT_NONE,
     PHYS_MAT_METAL,

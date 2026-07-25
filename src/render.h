@@ -8,7 +8,8 @@
 #define R_GL_MAJ 3
 #define R_GL_MIN 3
 #define MAX_MATERIALS 4
-#define MAX_LINES 2048
+#define MAX_LINES 4096
+#define MAX_PARTICLES 8192
 #define FPS_SAMPLE_RATE 45
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
@@ -80,6 +81,7 @@ typedef struct material_t {
     texture_t* normal;
     float tilex;
     float tiley;
+    float wind_factor;
     float scrollx;
     float scrolly;
     float scroll_speed;
@@ -97,20 +99,6 @@ typedef struct {
 } framebuffer_t;
 
 typedef struct {
-    const mesh_t* mesh;
-    vec3 start;
-    vec3 end;
-    vec4 color;
-    float spawn_time;
-    float decay_time;
-} line_t;
-
-typedef struct {
-    vec3 position;
-    mesh_t* mesh;
-} particle_t;
-
-typedef struct {
     shader_t* shader;
     texture_t* font;
     texture_t* button;
@@ -124,12 +112,35 @@ typedef struct {
 } ui_t;
 
 typedef struct {
+    bool is_free;
+    mesh_t* mesh;
+    vec3 start;
+    vec3 end;
+    vec4 color;
+    float spawn_time;
+    float decay_time;
+} line_t;
+
+typedef struct {
+    bool is_free;
+    vec3 position;
+    vec3 velocity;
+    float size;
+    float spawn_time;
+    float lifetime;
+    bool apply_gravity;
+    mesh_t* mesh;
+} particle_t;
+
+typedef struct {
+    char* entity;
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
     vec3 position;
-    vec3 scale;
     mat4 rotation;
+    vec3 scale;
     mat4 model;
+    bbox_t local_bbox;
     bbox_t world_bbox;
     float dist_to_camera;
     bool is_translucent;
@@ -178,9 +189,13 @@ typedef struct {
     mat4 projection;
     mat4 view;
 
+    ui_t ui;
+
     line_t lines[MAX_LINES];
 
-    ui_t ui;
+    particle_t particles[MAX_PARTICLES];
+    int particle_head;
+    int particle_tail;
 
     render_stats_t stats;
 } renderer_t;
@@ -230,13 +245,6 @@ void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int 
 void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer);
 void framebuffer_free(framebuffer_t* framebuffer);
 
-void line_init(sbox_t* sbox, renderer_t* renderer);
-void line_add(sbox_t* sbox,
-    renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time);
-void line_add_box(sbox_t* sbox,
-    renderer_t* renderer, const bbox_t* box, vec4 color, float decay_time);
-void line_render(sbox_t* sbox, renderer_t* renderer);
-
 void ui_init(sbox_t* sbox, ui_t* ui);
 
 void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
@@ -266,6 +274,22 @@ void r_tick(sbox_t* sbox, renderer_t* renderer);
 void r_reload(sbox_t* sbox, renderer_t* renderer);
 void r_on_resize(sbox_t* sbox);
 void r_on_toggle_fullscreen(sbox_t* sbox);
+
+void r_add_line(sbox_t* sbox,
+    renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time);
+void r_add_line_box(sbox_t* sbox,
+    renderer_t* renderer, const bbox_t* box, vec4 color, float decay_time);
+void r_render_lines(sbox_t* sbox, renderer_t* renderer);
+
+/* TODO: temporary */
+void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal);
+void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position);
+
+particle_t* r_add_particle(sbox_t* sbox,
+    renderer_t* renderer, vec3 position, vec3 velocity, float size);
+void r_tick_particles(sbox_t* sbox, renderer_t* renderer);
+void r_render_particles(sbox_t* sbox, renderer_t* renderer);
+int r_get_particle_count(sbox_t* sbox, renderer_t* renderer);
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);

@@ -1,13 +1,12 @@
 #include "physics.h"
 #include "sbox.h"
 
-#define PHYS_TRACE_STEP 0.01
-
 bool phys_line_trace(
     vec3 start, vec3 dir, double max_distance, entlist_t* entlist, trace_result_t* out)
 {
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
+    glm_vec3_copy(GLM_VEC3_ZERO, trace.normal);
     trace.water_level = 0.0f;
     trace.entity = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
@@ -29,15 +28,22 @@ bool phys_line_trace(
                     continue;
                 }
 
-                /*if (dist[0] > dist[1] && dist[0] > dist[2]) {
-                    printf("X\n");
-                } else if (dist[1] > dist[0] && dist[1] > dist[2]) {
-                    printf("Y\n");
-                } else {
-                    printf("Z\n");
-                }*/
+                vec3 center;
+                bbox_get_center(&entity->world_bbox, center);
 
-                glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, trace.normal);
+                vec3 half_size;
+                bbox_get_half_size(&entity->local_bbox, half_size);
+
+                vec3 diff;
+                glm_vec3_sub(trace.point, center, diff);
+
+                float bias = 1.00001f;
+                if (fabsf(diff[0]) > half_size[0] * bias - 0.001f)
+                    trace.normal[0] = sign(diff[0]);
+                if (fabsf(diff[1]) > half_size[1] * bias - 0.001f)
+                    trace.normal[1] = sign(diff[1]);
+                if (fabsf(diff[2]) > half_size[2] * bias - 0.001f)
+                    trace.normal[2] = sign(diff[2]);
 
                 hit = true;
                 trace.entity = entity;

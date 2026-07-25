@@ -13,6 +13,7 @@ typedef struct cvar_t {
     const char* name;
     const char* string;
     bool save;
+    const char* desc;
     float value;
     on_change_t on_change;
     struct cvar_t* next;

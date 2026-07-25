@@ -25,17 +25,20 @@ typedef struct {
     sound_t* jump_land_base_sound;
     sound_t* jump_land_sounds[PHYS_MAT_MAX];
     sound_t* step_sounds[PHYS_MAT_MAX];
+    sound_t* bullet_hit_sounds[PHYS_MAT_MAX];
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
     sound_t* inventory_open_sound;
     sound_t* inventory_close_sound;
     sound_t* hotbar_select_sound;
+    sound_t* button_hover_sound;
+    sound_t* button_press_sound;
 } audio_t;
 
 void a_init(sbox_t* sbox, audio_t* audio);
 void a_free(sbox_t* sbox, audio_t* audio);
 void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera);
-void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch);
+void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch);
 
 sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path);
 void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound);

@@ -16,14 +16,12 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* wood_frame_window_mesh = mesh_load(sbox, "res/meshes/wood_frame_window.obj");
     mesh_t* metal_panel_mesh = mesh_load(sbox, "res/meshes/metal_panel.obj");
     mesh_t* barrel_mesh = mesh_load(sbox, "res/meshes/barrel.obj");
-    mesh_t* cactus_mesh = mesh_load(sbox, "res/meshes/nature/cactus.obj");
     mesh_t* chainlink_fence_mesh = mesh_load(sbox, "res/meshes/chainlink_fence.obj");
     mesh_t* container_mesh = mesh_load(sbox, "res/meshes/container.obj");
     mesh_t* streetlight_mesh = mesh_load(sbox, "res/meshes/streetlight.obj");
     mesh_t* table_mesh = mesh_load(sbox, "res/meshes/table.obj");
     mesh_t* table2_mesh = mesh_load(sbox, "res/meshes/table2.obj");
     mesh_t* bench_mesh = mesh_load(sbox, "res/meshes/bench.obj");
-    mesh_t* rock_mesh = mesh_load(sbox, "res/meshes/rock.obj");
     mesh_t* stone_wall_mesh = mesh_load(sbox, "res/meshes/stone_wall.obj");
     mesh_t* water_mesh = mesh_load(sbox, "res/meshes/water.obj");
     mesh_t* car_mesh = mesh_load(sbox, "res/meshes/car.obj");
@@ -32,8 +30,11 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* dock_mesh = mesh_load(sbox, "res/meshes/dock.obj");
     mesh_t* vinyl_mesh = mesh_load(sbox, "res/meshes/vinyl.obj");
     mesh_t* player_mesh = mesh_load(sbox, "res/meshes/player.obj");
+    mesh_t* cactus_mesh = mesh_load(sbox, "res/meshes/nature/cactus.obj");
+    mesh_t* rock_mesh = mesh_load(sbox, "res/meshes/nature/rock.obj");
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
     mesh_t* bush_mesh = mesh_load(sbox, "res/meshes/nature/bush.obj");
+    mesh_t* bush2_mesh = mesh_load(sbox, "res/meshes/nature/bush2.obj");
     mesh_t* pipe_mesh = mesh_load(sbox, "res/meshes/pipe.obj");
     mesh_t* pipe_bend_mesh = mesh_load(sbox, "res/meshes/pipe_bend.obj");
     
@@ -63,7 +64,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/chainlink.png",
         "res/textures/materials/chainlink_r.png",
         "res/textures/materials/chainlink_n.png",
-        16, 16, true, PHYS_MAT_METAL);
+        8, 8, true, PHYS_MAT_METAL);
 
     material_t* metal = material_load(sbox,
         "metal",
@@ -147,7 +148,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/brick.png",
         "res/textures/materials/brick_r.png",
         "res/textures/materials/brick_n.png",
-        6, 6, false, PHYS_MAT_STONE);
+        4, 4, false, PHYS_MAT_STONE);
 
     material_t* brick2 = material_load(sbox,
         "brick2",
@@ -176,6 +177,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/cactus_r.png",
         "res/textures/materials/cactus_n.png",
         3, 3, false, PHYS_MAT_GRASS);
+    cactus->wind_factor = 1.0f;
 
     material_t* grass = material_load(sbox,
         "grass",
@@ -190,6 +192,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/leaves_r.png",
         "res/textures/materials/leaves_n.png",
         1, 1, false, PHYS_MAT_GRASS);
+    leaves->wind_factor = 1.0f;
 
     material_t* rock = material_load(sbox,
         "rock",
@@ -708,7 +711,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity->data.prop.is_pickup = true;
     entlist_add(sbox, &map->entlist, entity);
 
-    vec3 sun_dir = {2.0f, -4.0f, 1.0f};
+    vec3 sun_dir = {0.0f, -0.999f, 0.0f};
     vec3 sun_color = {5.0f, 4.0f, 3.0f};
     entity_init_sun_light(sbox, "sun", 0.0f, 0.0f, 0.0f, sun_dir, sun_color, &entity);
     entlist_add(sbox, &map->entlist, entity);
@@ -778,15 +781,16 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 16; i++) {
         vec3 min = {15.0f + 1.0f, -0.5f, 4.5f + 1.0f};
         vec3 max = {24.5f - 1.0f, -0.5f, 11.5f - 1.0f};
         vec3 pos = {random(min[0], max[0]), random(min[1], max[1]), random(min[2], max[2])};
+        mesh_t* mesh = (random(0.0f, 1.0f) > 0.5f) ? bush2_mesh : bush_mesh;
 
-        entity_init_prop(sbox, "bush", pos[0], pos[1], pos[2], bush_mesh, &entity);
+        entity_init_prop(sbox, "bush", pos[0], pos[1], pos[2], mesh, &entity);
         entity_prop_set_material(sbox, entity, leaves, 0);
         glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
-        glm_vec3_scale(entity->scale, random(1.0f, 4.0f), entity->scale);
+        glm_vec3_scale(entity->scale, random(1.0f, 3.0f), entity->scale);
         entity->data.prop.enable_collision = false;
         entlist_add(sbox, &map->entlist, entity);
     }
@@ -815,49 +819,9 @@ void map_free(sbox_t* sbox, map_t* map) {
 static void send_to_renderer(sbox_t* sbox, map_t* map) {
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENTITY_MESH) continue;
-        if (!entity->data.prop.is_visible) continue;
-        if (entity->data.prop.is_viewmodel) continue;
-
         drawcall_t drawcall;
-        drawcall.mesh = entity->data.prop.mesh;
-        memcpy(drawcall.materials, entity->data.prop.materials,
-            sizeof(material_t*) * MAX_MATERIALS);
-
-        int n = 0;
-        for (int i = 0; i < MAX_MATERIALS; i++)
-            if (entity->data.prop.materials[i])
-                n++;
-
-        if (n != entity->data.prop.mesh->nmaterials) {
-            error(sbox, "entity %s doesn't have the proper number of materials (have %d, need %d)",
-                entity->name, n, entity->data.prop.mesh->nmaterials);
-            return;
-        }
-
-        glm_mat4_identity(drawcall.model);
-        glm_translate(drawcall.model, entity->position);
-        glm_scale(drawcall.model, entity->scale);
-        glm_quat_rotate(drawcall.model, entity->rotation, drawcall.model);
-        drawcall.world_bbox = entity->world_bbox;
-
-        glm_vec3_copy(entity->position, drawcall.position);
-        glm_vec3_copy(entity->scale, drawcall.scale);
-        glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, drawcall.rotation);
-
-        drawcall.dist_to_camera = 0.0f;
-
-        drawcall.is_translucent = false;
-		for (int i = 0; i < MAX_MATERIALS; i++) {
-            const material_t* material = drawcall.materials[i];
-            if (!material) continue;
-			if (material->is_translucent) {
-				drawcall.is_translucent = true;
-				break;
-			}
-		}
-
-        r_add_drawcall(&sbox->renderer, drawcall);
+        if (entity_get_drawcall(sbox, entity, &drawcall))
+            r_add_drawcall(&sbox->renderer, drawcall);
     }
 }
 

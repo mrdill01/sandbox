@@ -4,10 +4,11 @@
 #include "math.h"
 #include "render.h"
 
-#define PICKUP_SPIN_RATE 24.0f
+#define ITEM_SPIN_RATE 24.0f
 
 typedef enum {
     ENTITY_MESH,
+    ENTITY_DROPPED_ITEM,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
 } entity_type_t;
@@ -20,6 +21,11 @@ typedef struct {
     bool is_pickup;
     bool enable_collision;
 } entity_mesh_t;
+
+typedef struct {
+    mesh_t* mesh;
+    material_t* materials[MAX_MATERIALS];
+} entity_dropped_item_t;
 
 typedef struct {
     vec3 direction;
@@ -42,6 +48,7 @@ typedef struct {
 
     union {
         entity_mesh_t prop;
+        entity_dropped_item_t dropped_item;
         entity_sun_light_t sun_light;
         entity_point_light_t point_light;
     } data;
@@ -61,6 +68,8 @@ void entity_init_sun_light(sbox_t* sbox,
 void entity_init_point_light(sbox_t* sbox,
     const char* name, float x, float y, float z, vec3 color, entity_t** out);
 void entity_free(sbox_t* sbox, entity_t* entity);
+
+bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
 
 void entity_prop_set_material(sbox_t* sbox,
     entity_t* entity, material_t* material, int slot);

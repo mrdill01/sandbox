@@ -15,11 +15,20 @@ uniform vec3 view_position;
 uniform vec3 view_direction;
 uniform vec3 sun_direction;
 
+float linearize_depth(float depth) {
+    float ndc = depth * 2.0f - 1.0f;
+    float near = 0.01f;
+    float far = 100.0f;
+    float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
+    linear_depth /= far; 
+    return linear_depth;
+}
+
 vec3 add_fog(vec3 color, float depth) {
     const vec3 default_color = vec3(0.2f, 0.75f, 0.9f);
     const vec3 sun_color = vec3(6.0f, 4.0f, 1.25f);
 
-    float amount = pow(depth, 4.0f);
+    float amount = pow(linearize_depth(depth), 4.0f);
     amount = clamp(amount, 0.0f, 1.0f);
 
     /*vec3 view_dir = normalize(view_position - texture(position, vs_uv).rgb);

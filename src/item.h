@@ -2,6 +2,7 @@
 #define ITEM_H
 
 #include "render.h"
+#include "audio.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -13,11 +14,25 @@
 
 typedef struct sbox_t sbox_t;
 
+typedef enum {
+    ITEM_WEAPON,
+} item_type_t;
+
 typedef struct {
+    sound_t* fire_sound;
+    float fire_rate;
+    float last_fire;
+} weapon_t;
+
+typedef struct {
+    item_type_t type;
     char* name;
     int count;
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    union {
+        weapon_t weapon;
+    } data;
 } item_t;
 
 typedef struct {
@@ -28,6 +43,7 @@ typedef struct {
 } inventory_t;
 
 item_t* item_new(sbox_t* sbox,
+    item_type_t type,
     const char* name,
     mesh_t* mesh,
     material_t* materials[MAX_MATERIALS]);

@@ -54,8 +54,25 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
 
-    line_init(sbox, renderer);
     ui_init(sbox, &renderer->ui);
+
+    for (int i = 0; i < MAX_LINES; i++) {
+        line_t* line = &renderer->lines[i];
+        line->is_free = true;
+        line->mesh = NULL;
+        glm_vec3_copy(GLM_VEC3_ZERO, line->start);
+        glm_vec3_copy(GLM_VEC3_ZERO, line->end);
+        glm_vec4_copy(GLM_VEC4_ZERO, line->color);
+        line->spawn_time = 0.0f;
+        line->decay_time = 0.0f;
+    }
+
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        particle_t* particle = &renderer->particles[i];
+        particle->is_free = true;
+    }
+    renderer->particle_head = 0;
+    renderer->particle_tail = 0;
 
     r_reset_stats(sbox, renderer);
     info(sbox, "renderer initialized!");
@@ -151,6 +168,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
         renderer->nfps_samples = 0;
     }
 
+    r_tick_particles(sbox, renderer);
+
     for (size_t i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
 
@@ -245,10 +264,14 @@ void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {
 }
 
 void r_clear_drawcalls(renderer_t* renderer) {
+    for (int i = 0; i < renderer->ndrawcalls; i++)
+        free(renderer->drawcalls[i].entity);
     renderer->ndrawcalls = 0;
     free(renderer->drawcalls);
     renderer->drawcalls = NULL;
 
+    for (int i = 0; i < renderer->ntranslucent_drawcalls; i++)
+        free(renderer->translucent_drawcalls[i].entity);
     renderer->ntranslucent_drawcalls = 0;
     free(renderer->translucent_drawcalls);
     renderer->translucent_drawcalls = NULL;
@@ -298,6 +321,9 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
         (material->normal) ?
             material->normal :
             renderer->default_material->normal, nmaterial_textures * slot + 2);
+
+    snprintf(slot_name, 32, "materials[%d].wind_factor", slot);
+    r_set_float(sbox, renderer, slot_name, material->wind_factor);
 
     snprintf(slot_name, 32, "materials[%d].tilex", slot);
     r_set_float(sbox, renderer, slot_name, material->tilex);

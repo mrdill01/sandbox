@@ -22,6 +22,7 @@ material_t* material_load(sbox_t* sbox,
     material->albedo = texture_load(sbox, albedo_path);
     material->roughness = texture_load(sbox, roughness_path);
     material->normal = texture_load(sbox, normal_path);
+    material->wind_factor = 0.0f;
     material->tilex = tilex;
     material->tiley = tiley;
     material->scrollx = 0.0f;

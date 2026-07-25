@@ -87,11 +87,24 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->step_sounds[PHYS_MAT_GRASS] = sound_load(sbox, audio, "res/sounds/step_grass.wav");
     audio->step_sounds[PHYS_MAT_WATER] = sound_load(sbox, audio, "res/sounds/step_water.wav");
 
+    audio->bullet_hit_sounds[PHYS_MAT_METAL] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_metal.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_WOOD] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_wood.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_STONE] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_stone.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_GRASS] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_grass.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_WATER] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_stone.wav");
+
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
     audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");
     audio->inventory_open_sound = sound_load(sbox, audio, "res/sounds/inventory_open.wav");
     audio->inventory_close_sound = sound_load(sbox, audio, "res/sounds/inventory_close.wav");
     audio->hotbar_select_sound = sound_load(sbox, audio, "res/sounds/hotbar_select.wav");
+    audio->button_hover_sound = sound_load(sbox, audio, "res/sounds/button_hover.wav");
+    audio->button_press_sound = sound_load(sbox, audio, "res/sounds/button_press.wav");
 }
 
 void a_free(sbox_t* sbox, audio_t* audio) {
@@ -138,7 +151,7 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
         error(sbox, "failed to set AL_ORIENTATION: %d", err);
 }
 
-void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch) {
+void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch) {
     if (!sound) return;
     ALenum err;
 
@@ -150,7 +163,7 @@ void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch) {
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_GAIN: %d", err);
     
-    alSource3f(sound->source, AL_POSITION, 0, 0, 0);
+    alSource3f(sound->source, AL_POSITION, position[0], position[1], position[2]);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_POSITION: %d", err);
     

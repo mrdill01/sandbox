@@ -24,8 +24,6 @@ void camera_tick(sbox_t* sbox, camera_t* camera) {
     glm_normalize(camera->right);
 
     glm_cross(camera->forward, camera->right, camera->up);
-
-    camera->fov = r_fov.value;
 }
 
 void camera_add_pitch(camera_t* camera, float pitch) {

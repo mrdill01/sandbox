@@ -75,6 +75,7 @@ extern cvar_t r_scale;
 extern cvar_t r_fullscreen;
 extern cvar_t r_vsync;
 extern cvar_t r_fov;
+extern cvar_t r_shadows;
 extern cvar_t r_shadow_res;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;

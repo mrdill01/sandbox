@@ -22,6 +22,7 @@ typedef struct {
     vec3 max;
 } bbox_t;
 
+float sign(float);
 float rad(float degrees);
 float deg(float radians);
 float min(float a, float b);

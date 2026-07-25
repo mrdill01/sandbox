@@ -1,5 +1,12 @@
 #include "math.h"
 
+float sign(float num) {
+    if (num < 0.0f) return -1.0f;
+    if (num == 0.0f) return 0.0f;
+    if (num > 0.0f) return 1.0f;
+    return 0.0f;
+}
+
 float rad(float degrees) {
     return degrees * (M_PI / 180.0f);
 }

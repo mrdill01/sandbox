@@ -3,26 +3,15 @@
 
 #include "../include/gl.h"
 
-void line_init(sbox_t* sbox, renderer_t* renderer) {
-    for (int i = 0; i < MAX_LINES; i++) {
-        line_t* line = &renderer->lines[i];
-        line->mesh = NULL;
-        glm_vec3_copy(GLM_VEC3_ZERO, line->start);
-        glm_vec3_copy(GLM_VEC3_ZERO, line->end);
-        glm_vec4_copy(GLM_VEC4_ZERO, line->color);
-        line->spawn_time = 0.0f;
-        line->decay_time = 0.0f;
-    }
-}
-
-void line_add(sbox_t* sbox,
+void r_add_line(sbox_t* sbox,
     renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time)
 {
     line_t* line = NULL;
     for (int i = 0; i < MAX_LINES; i++) {
         line = &renderer->lines[i];
-        if (sbox->time - line->spawn_time >= line->decay_time) {
+        if (line->is_free) {
             line = &renderer->lines[i];
+            line->is_free = false;
             break;
         }
     }
@@ -52,7 +41,7 @@ void line_add(sbox_t* sbox,
     line->decay_time = decay_time;
 }
 
-void line_add_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
+void r_add_line_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
     vec3 pairs[] = {
         {bbox->min[0], bbox->max[1], bbox->max[2]}, {bbox->max[0], bbox->max[1], bbox->max[2]},
         {bbox->min[0], bbox->min[1], bbox->max[2]}, {bbox->max[0], bbox->min[1], bbox->max[2]},
@@ -72,11 +61,11 @@ void line_add_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 c
 
     size_t len = sizeof(pairs) / sizeof(pairs[0]);
     for (size_t i = 0; i < len; i += 2) {
-        line_add(sbox, renderer, pairs[i], pairs[i + 1], color, decay_time);
+        r_add_line(sbox, renderer, pairs[i], pairs[i + 1], color, decay_time);
     }
 }
 
-void line_render(sbox_t* sbox, renderer_t* renderer) {
+void r_render_lines(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->line_shader);
     
     r_set_mat4(sbox, renderer, "view", renderer->view);
@@ -84,7 +73,11 @@ void line_render(sbox_t* sbox, renderer_t* renderer) {
     
     for (int i = 0; i < MAX_LINES; i++) {
         line_t* line = &renderer->lines[i];
-        if (sbox->time - line->spawn_time >= line->decay_time) continue;
+        if (line->is_free) continue;
+        if (sbox->time - line->spawn_time >= line->decay_time) {
+            line->is_free = true;
+        }
+
         r_set_vec4(sbox, renderer, "color", line->color);
         glBindVertexArray(line->mesh->vao);
         glDrawArrays(GL_LINES, 0, 3);   

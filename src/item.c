@@ -2,12 +2,14 @@
 #include "sbox.h"
 
 item_t* item_new(sbox_t* sbox,
+    item_type_t type,
     const char* name,
     mesh_t* mesh,
     material_t* materials[MAX_MATERIALS])
 {
     item_t* item = malloc(sizeof(item_t));
-    
+    item->type = type;
+
     size_t len = strlen(name);
     item->name = malloc(len + 1);
     strcpy(item->name, name);
@@ -41,12 +43,20 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
         1, 1, false, PHYS_MAT_METAL);
     material_t* materials[MAX_MATERIALS] = {test};
 
-    item_t* shooter = item_new(sbox, "shooter", shooter_mesh, materials);
+    item_t* shooter = item_new(sbox, ITEM_WEAPON, "shooter", shooter_mesh, materials);
     inventory_give_item(sbox, inventory, shooter);
+    weapon_t* weapon = &shooter->data.weapon;
+    weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/shooter_fire.wav");
+    weapon->fire_rate = 0.1f;
+    weapon->last_fire = 0.0f;
 
     mesh_t* pistol_mesh = mesh_load(sbox, "res/meshes/items/pistol.obj");
-    item_t* pistol = item_new(sbox, "pistol", pistol_mesh, materials);
+    item_t* pistol = item_new(sbox, ITEM_WEAPON, "pistol", pistol_mesh, materials);
     inventory_give_item(sbox, inventory, pistol);
+    weapon = &pistol->data.weapon;
+    weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/pistol_fire.wav");
+    weapon->fire_rate = 0.25f;
+    weapon->last_fire = 0.0f;
 }
 
 void inventory_free(sbox_t* sbox, inventory_t* inventory) {
@@ -67,18 +77,18 @@ void inventory_give_item(sbox_t* sbox, inventory_t* inventory, item_t* item) {
 void inventory_select_hotbar_slot(sbox_t* sbox, inventory_t* inventory, int slot) {
     inventory->item_slot = slot;
     inventory->last_switch = sbox->time;
-    a_play(sbox, &sbox->audio, sbox->audio.hotbar_select_sound, random(0.9f, 1.1f));
+    a_play(sbox, &sbox->audio, sbox->audio.hotbar_select_sound, GLM_VEC3_ZERO, random(0.9f, 1.1f));
 }
 
 void inventory_open(sbox_t* sbox, inventory_t* inventory) {
     if (inventory->is_open) return;
-    a_play(sbox, &sbox->audio, sbox->audio.inventory_open_sound, random(0.9f, 1.1f));
+    a_play(sbox, &sbox->audio, sbox->audio.inventory_open_sound, GLM_VEC3_ZERO, random(0.9f, 1.1f));
     inventory->is_open = true;
 }
 
 void inventory_close(sbox_t* sbox, inventory_t* inventory) {
     if (!inventory->is_open) return;
-    a_play(sbox, &sbox->audio, sbox->audio.inventory_close_sound, random(0.9f, 1.1f));
+    a_play(sbox, &sbox->audio, sbox->audio.inventory_close_sound, GLM_VEC3_ZERO, random(0.9f, 1.1f));
     inventory->is_open = false;
 }
 
