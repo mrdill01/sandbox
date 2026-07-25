@@ -20,6 +20,10 @@ int main(int argc, char* argv[]) {
     if (!init(&sbox))
         return EXIT_FAILURE;
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
+    SDL_GL_SwapWindow(sbox.window);
+
     map_load(&sbox, &sbox.map);
 
     while (sbox.running) {

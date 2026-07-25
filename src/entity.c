@@ -10,7 +10,7 @@ static void init_common(
 	entity->name = name;
 	entity->type = type;
 	glm_vec3_copy((vec3){x, y, z}, entity->position);
-    glm_quat_copy(GLM_QUAT_IDENTITY, entity->rotation);
+    glm_quat_identity(entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
 	entity->local_bbox = (bbox_t){0};
 	entity->world_bbox = (bbox_t){0};

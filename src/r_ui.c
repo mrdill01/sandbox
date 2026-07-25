@@ -135,6 +135,21 @@ bool ui_draw_button(
     return is_hovered && sbox->prev_buttons[SDL_BUTTON_LEFT] && !sbox->buttons[SDL_BUTTON_LEFT];
 }
 
+static void draw_loading_screen(sbox_t* sbox, ui_t* ui) {
+    ui_draw_texture(sbox,
+        ui,
+        ui->pixel,
+        (vec2){0.0f, 0.0f},
+        (vec2){r_width.value, r_height.value},
+        COLOR_LIGHT_BLUE);
+
+    float font_size = 64.0f;
+    vec2 position = {
+        r_width.value / 2.0f - ui_measure_text("MATCH LOADING...", font_size) / 2.0f,
+        r_height.value / 2.0f - font_size / 2.0f};
+    ui_draw_text_thick(sbox, ui, "MATCH LOADING...", position, font_size, 12, COLOR_WHITE);
+}
+
 static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     if (!r_debug_menu.value) return;
 
@@ -259,6 +274,13 @@ static void draw_hud(sbox_t* sbox, ui_t* ui) {
         ui_draw_texture(sbox, ui, ui->crosshair, position, size, COLOR_WHITE);
     }
 
+    char text[32];
+    sprintf(text, "HEALTH %d", (int)sbox->player.health);
+    float font_size = 64.0f;
+    float width = ui_measure_text(text, font_size);
+    ui_draw_text(sbox, ui, text, (vec2){r_width.value - width - 48.0f, r_height.value - font_size},
+        font_size, COLOR_WHITE);
+
     draw_hotbar(sbox, ui);
     draw_inventory(sbox, ui);
 }
@@ -309,6 +331,10 @@ void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
     r_set_mat4(sbox, renderer, "projection", ui->projection);
 
     switch (sbox->ui_state) {
+    case UI_STATE_LOADING: {
+        draw_loading_screen(sbox, ui);
+        break;
+    }
     case UI_STATE_IN_GAME: {
         draw_debug_menu(sbox, renderer, ui);
         draw_hud(sbox, ui);

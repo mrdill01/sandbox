@@ -6,7 +6,7 @@ bool phys_line_trace(
 {
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
-    glm_vec3_copy(GLM_VEC3_ZERO, trace.normal);
+    glm_vec3_zero(trace.normal);
     trace.water_level = 0.0f;
     trace.entity = NULL;
     trace.material = NULL;
@@ -20,6 +20,7 @@ bool phys_line_trace(
 
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
+            if (!entity) continue;
             if (entity->type != ENTITY_MESH) continue;
             if (!entity->data.prop.enable_collision) continue;
             
@@ -39,11 +40,11 @@ bool phys_line_trace(
                 glm_vec3_sub(trace.point, center, diff);
 
                 float bias = 1.00001f;
-                if (fabsf(diff[0]) > half_size[0] * bias - 0.001f)
+                if (fabsf(diff[0]) > half_size[0] * bias)
                     trace.normal[0] = sign(diff[0]);
-                else if (fabsf(diff[1]) > half_size[1] * bias - 0.001f)
+                if (fabsf(diff[1]) > half_size[1] * bias)
                     trace.normal[1] = sign(diff[1]);
-                else if (fabsf(diff[2]) > half_size[2] * bias - 0.001f)
+                if (fabsf(diff[2]) > half_size[2] * bias)
                     trace.normal[2] = sign(diff[2]);
 
                 hit = true;

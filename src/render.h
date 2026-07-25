@@ -287,9 +287,12 @@ void r_add_line_box(sbox_t* sbox,
 void r_render_lines(sbox_t* sbox, renderer_t* renderer);
 
 /* TODO: temporary */
-void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal);
-void r_add_partfx_shoot_beam(sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir);
-void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
+void r_add_partfx_shoot_hit(
+    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal);
+void r_add_partfx_shoot_beam(
+    sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance);
+void r_add_partfx_hit_ground(
+    sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 
 particle_t* r_add_particle(
     sbox_t* sbox,

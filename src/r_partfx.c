@@ -14,8 +14,8 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, v
             random(-10.0f, 10.0f),
             random(-10.0f, 10.0f)};
         
-        r_add_particle(
-            sbox, &sbox->renderer, position, velocity, renderer->p_fire, 1.0f, 0.05f, 2.0f);
+        r_add_particle(sbox, &sbox->renderer, position, velocity, renderer->p_fire,
+            1.0f, random(0.05f, 0.075f), 0.15f);
     }
 
     vec3 bullet_hole_position;
@@ -30,6 +30,30 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, v
     r_add_particle(sbox, &sbox->renderer,
         bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
         1.0f, random(0.08f, 0.12f), 8.0f);
+}
+
+void r_add_partfx_shoot_beam(
+    sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance)
+{
+    const float PARTICLES_PER_UNIT = 2.5f;
+
+    vec3 position;
+    glm_vec3_copy(start, position);
+
+    for (int i = 0; i < distance * PARTICLES_PER_UNIT; i++) {
+        vec3 step;
+        glm_vec3_scale(dir, 1.0f / PARTICLES_PER_UNIT, step);
+        glm_vec3_add(position, step, position);
+
+        vec3 velocity = {
+            random(-0.1f, 0.1f),
+            random(-0.1f, 0.1f),
+            random(-0.1f, 0.1f)};
+
+        r_add_particle(sbox, &sbox->renderer,
+            position, velocity, renderer->p_smoke,
+            0.25f, random(0.04f, 0.08f), random(0.75f, 1.5f));
+    }
 }
 
 void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material) {
@@ -49,7 +73,7 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
             position[2] + random(-0.35f, 0.35f)};
         glm_vec3_zero(velocity);
         r_add_particle(sbox, &sbox->renderer, smoke_position, velocity,
-            renderer->p_smoke, 0.5f, 0.4f, 2.0f);
+            renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f));
     }
 }
 
@@ -119,7 +143,6 @@ void r_tick_particles(sbox_t* sbox, renderer_t* renderer) {
     }
 
 	qsort(renderer->particles, MAX_PARTICLES, sizeof(particle_t), sort_back_to_front);
-
 }
 
 void r_render_particles(sbox_t* sbox, renderer_t* renderer) {

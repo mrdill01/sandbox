@@ -31,12 +31,12 @@ vec3 add_fog(vec3 color, float depth) {
     float amount = pow(linearize_depth(depth), 4.0f);
     amount = clamp(amount, 0.0f, 1.0f);
 
-    /*vec3 view_dir = normalize(view_position - texture(position, vs_uv).rgb);
+    vec3 view_dir = normalize(view_position - texture(position, vs_uv).rgb);
     float sun_factor = max(dot(view_dir, sun_direction), 0.0f);
     sun_factor = pow(sun_factor, 8.0f);
-    vec3 fog_color = mix(default_color, sun_color, amount);*/
+    vec3 fog_color = mix(default_color, sun_color, amount);
 
-    vec3 fog_color = default_color;
+    //vec3 fog_color = default_color;
     return mix(color, fog_color, amount);
 }
 

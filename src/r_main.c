@@ -60,9 +60,9 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         line_t* line = &renderer->lines[i];
         line->is_free = true;
         line->mesh = NULL;
-        glm_vec3_copy(GLM_VEC3_ZERO, line->start);
-        glm_vec3_copy(GLM_VEC3_ZERO, line->end);
-        glm_vec4_copy(GLM_VEC4_ZERO, line->color);
+        glm_vec3_zero(line->start);
+        glm_vec3_zero(line->end);
+        glm_vec4_zero(line->color);
         line->spawn_time = 0.0f;
         line->decay_time = 0.0f;
     }
@@ -298,7 +298,11 @@ void r_set_texture(renderer_t* renderer, texture_t* texture, int slot) {
 }
 
 void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot) {
-    if (!material) return;
+    if (!material) {
+        r_set_material(sbox, renderer, renderer->default_material, slot);
+        return;
+    }
+
     renderer->stats.materials++;
     const int nmaterial_textures = 3;
 
@@ -308,21 +312,24 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
     r_set_texture(renderer,
         (material->albedo) ?
             material->albedo :
-            renderer->default_material->albedo, nmaterial_textures * slot + 0);
+            renderer->default_material->albedo,
+        nmaterial_textures * slot + 0);
     
     snprintf(slot_name, 32, "materials[%d].roughness", slot);
     r_set_int(sbox, renderer, slot_name, nmaterial_textures * slot + 1);
     r_set_texture(renderer,
         (material->roughness) ?
             material->roughness :
-            renderer->default_material->roughness, nmaterial_textures * slot + 1);
+            renderer->default_material->roughness,
+        nmaterial_textures * slot + 1);
 
     snprintf(slot_name, 32, "materials[%d].normal", slot);
     r_set_int(sbox, renderer, slot_name, nmaterial_textures * slot + 2);
     r_set_texture(renderer,
         (material->normal) ?
             material->normal :
-            renderer->default_material->normal, nmaterial_textures * slot + 2);
+            renderer->default_material->normal,
+        nmaterial_textures * slot + 2);
 
     snprintf(slot_name, 32, "materials[%d].wind_factor", slot);
     r_set_float(sbox, renderer, slot_name, material->wind_factor);

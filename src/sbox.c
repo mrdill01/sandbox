@@ -81,7 +81,7 @@ void sbox_init(sbox_t* sbox) {
 	sbox->textures = NULL;
 	sbox->materials = NULL;
 
-	sbox->ui_state = UI_STATE_IN_GAME;
+	sbox->ui_state = UI_STATE_LOADING;
 }
 
 void sbox_free(sbox_t* sbox) {

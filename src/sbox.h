@@ -29,6 +29,7 @@
 #endif 
 
 typedef enum {
+    UI_STATE_LOADING,
     UI_STATE_IN_GAME,
     UI_STATE_PAUSE_MENU,
 } ui_state_t;

@@ -134,7 +134,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/wood4.png",
         "res/textures/materials/wood4_r.png",
         "res/textures/materials/wood4_n.png",
-        2, 2, false, PHYS_MAT_METAL);
+        2, 2, false, PHYS_MAT_WOOD);
 
     material_t* wood5 = material_load(sbox,
         "wood5",
@@ -761,6 +761,26 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
+    entity_init_prop(sbox, "hedge(5)", 23.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_prop_set_material(sbox, entity, leaves, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "hedge(6)", 21.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_prop_set_material(sbox, entity, leaves, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "hedge(7)", 19.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_prop_set_material(sbox, entity, leaves, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "hedge(8)", 17.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_prop_set_material(sbox, entity, leaves, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
     entity_init_prop(sbox, "hedge(9)", 23.0f, -0.5f, 11.5f, hedge_mesh, &entity);
     entity_prop_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
@@ -810,6 +830,9 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/skies/sky_back.png",
     };
     map->skybox = texture_load_cubemap(sbox, paths);
+
+    info(sbox, "map loaded!");
+    sbox->ui_state = UI_STATE_IN_GAME;
 }
 
 void map_free(sbox_t* sbox, map_t* map) {

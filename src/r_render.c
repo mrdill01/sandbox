@@ -65,6 +65,8 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
+        if (!drawcall->materials[0]) continue;
+        
         r_set_mat4(sbox, renderer, "model", drawcall->model);
 
         r_set_int(sbox, renderer, "albedo", 0);
@@ -105,7 +107,6 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = drawcall->materials[i];
-            if (!material) continue;
             r_set_material(sbox, renderer, material, i);
         }
 
@@ -279,7 +280,6 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = drawcall->materials[i];
-            if (!material) continue;
             r_set_material(sbox, renderer, material, i);
         }
 
@@ -357,12 +357,12 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_shadows(sbox, renderer);
     render_skybox(sbox, renderer);
+    player_render(sbox, &sbox->player, renderer);
     render_gbuffer(sbox, renderer);
     render_ambient_light(sbox, renderer);
     render_sun_lights(sbox, renderer);
     render_point_lights(sbox, renderer);
     copy_depth(sbox, renderer);
-    player_render(sbox, &sbox->player, renderer);
     render_forward(sbox, renderer);
     r_render_particles(sbox, renderer);
     render_screen(sbox, renderer);
