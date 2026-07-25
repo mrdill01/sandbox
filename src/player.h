@@ -82,6 +82,7 @@ typedef struct player_t {
     inventory_t inventory;
     vec3 item_position;
     vec3 item_anim;
+    vec3 item_anim_angles;
     float health;
     body_t body;
     editor_t editor;

@@ -77,6 +77,8 @@ void inventory_give_item(sbox_t* sbox, inventory_t* inventory, item_t* item) {
 }
 
 void inventory_select_hotbar_slot(sbox_t* sbox, inventory_t* inventory, int slot) {
+    if (inventory->item_slot == slot) return;
+    
     inventory->item_slot = slot;
     inventory->last_switch = sbox->time;
     a_play(sbox, &sbox->audio, sbox->audio.hotbar_select_sound, GLM_VEC3_ZERO, random(0.9f, 1.1f));

@@ -8,7 +8,7 @@
 #ifndef SBOX_NO_AUDIO
 
 #define REFERENCE_DISTANCE 3.0f
-#define MAX_DISTANCE 24.0f
+#define MAX_DISTANCE 20.0f
 
 static void list_audio_devices(sbox_t* sbox, const ALCchar *devices) {
     const ALCchar* device = devices;

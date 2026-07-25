@@ -4,6 +4,7 @@
 #define VIEWMODEL_POS_X -0.05f
 #define VIEWMODEL_POS_Y -0.1f
 #define VIEWMODEL_POS_Z 0.35f
+#define WEAPON_SWITCH_DELAY 0.5f
 
 static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     item_t* item = inventory_get_item(sbox, &player->inventory);
@@ -30,6 +31,9 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
 
     if (player->buttons & PLAYER_BUTTON_FIRE) {
         if (sbox->time - weapon->last_fire < weapon->fire_rate)
+            return;
+
+        if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY)
             return;
         
         weapon->last_fire = sbox->time;
@@ -69,7 +73,31 @@ static void tick_item_position(sbox_t* sbox, player_t* player) {
     player->item_position[2] = interp_to(player->item_position[2], target[2], aim_speed, sbox->dt);
 }
 
-static void tick_item_anim(sbox_t* sbox, player_t* player) {
+static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
+    if (!item) return;
+
+    if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY) {
+        player->item_anim[1] = -0.65f;
+        player->item_anim_angles[0] = -90.0f;
+        player->item_anim_angles[1] = 35.0f;
+        return;
+    }
+
+    if (item->type == ITEM_WEAPON && sbox->time - item->data.weapon.last_fire <
+        min(item->data.weapon.fire_rate - 0.05f, 0.1f))
+    {
+        player->item_anim_angles[0] = (player->buttons & PLAYER_BUTTON_AIM) ?
+            -3.0f : -15.0f;
+    }
+
+    float reset_speed = 7.0f;
+    player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 0.0f, reset_speed,
+        sbox->dt);
+    player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 0.0f, reset_speed,
+        sbox->dt);
+    player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, reset_speed,
+        sbox->dt);
+
     if (player->target_speed < 1.0f || !player->is_grounded) {
         float reset_speed = 5.0f;
         player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
@@ -98,7 +126,7 @@ static void tick_item_anim(sbox_t* sbox, player_t* player) {
 void player_tick_item(sbox_t* sbox, player_t* player) {
     tick_item(sbox, player, &sbox->map.entlist);
     tick_item_position(sbox, player);
-    tick_item_anim(sbox, player);
+    tick_item_anim(sbox, player, inventory_get_item(sbox, &player->inventory));
 }
 
 void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
@@ -133,10 +161,26 @@ void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 
     vec3 scale = {1.0f, 1.0f, 1.0f};
 
+    quat pitch;
+    quat yaw;
+    glm_quat(pitch, rad(-renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
+    glm_quat(yaw, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+
     quat rotation;
     glm_quat_identity(rotation);
-    glm_quat(rotation, rad(renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
-    glm_quat(rotation, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+    glm_quat_mul(rotation, pitch, rotation);
+    glm_quat_mul(rotation, yaw, rotation);
+
+    quat anim_pitch;
+    quat anim_yaw;
+    quat anim_roll;
+    glm_quat(anim_pitch, rad(player->item_anim_angles[0]), 1.0f, 0.0f, 0.0f);
+    glm_quat(anim_yaw, rad(player->item_anim_angles[1]), 0.0f, 1.0f, 0.0f);
+    glm_quat(anim_roll, rad(player->item_anim_angles[2]), 0.0f, 0.0f, 1.0f);
+
+    glm_quat_mul(rotation, anim_pitch, rotation);
+    glm_quat_mul(rotation, anim_yaw, rotation);
+    glm_quat_mul(rotation, anim_roll, rotation);
 
     glm_mat4_identity(drawcall.model);
     glm_translate(drawcall.model, position);

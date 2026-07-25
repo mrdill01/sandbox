@@ -92,13 +92,13 @@ static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, fl
 
 void player_tick_body(sbox_t* sbox, player_t* player) {
     body_t* body = &player->body;
+    glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
 
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);
     velocity[1] = 0.0f;
 
     if (player->is_grounded && glm_vec3_dot(velocity, velocity) > 0.0f) {
-        glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
         if (body->walk_cycle) {
             blend_poses(sbox, player, &body->walk_a, &body->walk_b,
                 body->walk_timer / player_get_step_rate(sbox, player));

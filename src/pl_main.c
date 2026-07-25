@@ -45,6 +45,7 @@ player_t* player_new(sbox_t* sbox) {
     inventory_init(sbox, &player->inventory);
     glm_vec3_zero(player->item_position);
     glm_vec3_zero(player->item_anim);
+    glm_vec3_zero(player->item_anim_angles);
     player->health = 100.0f;
     player_init_body(sbox, player);
     edit_init(sbox, &player->editor);
