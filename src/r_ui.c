@@ -151,7 +151,7 @@ static void draw_loading_screen(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
-    if (!r_debug_menu.value) return;
+    if (!r_debug_menu.value || !sbox->player) return;
 
     float font_size = 30.0f;
     float spacing = font_size * 0.65f;
@@ -164,18 +164,18 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 
     position[1] += spacing;
     sprintf(text, "x %.3g, y %.3g, z %.3g",
-        sbox->player.position[0],
-        sbox->player.position[1],
-        sbox->player.position[2]);
+        sbox->player->position[0],
+        sbox->player->position[1],
+        sbox->player->position[2]);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
-    vec3 velocity = {sbox->player.velocity[0], 0.0f, sbox->player.velocity[2]};
+    vec3 velocity = {sbox->player->velocity[0], 0.0f, sbox->player->velocity[2]};
     position[1] += spacing;
     sprintf(text, "speed: %.2g", glm_vec3_dot(velocity, velocity));
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
-    sprintf(text, "water level: %g", sbox->player.water_level);
+    sprintf(text, "water level: %g", sbox->player->water_level);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
@@ -202,7 +202,7 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
     if (edit_mode.value) return;
 
-    const inventory_t* inventory = &sbox->player.inventory;
+    const inventory_t* inventory = &sbox->player->inventory;
     vec2 size = {48.0f, 48.0f};
     vec2 position = {0.0f, r_height.value / 2.0f - size[1] / 2.0f};
 
@@ -248,7 +248,7 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_inventory(sbox_t* sbox, ui_t* ui) {
-    const inventory_t* inventory = &sbox->player.inventory;
+    const inventory_t* inventory = &sbox->player->inventory;
     if (!inventory->is_open || edit_mode.value) return;
 
     vec2 size = {48.0f, 48.0f};
@@ -266,7 +266,7 @@ static void draw_inventory(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_hud(sbox_t* sbox, ui_t* ui) {
-    if (!(sbox->player.buttons & PLAYER_BUTTON_AIM)) {
+    if (!(sbox->player->buttons & PLAYER_BUTTON_AIM)) {
         vec2 size = {20.0f, 20.0f};
         vec2 position = {
             r_width.value / 2.0f - size[0] / 2.0f,
@@ -275,7 +275,7 @@ static void draw_hud(sbox_t* sbox, ui_t* ui) {
     }
 
     char text[32];
-    sprintf(text, "HEALTH %d", (int)sbox->player.health);
+    sprintf(text, "HEALTH %d", (int)sbox->player->health);
     float font_size = 64.0f;
     float width = ui_measure_text(text, font_size);
     ui_draw_text(sbox, ui, text, (vec2){r_width.value - width - 48.0f, r_height.value - font_size},

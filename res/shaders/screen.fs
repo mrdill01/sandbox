@@ -27,8 +27,9 @@ float linearize_depth(float depth) {
 vec3 add_fog(vec3 color, float depth) {
     const vec3 default_color = vec3(0.2f, 0.75f, 0.9f);
     const vec3 sun_color = vec3(6.0f, 4.0f, 1.25f);
+    float factor = 0.02f;
 
-    float amount = pow(linearize_depth(depth), 4.0f);
+    float amount = 1.0f - exp(-linearize_depth(depth) * factor);
     amount = clamp(amount, 0.0f, 1.0f);
 
     vec3 view_dir = normalize(view_position - texture(position, vs_uv).rgb);

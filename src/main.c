@@ -26,6 +26,10 @@ int main(int argc, char* argv[]) {
 
     map_load(&sbox, &sbox.map);
 
+    sbox.players[0] = gm_spawn_player(&sbox);
+    sbox.player = sbox.players[0];
+    sbox.player->is_me = true;
+
     while (sbox.running) {
         tick(&sbox);
         r_render(&sbox, &sbox.renderer);
@@ -89,7 +93,6 @@ bool init(sbox_t* sbox) {
 
     r_init(sbox, &sbox->renderer);
     a_init(sbox, &sbox->audio);
-    player_init(sbox, &sbox->player);
 
     return true;
 }
@@ -178,7 +181,10 @@ void shutdown(sbox_t* sbox) {
 
     r_free(sbox, &sbox->renderer);
     a_free(sbox, &sbox->audio);
-    player_free(sbox, &sbox->player);
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (!sbox->players[i]) continue;
+        player_free(sbox, sbox->players[i]);
+    }
     
     SDL_GL_DeleteContext(sbox->gl_context);
     SDL_DestroyWindow(sbox->window);

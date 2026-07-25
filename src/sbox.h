@@ -8,6 +8,7 @@
 #include "entity.h"
 #include "player.h"
 #include "map.h"
+#include "gm.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +27,9 @@
 #define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);
 #else
 #define unreachable(sbox) (void)sbox
-#endif 
+#endif
+
+#define MAX_PLAYERS 32
 
 typedef enum {
     UI_STATE_LOADING,
@@ -67,7 +70,8 @@ typedef struct sbox_t {
     ui_state_t ui_state;
 
     map_t map;
-    player_t player;
+    player_t* players[MAX_PLAYERS];
+    player_t* player;
 } sbox_t;
 
 extern cvar_t r_width;

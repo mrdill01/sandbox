@@ -124,6 +124,33 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
+static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
+    r_set_framebuffer(renderer, renderer->gbuffer);
+    r_set_shader(renderer, renderer->skybox_shader);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    mat4 view;
+    glm_mat4_copy(renderer->view, view);
+    glm_mat4_inv(view, view);
+    r_set_mat4(sbox, renderer, "inv_view", view);
+
+    mat4 projection;
+    glm_mat4_copy(renderer->projection, projection);
+    glm_mat4_inv(projection, projection);
+    r_set_mat4(sbox, renderer, "inv_projection", projection);
+
+    r_set_int(sbox, renderer, "cubemap", 0);
+    r_set_texture(renderer, sbox->map.skybox, 0);
+
+    r_draw_mesh(renderer, renderer->quad_mesh);
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    r_set_framebuffer(renderer, NULL);
+}
+
 static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->ambient_light_shader);
@@ -294,37 +321,6 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
-static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
-    r_set_framebuffer(renderer, renderer->gbuffer);
-    r_set_shader(renderer, renderer->skybox_shader);
-
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_LEQUAL);
-
-    mat4 projection;
-    glm_mat4_copy(renderer->projection, projection);
-    glm_mat4_inv(projection, projection);
-    r_set_mat4(sbox, renderer, "inv_projection", projection);
-
-    mat4 view;
-    glm_mat4_copy(renderer->view, view);
-    glm_mat4_inv(view, view);
-    r_set_mat4(sbox, renderer, "inv_view", view);
-
-    r_set_int(sbox, renderer, "cubemap", 0);
-    r_set_int(sbox, renderer, "depth", 1);
-    r_set_texture(renderer, sbox->map.skybox, 0);
-    r_set_texture(renderer, renderer->gbuffer->textures[3], 1);
-
-    r_draw_mesh(renderer, renderer->quad_mesh);
-
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
-    r_set_framebuffer(renderer, NULL);
-}
-
 static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->screen_shader);
     glViewport(0, 0, r_width.value, r_height.value);
@@ -356,9 +352,12 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     render_shadows(sbox, renderer);
-    render_skybox(sbox, renderer);
-    player_render(sbox, &sbox->player, renderer);
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        if (!sbox->players[i]) continue;
+        player_render(sbox, sbox->players[i], renderer);
+    }
     render_gbuffer(sbox, renderer);
+    render_skybox(sbox, renderer);
     render_ambient_light(sbox, renderer);
     render_sun_lights(sbox, renderer);
     render_point_lights(sbox, renderer);

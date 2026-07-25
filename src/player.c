@@ -2,7 +2,7 @@
 #include "sbox.h"
 #include "entity.h"
 
-#define HEIGHT 1.5f
+#define HEIGHT 1.35f
 #define HEIGHT_CROUCH 0.75f
 #define RADIUS 0.5f
 #define JUMPFORCE 2.775f
@@ -42,7 +42,7 @@ static void init_body(sbox_t* sbox, player_t* player) {
     body->parts[BODY_TORSO] = create_body_part(
         sbox, "res/meshes/player/torso.obj", GLM_VEC3_ZERO, NULL);
     body->parts[BODY_HEAD] = create_body_part(
-        sbox, "res/meshes/player/head.obj", (vec3){0.0f, 0.5f, 0.0f}, &body->parts[BODY_TORSO]);
+        sbox, "res/meshes/player/head.obj", (vec3){0.0f, 0.6f, 0.0f}, &body->parts[BODY_TORSO]);
     
     body->parts[BODY_LEFT_UPPER_ARM] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
@@ -69,9 +69,11 @@ static void init_body(sbox_t* sbox, player_t* player) {
             &body->parts[BODY_RIGHT_UPPER_LEG]);
 }
 
-void player_init(sbox_t* sbox, player_t* player) {
+player_t* player_new(sbox_t* sbox) {
+    player_t* player = malloc(sizeof(player_t));
+    player->is_me = false;
     player->move_mode = MOVE_WALK;
-    glm_vec3_copy((vec3){0.0f, 1.5f, -4.5f}, player->position);
+    glm_vec3_copy((vec3){0.0f, 2.0f, -4.5f}, player->position);
     glm_vec3_zero(player->velocity);
     glm_vec3_zero(player->move_input);
     glm_vec3_zero(player->target_dir);
@@ -92,10 +94,12 @@ void player_init(sbox_t* sbox, player_t* player) {
     player->health = 100.0f;
     init_body(sbox, player);
     edit_init(sbox, &player->editor);
+    return player;
 }
 
 void player_free(sbox_t* sbox, player_t* player) {
     inventory_free(sbox, &player->inventory);
+    free(player);
 }
 
 static void set_move_mode(player_t* player, move_mode_t new_mode) {
@@ -138,112 +142,6 @@ static float get_step_rate(sbox_t* sbox, player_t* player) {
     }
     
     return speed;
-}
-
-static void reset_input(sbox_t* sbox, player_t* player) {
-    glm_vec3_zero(player->move_input);
-    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, player->target_dir);
-    player->buttons = 0;
-}
-
-static void tick_input(sbox_t* sbox, player_t* player, camera_t* camera) {
-    reset_input(sbox, player);
-    if (sbox->ui_state != UI_STATE_IN_GAME)
-        return;
-    
-    if (sbox->keys[SDL_SCANCODE_Z])
-        camera_add_pitch(camera, -m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_X])
-        camera_add_pitch(camera, m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_LEFT])
-        camera_add_yaw(camera, -m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_RIGHT])
-        camera_add_yaw(camera, m_sens.value);
-
-    /*if (sbox->mxdt != 0.0f)
-        camera_add_yaw(camera, sbox->mxdt * m_sens.value);
-
-    if (sbox->mydt != 0.0f)
-        camera_add_pitch(camera, sbox->mydt * -m_sens.value);*/
-    
-    if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP]) {
-        player->move_input[2] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->forward, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_S] || sbox->keys[SDL_SCANCODE_DOWN]) {
-        player->move_input[2] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->forward, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_D]) {
-        player->move_input[0] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->right, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_A]) {
-        player->move_input[0] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->right, player->target_dir);
-    }
-
-    if (glm_vec3_dot(player->move_input, player->move_input) > 0.0f)
-        glm_vec3_norm(player->move_input);
-
-    if (sbox->keys[SDL_SCANCODE_SPACE])
-        player->buttons |= PLAYER_BUTTON_JUMP;
-    
-    if (sbox->keys[SDL_SCANCODE_LCTRL])
-        player->buttons |= PLAYER_BUTTON_CROUCH;
-
-    if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL]) {
-        player->buttons |= PLAYER_BUTTON_FIRE;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_LALT]) {
-        player->buttons |= PLAYER_BUTTON_AIM;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_B]) {
-        sbox->keys[SDL_SCANCODE_B] = false;
-        cvar_toggle(sbox, "edit_mode");
-    }
-
-    if (sbox->keys[SDL_SCANCODE_C]) {
-        sbox->keys[SDL_SCANCODE_C] = false;
-        player->is_thirdperson = !player->is_thirdperson;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_1]) {
-        sbox->keys[SDL_SCANCODE_1] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 0);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_2]) {
-        sbox->keys[SDL_SCANCODE_2] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 1);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_3]) {
-        sbox->keys[SDL_SCANCODE_3] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 2);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_4]) {
-        sbox->keys[SDL_SCANCODE_4] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 3);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_I]) {
-        sbox->keys[SDL_SCANCODE_I] = false;
-        inventory_toggle(sbox, &player->inventory);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_F3]) {
-        sbox->keys[SDL_SCANCODE_F3] = false;
-    }
 }
 
 static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
@@ -489,6 +387,8 @@ static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist)
 }
 
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
+    if (!player->is_me) return;
+
     camera_tick(sbox, camera);
 
     if (player->buttons & PLAYER_BUTTON_AIM)
@@ -534,24 +434,24 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
     float max_distance = 100.0f;
-    trace_result_t trace;
 
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+    if (phys_line_trace(start, dir, max_distance, entlist, &player->look_trace)) {
         if (player->buttons & PLAYER_BUTTON_FIRE) {
             if (edit_mode.value) {
                  if (player->editor.selection) {
                     player->editor.selection->data.prop.enable_collision = true;
                     player->editor.selection = NULL;
                 } else {
-                    player->editor.selection = trace.entity;
+                    player->editor.selection = player->look_trace.entity;
                     player->editor.selection->data.prop.enable_collision = false;
-                    player->editor.trace = trace;
+                    player->editor.trace = player->look_trace;
                 }
             }
         }
     }
 }
 
+/* TODO: delete */
 static void tick_mesh(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     entity_t* mesh = entlist_find_by_name(sbox, entlist, "player_thirdperson");
     mesh->data.prop.is_visible = player->is_thirdperson;
@@ -679,9 +579,121 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     }
 }
 
-void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
-    tick_input(sbox, player, camera);
+static void reset_input(sbox_t* sbox, player_t* player) {
+    glm_vec3_zero(player->move_input);
+    glm_vec3_zero(player->target_dir);
+    player->buttons = 0;
+}
 
+void player_input(sbox_t* sbox, player_t* player) {
+    reset_input(sbox, player);
+    if (sbox->ui_state != UI_STATE_IN_GAME)
+        return;
+
+    camera_t* camera = &sbox->renderer.camera;
+    
+    if (sbox->keys[SDL_SCANCODE_Z])
+        camera_add_pitch(camera, -m_sens.value);
+
+    if (sbox->keys[SDL_SCANCODE_X])
+        camera_add_pitch(camera, m_sens.value);
+
+    if (sbox->keys[SDL_SCANCODE_LEFT])
+        camera_add_yaw(camera, -m_sens.value);
+
+    if (sbox->keys[SDL_SCANCODE_RIGHT])
+        camera_add_yaw(camera, m_sens.value);
+
+    /*if (sbox->mxdt != 0.0f)
+        camera_add_yaw(camera, sbox->mxdt * m_sens.value);
+
+    if (sbox->mydt != 0.0f)
+        camera_add_pitch(camera, sbox->mydt * -m_sens.value);*/
+    
+    if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP]) {
+        player->move_input[2] += 1.0f;
+        glm_vec3_add(player->target_dir, camera->forward, player->target_dir);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_S] || sbox->keys[SDL_SCANCODE_DOWN]) {
+        player->move_input[2] -= 1.0f;
+        glm_vec3_sub(player->target_dir, camera->forward, player->target_dir);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_D]) {
+        player->move_input[0] -= 1.0f;
+        glm_vec3_sub(player->target_dir, camera->right, player->target_dir);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_A]) {
+        player->move_input[0] += 1.0f;
+        glm_vec3_add(player->target_dir, camera->right, player->target_dir);
+    }
+
+    if (glm_vec3_dot(player->move_input, player->move_input) > 0.0f)
+        glm_vec3_norm(player->move_input);
+
+    if (sbox->keys[SDL_SCANCODE_SPACE])
+        player->buttons |= PLAYER_BUTTON_JUMP;
+    
+    if (sbox->keys[SDL_SCANCODE_LCTRL])
+        player->buttons |= PLAYER_BUTTON_CROUCH;
+
+    if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL]) {
+        player->buttons |= PLAYER_BUTTON_FIRE;
+    }
+
+    if (sbox->keys[SDL_SCANCODE_G]) {
+        sbox->keys[SDL_SCANCODE_G] = false;
+        player_t* bot = gm_spawn_player(sbox);
+        player_teleport(sbox, bot, player->look_trace.point);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_LALT]) {
+        player->buttons |= PLAYER_BUTTON_AIM;
+    }
+
+    if (sbox->keys[SDL_SCANCODE_B]) {
+        sbox->keys[SDL_SCANCODE_B] = false;
+        cvar_toggle(sbox, "edit_mode");
+    }
+
+    if (sbox->keys[SDL_SCANCODE_C]) {
+        sbox->keys[SDL_SCANCODE_C] = false;
+        player->is_thirdperson = !player->is_thirdperson;
+    }
+
+    if (sbox->keys[SDL_SCANCODE_1]) {
+        sbox->keys[SDL_SCANCODE_1] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 0);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_2]) {
+        sbox->keys[SDL_SCANCODE_2] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 1);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_3]) {
+        sbox->keys[SDL_SCANCODE_3] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 2);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_4]) {
+        sbox->keys[SDL_SCANCODE_4] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 3);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_I]) {
+        sbox->keys[SDL_SCANCODE_I] = false;
+        inventory_toggle(sbox, &player->inventory);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_F3]) {
+        sbox->keys[SDL_SCANCODE_F3] = false;
+    }
+}
+
+void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
     if (player->buttons & PLAYER_BUTTON_CROUCH) set_move_mode(player, MOVE_CROUCH);
     else set_move_mode(player, MOVE_WALK);
 
@@ -700,17 +712,15 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     
     tick_camera(sbox, player, camera);
     trace_look_ray(sbox, player, camera, entlist);
-    //tick_mesh(sbox, player, entlist);
     tick_item(sbox, player, entlist);
     tick_item_position(sbox, player);
     tick_item_anim(sbox, player);
     tick_step_sounds(sbox, player);
     edit_tick(sbox, &player->editor, player);
-    reset_input(sbox, player);
 }
 
 static void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (!player->is_thirdperson) return;
+    if (!player->is_thirdperson && player->is_me) return;
 
     body_t* body = &player->body;
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
@@ -750,7 +760,7 @@ static void player_render_body(sbox_t* sbox, player_t* player, renderer_t* rende
 }
 
 static void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (player->is_thirdperson || edit_mode.value) return;
+    if (player->is_thirdperson || edit_mode.value || !player->is_me) return;
     item_t* item = inventory_get_item(sbox, &player->inventory);
     if (!item) return;
 
@@ -815,6 +825,10 @@ void player_add_damage(sbox_t* sbox, player_t* player, float damage) {
 
     player->health -= damage;
     player->health = clamp(player->health, 0.0f, 100.0f);
+}
+
+void player_teleport(sbox_t* sbox, player_t* player, vec3 destination) {
+    glm_vec3_copy(destination, player->position);
 }
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position) {

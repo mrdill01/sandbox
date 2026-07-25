@@ -47,6 +47,7 @@ typedef struct {
 } body_t;
 
 typedef struct player_t {
+    bool is_me;
     move_mode_t move_mode;
     vec3 position;
     vec3 velocity;
@@ -56,6 +57,7 @@ typedef struct player_t {
     float target_speed;
     bool is_grounded;
     bool is_jumping;
+    trace_result_t look_trace;
     phys_material_t ground_mat;
     float fall_distance;
     float water_level;
@@ -71,12 +73,14 @@ typedef struct player_t {
     editor_t editor;
 } player_t;
 
-void player_init(sbox_t* sbox, player_t* player);
+player_t* player_new(sbox_t* sbox);
 void player_free(sbox_t* sbox, player_t* player);
+void player_input(sbox_t* sbox, player_t* player);
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist);
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
 void player_add_damage(sbox_t* sbox, player_t* player, float damage);
+void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
 void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);

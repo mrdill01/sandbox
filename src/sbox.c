@@ -82,6 +82,9 @@ void sbox_init(sbox_t* sbox) {
 	sbox->materials = NULL;
 
 	sbox->ui_state = UI_STATE_LOADING;
+
+	for (int i = 0; i < MAX_PLAYERS; i++)
+		sbox->players[i] = NULL;
 }
 
 void sbox_free(sbox_t* sbox) {
@@ -94,8 +97,16 @@ void sbox_tick(sbox_t* sbox) {
    	sbox->dt = (sbox->now - sbox->last) / (double)SDL_GetPerformanceFrequency();
 	sbox->time += sbox->dt;
 
-	a_tick(sbox, &sbox->audio, &sbox->player, &sbox->renderer.camera);
-    player_tick(sbox, &sbox->player, &sbox->renderer.camera, &sbox->map.entlist);
+	a_tick(sbox, &sbox->audio, sbox->player, &sbox->renderer.camera);
+	
+	for (int i = 0; i < MAX_PLAYERS; i++) {
+		player_t* player = sbox->players[i];
+		if (!player) continue;
+		if (player->is_me)
+			player_input(sbox, sbox->player);
+		player_tick(sbox, sbox->players[i], &sbox->renderer.camera, &sbox->map.entlist);
+	}
+
     map_tick(sbox, &sbox->map);
 	r_tick(sbox, &sbox->renderer);
 }
