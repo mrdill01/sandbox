@@ -58,7 +58,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/pistol_fire.wav");
     weapon->fire_rate = 0.25f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.08f;
+    weapon->spread = 0.06f;
 }
 
 void inventory_free(sbox_t* sbox, inventory_t* inventory) {

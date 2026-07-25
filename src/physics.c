@@ -39,12 +39,12 @@ bool phys_line_trace(
                 vec3 diff;
                 glm_vec3_sub(trace.point, center, diff);
 
-                float bias = 1.00001f;
+                float bias = 1.0000f + PHYS_TRACE_STEP;
                 if (fabsf(diff[0]) > half_size[0] * bias)
                     trace.normal[0] = sign(diff[0]);
-                if (fabsf(diff[1]) > half_size[1] * bias)
+                else if (fabsf(diff[1]) > half_size[1] * bias)
                     trace.normal[1] = sign(diff[1]);
-                if (fabsf(diff[2]) > half_size[2] * bias)
+                else if (fabsf(diff[2]) > half_size[2] * bias)
                     trace.normal[2] = sign(diff[2]);
 
                 hit = true;

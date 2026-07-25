@@ -30,7 +30,9 @@ static uint32_t get_gl_format(sbox_t* sbox, texture_format_t format) {
     return 0;
 }
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, texture_format_t format) {
+texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
+    texture_format_t format, texture_filter_t filter)
+{
     uint32_t id;
     glGenTextures(1, &id);
 
@@ -52,8 +54,17 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, textu
         data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    GLint gl_filter;
+    switch (filter) {
+    case TEX_FILTER_NEAREST: gl_filter = GL_NEAREST; break;
+    case TEX_FILTER_LINEAR: gl_filter = GL_LINEAR; break;
+    default: unreachable(sbox);
+    }
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter);
+
     glGenerateMipmap(GL_TEXTURE_2D);
 
     texture_t* texture = malloc(sizeof(texture_t));
@@ -62,13 +73,14 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, textu
     texture->width = width;
     texture->height = height;
     texture->format = format;
+    texture->filter = filter;
 
     texture->next = sbox->textures;
     sbox->textures = texture;
     return texture;
 }
 
-texture_t* texture_load(sbox_t* sbox, const char* path) {
+texture_t* texture_load(sbox_t* sbox, const char* path, texture_filter_t filter) {
     info(sbox, "loading texture %s", path);
 
     int width, height, channels;
@@ -78,7 +90,7 @@ texture_t* texture_load(sbox_t* sbox, const char* path) {
         return NULL;
     }
 
-    texture_t* texture = texture_new(sbox, width, height, data, TEX_FORMAT_RGBA);
+    texture_t* texture = texture_new(sbox, width, height, data, TEX_FORMAT_RGBA, filter);
     stbi_image_free(data);
     return texture;
 }

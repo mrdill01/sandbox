@@ -2,13 +2,13 @@
 #include "sbox.h"
 #include "entity.h"
 
-#define HEIGHT 1.35f
+#define HEIGHT 1.5f
 #define HEIGHT_CROUCH 0.75f
 #define RADIUS 0.5f
 #define JUMPFORCE 2.775f
 #define MAX_STEDOWN 0.5f
 #define MAX_SPEED_WALK 3.2f
-#define MAX_SPEED_CROUCH 1.8f
+#define MAX_SPEED_CROUCH 2.2f
 #define ACCEL 10.0f
 #define AIR_ACCEL 2.0f
 #define STOPSPEED 2.5f
@@ -25,49 +25,6 @@
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
-
-static body_part_t create_body_part(
-    sbox_t* sbox, const char* path, vec3 offset, body_part_t* parent)
-{
-    body_part_t part;
-    part.mesh = mesh_load(sbox, path);
-    glm_vec3_copy(offset, part.offset);
-    glm_quat_identity(part.rotation);
-    part.parent = parent;
-    return part;
-}
-
-static void init_body(sbox_t* sbox, player_t* player) {
-    body_t* body = &player->body;
-    body->parts[BODY_TORSO] = create_body_part(
-        sbox, "res/meshes/player/torso.obj", GLM_VEC3_ZERO, NULL);
-    body->parts[BODY_HEAD] = create_body_part(
-        sbox, "res/meshes/player/head.obj", (vec3){0.0f, 0.6f, 0.0f}, &body->parts[BODY_TORSO]);
-    
-    body->parts[BODY_LEFT_UPPER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
-    body->parts[BODY_LEFT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, -0.05f, 0.0f},
-            &body->parts[BODY_LEFT_UPPER_ARM]);
-    
-    body->parts[BODY_RIGHT_UPPER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
-    body->parts[BODY_RIGHT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.25f, -0.05f, 0.0f},
-            &body->parts[BODY_RIGHT_UPPER_ARM]);
-    
-    body->parts[BODY_LEFT_UPPER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
-    body->parts[BODY_LEFT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.4f, 0.0f},
-            &body->parts[BODY_LEFT_UPPER_LEG]);
-    
-    body->parts[BODY_RIGHT_UPPER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
-    body->parts[BODY_RIGHT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.4f, 0.0f},
-            &body->parts[BODY_RIGHT_UPPER_LEG]);
-}
 
 player_t* player_new(sbox_t* sbox) {
     player_t* player = malloc(sizeof(player_t));
@@ -92,7 +49,7 @@ player_t* player_new(sbox_t* sbox) {
     glm_vec3_zero(player->item_position);
     glm_vec3_zero(player->item_anim);
     player->health = 100.0f;
-    init_body(sbox, player);
+    player_init_body(sbox, player);
     edit_init(sbox, &player->editor);
     return player;
 }
@@ -148,12 +105,6 @@ static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
     float speed = sqrt(player->velocity[0] * player->velocity[0] +
         player->velocity[1] * player->velocity[1] +
         player->velocity[2] * player->velocity[2]);
-
-    if (speed < 1.0f) {
-        player->velocity[0] = 0.0f;
-        player->velocity[2] = 0.0f;
-        return;
-    }
 
     float control = (speed < STOPSPEED) ? STOPSPEED : speed;
     float drop = control * friction * sbox->dt;
@@ -280,7 +231,9 @@ static void leave_ground(sbox_t* sbox, player_t* player) {
 static void enter_water(sbox_t* sbox, player_t* player) {
     vec3 position;
     player_get_bottom_position(sbox, player, position);
+    position[1] += get_height(sbox, player) / 2.0f * player->water_level;
     a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound, position, random(0.9f, 1.1f));
+    r_add_partfx_enter_water(sbox, &sbox->renderer, position);
 }
 
 static void exit_water(sbox_t* sbox, player_t* player) {
@@ -410,7 +363,6 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
 
         vec3 position;
         glm_vec3_copy(camera->position, position);
-        position[1] += 2.0f;
 
         float camera_distance = THIRDPERSON_CAMERA_BOOM_LENGTH;
         trace_result_t trace;
@@ -433,7 +385,7 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
-    float max_distance = 100.0f;
+    float max_distance = 8.0f;
 
     if (phys_line_trace(start, dir, max_distance, entlist, &player->look_trace)) {
         if (player->buttons & PLAYER_BUTTON_FIRE) {
@@ -449,16 +401,6 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
             }
         }
     }
-}
-
-/* TODO: delete */
-static void tick_mesh(sbox_t* sbox, player_t* player, entlist_t* entlist) {
-    entity_t* mesh = entlist_find_by_name(sbox, entlist, "player_thirdperson");
-    mesh->data.prop.is_visible = player->is_thirdperson;
-    mesh->position[0] = player->position[0];
-    mesh->position[1] = player->position[1] - get_height(sbox, player) / 2.0f;
-    mesh->position[2] = player->position[2];
-    glm_quat(mesh->rotation, rad(-sbox->renderer.camera.angles[1]), 0.0f, 1.0f, 0.0f);
 }
 
 static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
@@ -501,7 +443,7 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
             a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
 
-            r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace.point, trace.normal);
+            r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace);
         }
 
         r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
@@ -715,48 +657,9 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     tick_item(sbox, player, entlist);
     tick_item_position(sbox, player);
     tick_item_anim(sbox, player);
+    player_tick_body(sbox, player);
     tick_step_sounds(sbox, player);
     edit_tick(sbox, &player->editor, player);
-}
-
-static void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (!player->is_thirdperson && player->is_me) return;
-
-    body_t* body = &player->body;
-    for (int i = 0; i < NUM_BODY_PARTS; i++) {
-        body_part_t* part = &body->parts[i];
-        if (!part->mesh) continue;
-
-        drawcall_t drawcall;
-        drawcall.entity = malloc(strlen("body part"));
-        strcpy(drawcall.entity, "body part");
-        
-        drawcall.mesh = part->mesh;
-        drawcall.materials[0] = NULL;
-        drawcall.materials[1] = NULL;
-        drawcall.materials[2] = NULL;
-        drawcall.materials[3] = NULL;
-
-        bbox_t bbox = {0};
-        drawcall.local_bbox = drawcall.mesh->bbox;
-
-        vec3 position;
-        glm_vec3_copy(player->position, position);
-        glm_vec3_add(position, part->offset, position);
-
-        glm_mat4_identity(drawcall.model);
-        glm_translate(drawcall.model, position);
-        glm_quat_rotate(drawcall.model, part->rotation, drawcall.model);
-        drawcall.world_bbox = bbox;
-
-        glm_vec3_copy(position, drawcall.position);
-        glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, drawcall.scale);
-        glm_quat_rotate(GLM_MAT4_IDENTITY, part->rotation, drawcall.rotation);
-
-        drawcall.dist_to_camera = 0.0f;
-        drawcall.is_translucent = false;
-        r_add_drawcall(renderer, drawcall);
-    }
 }
 
 static void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {

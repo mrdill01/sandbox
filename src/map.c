@@ -690,7 +690,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, water, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "underwater", 0.0f, -2.4f, 0.0f, water_mesh, &entity);
+    entity_init_prop(sbox, "underwater", 0.0f, -2.0f, 0.0f, water_mesh, &entity);
     entity_prop_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -712,7 +712,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     vec3 sun_dir = {0.0f, -0.999f, 0.0f};
-    vec3 sun_color = {5.0f, 4.0f, 3.0f};
+    vec3 sun_color = {6.0f, 5.5f, 5.0f};
     entity_init_sun_light(sbox, "sun", 0.0f, 0.0f, 0.0f, sun_dir, sun_color, &entity);
     entlist_add(sbox, &map->entlist, entity);
 

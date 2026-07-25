@@ -7,6 +7,9 @@
 
 #ifndef SBOX_NO_AUDIO
 
+#define REFERENCE_DISTANCE 3.0f
+#define MAX_DISTANCE 20.0f
+
 static void list_audio_devices(sbox_t* sbox, const ALCchar *devices) {
     const ALCchar* device = devices;
     const ALCchar* next = devices + 1;
@@ -93,6 +96,8 @@ void a_init(sbox_t* sbox, audio_t* audio) {
         sound_load(sbox, audio, "res/sounds/bullet_hit_wood.wav");
     audio->bullet_hit_sounds[PHYS_MAT_STONE] =
         sound_load(sbox, audio, "res/sounds/bullet_hit_stone.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_SAND] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_sand.wav");
     audio->bullet_hit_sounds[PHYS_MAT_GRASS] =
         sound_load(sbox, audio, "res/sounds/bullet_hit_grass.wav");
     audio->bullet_hit_sounds[PHYS_MAT_WATER] =
@@ -138,7 +143,7 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_GAIN: %d", err);
 
-    alListener3f(AL_POSITION, player->position[0], player->position[1], player->position[2]);
+    alListener3f(AL_POSITION, camera->position[0], camera->position[1], camera->position[2]);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_POSITION: %d", err);
     
@@ -149,19 +154,23 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
     alListenerfv(AL_ORIENTATION, orientation);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_ORIENTATION: %d", err);
+
+    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_LINEAR_DISTANCE_CLAMPED: %d", err);
 }
 
 void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch) {
     if (!sound) return;
     ALenum err;
 
-    alSourcef(sound->source, AL_PITCH, pitch);
-    if ((err = alGetError()) != AL_NO_ERROR)
-        error(sbox, "failed to set AL_PITCH: %d", err);
-
     alSourcef(sound->source, AL_GAIN, 1.0f);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_GAIN: %d", err);
+
+    alSourcef(sound->source, AL_PITCH, pitch);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_PITCH: %d", err);
     
     alSource3f(sound->source, AL_POSITION, position[0], position[1], position[2]);
     if ((err = alGetError()) != AL_NO_ERROR)
@@ -174,6 +183,18 @@ void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float p
     alSourcei(sound->source, AL_LOOPING, AL_FALSE);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_LOOPING: %d", err);
+
+    alSourcef(sound->source, AL_ROLLOFF_FACTOR, 1.0f);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_ROLLOFF_FACTOR: %d", err);
+    
+    alSourcef(sound->source, AL_REFERENCE_DISTANCE, REFERENCE_DISTANCE);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_REFERENCE_DISTANCE: %d", err);
+    
+    alSourcef(sound->source, AL_MAX_DISTANCE, MAX_DISTANCE);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to set AL_MAX_DISTANCE: %d", err);
 
     alSourcePlay(sound->source);
     if ((err = alGetError()) != AL_NO_ERROR)
@@ -201,8 +222,33 @@ sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {
         return NULL;
     }
 
-    len = len - len % 4;
-    alBufferData(buffer, AL_FORMAT_STEREO16, data, len, spec.freq);
+    SDL_AudioCVT cvt;
+    int status = SDL_BuildAudioCVT(&cvt, spec.format, spec.channels, spec.freq,
+        spec.format, 1, spec.freq);
+
+    if (status < 0) {
+        error(sbox, "failed to build audio converter: %s", SDL_GetError());
+        return NULL;
+    }
+
+    cvt.len = len;
+    cvt.buf = malloc(cvt.len * cvt.len_mult);
+    if (cvt.buf == NULL) {
+        error(sbox, "failed to malloc buffer for converted audio");
+        SDL_FreeWAV(data);
+        return NULL;
+    }
+
+    memcpy(cvt.buf, data, len);
+
+    if (SDL_ConvertAudio(&cvt) < 0) {
+        error(sbox, "failed to convert audio: %s", SDL_GetError());
+        free(cvt.buf);
+        SDL_FreeWAV(data);
+        return NULL;
+    }
+
+    alBufferData(buffer, AL_FORMAT_MONO16, cvt.buf, cvt.len * cvt.len_ratio, spec.freq);
     if ((err = alGetError()) != AL_NO_ERROR) {
         error(sbox, "failed to set audio buffer data for %s: %d", path, err);
         return NULL;
@@ -241,7 +287,6 @@ void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound) {
 }
 
 #else
-
 
 void a_init(sbox_t* sbox, audio_t* audio) {}
 void a_free(sbox_t* sbox, audio_t* audio) {}

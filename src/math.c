@@ -48,14 +48,6 @@ float random(float start, float end) {
 	return start + scale * (end - start);
 }
 
-void random_in_cone(float angle, vec3 dir, vec3 cone) {
-    float theta = random(0.0f, angle);
-    float phi = random(0.0f, 2.0f * M_PI);
-
-    vec3 local = {cos(phi)*sin(theta), sin(phi)*sin(theta), cos(theta)};
-    cone = local;
-}
-
 bbox_t bbox_new(vec3 min, vec3 max) {
     bbox_t bbox;
     glm_vec3_copy(min, bbox.min);
@@ -65,9 +57,9 @@ bbox_t bbox_new(vec3 min, vec3 max) {
 
 void bbox_get_center(const bbox_t* bbox, vec3 center) {
     vec3 result = {
-        (bbox->min[0] + bbox->max[0]) / 2,
-        (bbox->min[1] + bbox->max[1]) / 2,
-        (bbox->min[2] + bbox->max[2]) / 2};
+        (bbox->min[0] + bbox->max[0]) / 2.0f,
+        (bbox->min[1] + bbox->max[1]) / 2.0f,
+        (bbox->min[2] + bbox->max[2]) / 2.0f};
     glm_vec3_copy(result, center);
 }
 
@@ -79,12 +71,12 @@ void bbox_get_size(const bbox_t* bbox, vec3 size) {
     glm_vec3_copy(result, size);
 }
 
-void bbox_get_half_size(const bbox_t* bbox, vec3 size) {
+void bbox_get_half_size(const bbox_t* bbox, vec3 half_size) {
     vec3 result = {
         (bbox->max[0] - bbox->min[0]) / 2.0f,
         (bbox->max[1] - bbox->min[1]) / 2.0f,
         (bbox->max[2] - bbox->min[2]) / 2.0f};
-    glm_vec3_copy(result, size);
+    glm_vec3_copy(result, half_size);
 }
 
 bbox_t bbox_translate(bbox_t* bbox, vec3 position) {
@@ -130,9 +122,9 @@ bbox_t bbox_scale(bbox_t* bbox, vec3 scale) {
 }
 
 bool bbox_point_intersects(const bbox_t* bbox, vec3 point) {
-    return point[0] > bbox->min[0] &&
-        point[1] > bbox->min[1] &&
-        point[2] > bbox->min[2] &&
+    return point[0] >= bbox->min[0] &&
+        point[1] >= bbox->min[1] &&
+        point[2] >= bbox->min[2] &&
         point[0] < bbox->max[0] &&
         point[1] < bbox->max[1] &&
         point[2] < bbox->max[2];

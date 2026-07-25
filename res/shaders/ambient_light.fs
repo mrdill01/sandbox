@@ -41,7 +41,7 @@ void main() {
     sample.metallic = 0.0f;
     sample.ao = 1.0f;
 
-    vec3 ambient = vec3(0.4) * sample.albedo * sample.ao;
+    vec3 ambient = vec3(0.5f, 0.5f, 0.9f) * sample.albedo * sample.ao;
     frag_color = vec4(ambient, 1.0f);
 
     #if VISUALIZE == -1

@@ -3,10 +3,10 @@
 
 #include "../include/gl.h"
 
-void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal) {
-    for (int i = 0; i < 50; i++) {
+void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t trace) {
+    for (int i = 0; i < 100; i++) {
         /*vec3 velocity;
-        glm_vec3_copy(normal, velocity);
+        glm_vec3_copy(trace.normal, velocity);
         glm_vec3_scale(velocity, 10.0f, velocity);*/
 
         vec3 velocity = {
@@ -14,28 +14,30 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, vec3 position, v
             random(-10.0f, 10.0f),
             random(-10.0f, 10.0f)};
         
-        r_add_particle(sbox, &sbox->renderer, position, velocity, renderer->p_fire,
-            1.0f, random(0.05f, 0.075f), 0.15f);
+        particle_t* particle = r_add_particle(sbox, &sbox->renderer,
+            trace.point, velocity, renderer->p_fire,
+            1.0f, random(0.05f, 0.075f), random(0.1f, 0.15f));
+        particle->apply_gravity = true;
     }
 
     vec3 bullet_hole_position;
-    glm_vec3_copy(position, bullet_hole_position);
+    glm_vec3_copy(trace.point, bullet_hole_position);
     
     vec3 offset;
-    glm_vec3_copy(normal, offset);
+    glm_vec3_copy(trace.normal, offset);
     glm_vec3_scale(offset, 0.05f, offset);
 
     glm_vec3_add(bullet_hole_position, offset, bullet_hole_position);
 
     r_add_particle(sbox, &sbox->renderer,
         bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
-        1.0f, random(0.08f, 0.12f), 8.0f);
+        1.0f, random(0.08f, 0.12f), 15.0f);
 }
 
 void r_add_partfx_shoot_beam(
     sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance)
 {
-    const float PARTICLES_PER_UNIT = 2.5f;
+    const float PARTICLES_PER_UNIT = 5.0f;
 
     vec3 position;
     glm_vec3_copy(start, position);
@@ -50,21 +52,27 @@ void r_add_partfx_shoot_beam(
             random(-0.1f, 0.1f),
             random(-0.1f, 0.1f)};
 
+        if (random(0.0f, 1.0f) > 0.5f) {
+            vec3 forward;
+            glm_vec3_scale(dir, 20.0f, forward);
+            glm_vec3_add(velocity, forward, velocity);
+        }
+        
         r_add_particle(sbox, &sbox->renderer,
-            position, velocity, renderer->p_smoke,
-            0.25f, random(0.04f, 0.08f), random(0.75f, 1.5f));
+            position, velocity, renderer->p_steam,
+            0.125f, random(0.04f, 0.08f), random(0.5f, 1.0f));
     }
 }
 
 void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material) {
     for (int i = 0; i < 20; i++) {
         vec3 velocity = {
-            random(-10.0f, 10.0f),
-            random(2.0f, 15.0f),
-            random(-10.0f, 10.0f)};
+            random(-2.0f, 2.0f),
+            random(2.0f, 4.0f),
+            random(-2.0f, 2.0f)};
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, position, velocity, material->albedo,
-                0.75f, random(0.075f, 0.125f), 1.0f);
+                0.75f, random(0.025f, 0.075f), 0.5f);
         particle->apply_gravity = true;
 
         vec3 smoke_position = {
@@ -74,6 +82,27 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
         glm_vec3_zero(velocity);
         r_add_particle(sbox, &sbox->renderer, smoke_position, velocity,
             renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f));
+    }
+}
+
+void r_add_partfx_enter_water(
+    sbox_t* sbox, renderer_t* renderer, vec3 position)
+{
+    for (int i = 0; i < 200; i++) {
+        vec3 new_position;
+        glm_vec3_copy(position, new_position);
+        new_position[0] += random(-0.5f, 0.5f);
+        new_position[1] += random(-0.5f, 0.5f);
+        new_position[2] += random(-0.5f, 0.5f);
+
+        vec3 velocity = {
+            random(-2.0f, 2.0f),
+            random(2.0f, 6.0f),
+            random(-2.0f, 2.0f)};
+        particle_t* particle =
+            r_add_particle(sbox, &sbox->renderer, position, velocity, renderer->p_water,
+                1.0f, random(0.05f, 0.15f), 3.0f);
+        particle->apply_gravity = true;
     }
 }
 
@@ -129,7 +158,7 @@ void r_tick_particles(sbox_t* sbox, renderer_t* renderer) {
         }
 
         if (particle->apply_gravity)
-            particle->velocity[1] -= PHYS_GRAVITY;
+            particle->velocity[1] -= PHYS_GRAVITY * sbox->dt;
 
         vec3 move;
         glm_vec3_copy(particle->velocity, move);

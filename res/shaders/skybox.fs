@@ -17,7 +17,7 @@ void main() {
     vec3 color = texture(cubemap, vs_sample_dir).rgb;
     color = pow(color, vec3(GAMMA));
     g_position = vs_frag_position;
-    g_albedo_roughness.rgb = color;
+    g_albedo_roughness.rgb = color * 3.0f;
     g_albedo_roughness.a = 1.0f;
     g_normal = -vs_sample_dir;
     g_depth.r = gl_FragCoord.z;

@@ -9,13 +9,14 @@
 void ui_init(sbox_t* sbox, ui_t* ui) {
     info(sbox, "ui_init()...");
     ui->shader = shader_load(sbox, "ui", "res/shaders/ui.vs", "res/shaders/ui.fs");
-    ui->font = texture_load(sbox, "res/textures/ui/font.png");
-    ui->button = texture_load(sbox, "res/textures/ui/button.png");
-    ui->button_pressed = texture_load(sbox, "res/textures/ui/button_pressed.png");
-    ui->item_slot = texture_load(sbox, "res/textures/ui/item_slot.png");
-    ui->item_slot_active = texture_load(sbox, "res/textures/ui/item_slot_active.png");
-    ui->crosshair = texture_load(sbox, "res/textures/ui/crosshair.png");
-    ui->pixel = texture_load(sbox, "res/textures/ui/pixel.png");
+    ui->font = texture_load(sbox, "res/textures/ui/font.png", TEX_FILTER_NEAREST);
+    ui->button = texture_load(sbox, "res/textures/ui/button.png", TEX_FILTER_NEAREST);
+    ui->button_pressed = texture_load(sbox, "res/textures/ui/button_pressed.png", TEX_FILTER_NEAREST);
+    ui->item_slot = texture_load(sbox, "res/textures/ui/item_slot.png", TEX_FILTER_NEAREST);
+    ui->item_slot_active = texture_load(sbox,
+        "res/textures/ui/item_slot_active.png", TEX_FILTER_NEAREST);
+    ui->crosshair = texture_load(sbox, "res/textures/ui/crosshair.png", TEX_FILTER_NEAREST);
+    ui->pixel = texture_load(sbox, "res/textures/ui/pixel.png", TEX_FILTER_NEAREST);
     ui->quad = mesh_load(sbox, "res/meshes/quad.obj");
     glm_mat4_identity(ui->projection);
 }

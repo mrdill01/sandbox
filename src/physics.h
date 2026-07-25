@@ -18,7 +18,7 @@ typedef enum phys_material_t {
     PHYS_MAT_MAX,
 } phys_material_t;
 
-typedef struct {
+typedef struct trace_result_t {
     vec3 point;
     vec3 normal;
     float distance;

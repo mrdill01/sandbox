@@ -28,6 +28,8 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     float near = 1.0f;
     float far = 32.0f;
     bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
+    frustum = bbox_translate(&frustum, renderer->camera.position);
+    
     mat4 projection;
     glm_ortho(frustum.min[0], frustum.max[0],
         frustum.min[1], frustum.max[1],
@@ -39,13 +41,14 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     vec3 dir;
     glm_vec3_copy(sun_light->direction, dir);
+    glm_vec3_scale(dir, -20.0f, dir);
 
     vec3 position;
     glm_vec3_copy(center, position);
+    glm_vec3_add(position, dir, position);
     
     vec3 target;
-    glm_vec3_copy(center, target);
-    glm_vec3_add(target, dir, target);
+    glm_vec3_zero(target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);
@@ -58,7 +61,16 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
+        if (!drawcall->materials[0]) continue;
+
         r_set_mat4(sbox, renderer, "model", drawcall->model);
+
+        r_set_int(sbox, renderer, "albedo", 0);
+        r_set_texture(renderer, drawcall->materials[0]->albedo, 0);
+
+        r_set_float(sbox, renderer, "tilex", drawcall->materials[0]->tilex);
+        r_set_float(sbox, renderer, "tiley", drawcall->materials[0]->tiley);
+
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
     }
@@ -71,6 +83,9 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
         r_set_int(sbox, renderer, "albedo", 0);
         r_set_texture(renderer, drawcall->materials[0]->albedo, 0);
+
+        r_set_float(sbox, renderer, "tilex", drawcall->materials[0]->tilex);
+        r_set_float(sbox, renderer, "tiley", drawcall->materials[0]->tiley);
         
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
@@ -169,7 +184,7 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
-static void render_sun_lights(sbox_t* sbox, renderer_t* renderer) {
+static void render_sun_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->sun_light_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -328,11 +343,11 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_int(sbox, renderer, "screen", 0);
     r_set_int(sbox, renderer, "depth", 1);
     r_set_int(sbox, renderer, "position", 2);
-    r_set_int(sbox, renderer, "debug", 2);
+    r_set_int(sbox, renderer, "debug", 3);
     r_set_texture(renderer, renderer->screen_buffer->textures[0], 0);
     r_set_texture(renderer, renderer->gbuffer->textures[3], 1);
     r_set_texture(renderer, renderer->gbuffer->textures[0], 2);
-    r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 2);
+    r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 3);
 
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
@@ -351,15 +366,15 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
-    render_shadows(sbox, renderer);
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (!sbox->players[i]) continue;
         player_render(sbox, sbox->players[i], renderer);
     }
+    render_shadows(sbox, renderer);
     render_gbuffer(sbox, renderer);
     render_skybox(sbox, renderer);
     render_ambient_light(sbox, renderer);
-    render_sun_lights(sbox, renderer);
+    render_sun_light(sbox, renderer);
     render_point_lights(sbox, renderer);
     copy_depth(sbox, renderer);
     render_forward(sbox, renderer);

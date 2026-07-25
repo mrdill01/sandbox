@@ -31,7 +31,6 @@ float clamp(float x, float a, float b);
 float lerp(float a, float b, float t);
 float interp_to(float current, float target, float speed, float dt);
 float random(float start, float end);
-void random_in_cone(float angle, vec3 dir, vec3 cone);
 
 bbox_t bbox_new(vec3 min, vec3 max);
 void bbox_get_center(const bbox_t* bbox, vec3 center);

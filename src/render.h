@@ -23,6 +23,7 @@
 
 typedef struct sbox_t sbox_t;
 typedef enum phys_material_t phys_material_t;
+typedef struct trace_result_t trace_result_t;
 
 typedef struct camera_t {
     vec3 position;
@@ -65,12 +66,18 @@ typedef enum {
     TEX_FORMAT_DEPTH,
 } texture_format_t;
 
+typedef enum {
+    TEX_FILTER_NEAREST,
+    TEX_FILTER_LINEAR,
+} texture_filter_t;
+
 typedef struct texture_t {
     uint32_t id;
     texture_type_t type;
     int width;
     int height;
     texture_format_t format;
+    texture_filter_t filter;
     struct texture_t* next;
 } texture_t;
 
@@ -196,9 +203,11 @@ typedef struct {
 
     line_t lines[MAX_LINES];
 
-    texture_t* p_smoke;
     texture_t* p_fire;
+    texture_t* p_smoke;
+    texture_t* p_steam;
     texture_t* p_bullet_hole;
+    texture_t* p_water;
 
     particle_t particles[MAX_PARTICLES];
 
@@ -227,8 +236,9 @@ mesh_t* mesh_new(sbox_t* sbox,
 mesh_t* mesh_load(sbox_t* sbox, const char* path);
 void mesh_free(sbox_t* sbox, mesh_t* mesh);
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data, texture_format_t format);
-texture_t* texture_load(sbox_t* sbox, const char* path);
+texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
+    texture_format_t format, texture_filter_t filter);
+texture_t* texture_load(sbox_t* sbox, const char* path, texture_filter_t filter);
 texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]);
 void texture_free(sbox_t* sbox, texture_t* texture);
 
@@ -286,13 +296,14 @@ void r_add_line_box(sbox_t* sbox,
     renderer_t* renderer, const bbox_t* box, vec4 color, float decay_time);
 void r_render_lines(sbox_t* sbox, renderer_t* renderer);
 
-/* TODO: temporary */
 void r_add_partfx_shoot_hit(
-    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 normal);
+    sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
 void r_add_partfx_shoot_beam(
     sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance);
 void r_add_partfx_hit_ground(
     sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
+void r_add_partfx_enter_water(
+    sbox_t* sbox, renderer_t* renderer, vec3 position);
 
 particle_t* r_add_particle(
     sbox_t* sbox,

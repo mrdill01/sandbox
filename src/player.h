@@ -44,6 +44,7 @@ typedef enum {
 
 typedef struct {
     body_part_t parts[NUM_BODY_PARTS];
+    quat rotation;
 } body_t;
 
 typedef struct player_t {
@@ -84,5 +85,9 @@ void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
 void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
+
+void player_init_body(sbox_t* sbox, player_t* player);
+void player_tick_body(sbox_t* sbox, player_t* player);
+void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
 #endif

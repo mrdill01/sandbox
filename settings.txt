@@ -6,7 +6,7 @@ a_device (null) Audio output device (default (null)).
 r_debug_draw_colliders 0 Draw colliders.
 r_debug_menu 1 Debug menu.
 r_shadow_res 1024.0 Shadow resolution.
-r_shadows 0.0f Enable shadows.
+r_shadows 0 Enable shadows.
 r_fov 75.0f Field-of-view.
 r_vsync 0 Vertical sync.
 r_fullscreen 0 Fullscreen.

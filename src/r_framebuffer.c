@@ -29,7 +29,7 @@ void framebuffer_add_texture(
     framebuffer->textures = realloc(framebuffer->textures,
         sizeof(texture_t*) * (framebuffer->ntextures + 1));
 
-    texture_t* texture = texture_new(sbox, width, height, NULL, format);
+    texture_t* texture = texture_new(sbox, width, height, NULL, format, TEX_FILTER_NEAREST);
     framebuffer->textures[framebuffer->ntextures++] = texture;
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);

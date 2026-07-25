@@ -67,9 +67,13 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         line->decay_time = 0.0f;
     }
 
-    renderer->p_smoke = texture_load(sbox, "res/textures/particles/p_smoke.png");
-    renderer->p_fire = texture_load(sbox, "res/textures/particles/p_fire.png");
-    renderer->p_bullet_hole = texture_load(sbox, "res/textures/particles/p_bullet_hole.png");
+    renderer->p_fire = texture_load(sbox, "res/textures/particles/p_fire.png", TEX_FILTER_NEAREST);
+    renderer->p_smoke = texture_load(sbox, "res/textures/particles/p_smoke.png", TEX_FILTER_NEAREST);
+    renderer->p_steam = texture_load(sbox, "res/textures/particles/p_steam.png", TEX_FILTER_NEAREST);
+    renderer->p_bullet_hole = texture_load(sbox,
+        "res/textures/particles/p_bullet_hole.png", TEX_FILTER_NEAREST);
+    renderer->p_water = texture_load(sbox,
+        "res/textures/particles/p_water.png", TEX_FILTER_NEAREST);
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
         particle_t* particle = &renderer->particles[i];
