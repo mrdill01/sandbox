@@ -86,22 +86,24 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
 }
 
 void r_add_partfx_enter_water(
-    sbox_t* sbox, renderer_t* renderer, vec3 position)
+    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity)
 {
     for (int i = 0; i < 200; i++) {
         vec3 new_position;
         glm_vec3_copy(position, new_position);
         new_position[0] += random(-0.5f, 0.5f);
-        new_position[1] += random(-0.5f, 0.5f);
+        new_position[1] += random(0.0f, 0.5f);
         new_position[2] += random(-0.5f, 0.5f);
 
-        vec3 velocity = {
-            random(-2.0f, 2.0f),
-            random(2.0f, 6.0f),
-            random(-2.0f, 2.0f)};
+        vec3 new_velocity;
+        glm_vec3_copy(velocity, new_velocity);
+        new_velocity[0] += random(-2.0f, 2.0f);
+        new_velocity[1] = random(2.0f, 5.0f);
+        new_velocity[2] += random(-2.0f, 2.0f);
+
         particle_t* particle =
-            r_add_particle(sbox, &sbox->renderer, position, velocity, renderer->p_water,
-                1.0f, random(0.05f, 0.15f), 3.0f);
+            r_add_particle(sbox, &sbox->renderer, new_position, new_velocity, renderer->p_water,
+                random(0.1f, 1.0f), random(0.11f, 0.14f), 3.0f);
         particle->apply_gravity = true;
     }
 }
@@ -142,7 +144,7 @@ particle_t* r_add_particle(
 static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
 	particle_t* a = (particle_t*)a_ptr;
 	particle_t* b = (particle_t*)b_ptr;
-    if (!a || !b) return 0;
+    if (!a || !b) return 1;
 	if (a->dist_to_camera < b->dist_to_camera) return 1;
 	return -1;
 }

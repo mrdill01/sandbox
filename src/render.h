@@ -303,7 +303,7 @@ void r_add_partfx_shoot_beam(
 void r_add_partfx_hit_ground(
     sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 void r_add_partfx_enter_water(
-    sbox_t* sbox, renderer_t* renderer, vec3 position);
+    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
 
 particle_t* r_add_particle(
     sbox_t* sbox,

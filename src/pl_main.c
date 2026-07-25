@@ -19,9 +19,6 @@
 #define THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
 #define INTERP_HEIGHT_SPEED 5.5f
 #define MAX_INTERACT_DISTANCE 8.0f
-#define VIEWMODEL_POS_X -0.05f
-#define VIEWMODEL_POS_Y -0.1f
-#define VIEWMODEL_POS_Z 0.35f
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
@@ -88,17 +85,6 @@ static float get_height(sbox_t* sbox, player_t* player) {
     }
 
     return 0.0f;
-}
-
-static float get_step_rate(sbox_t* sbox, player_t* player) {
-    float speed;
-    switch (player->move_mode) {
-    case MOVE_WALK: speed = 0.55f; break;
-    case MOVE_CROUCH: speed = 0.8f; break;
-    default: unreachable(sbox);
-    }
-    
-    return speed;
 }
 
 static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
@@ -233,7 +219,7 @@ static void enter_water(sbox_t* sbox, player_t* player) {
     player_get_bottom_position(sbox, player, position);
     position[1] += get_height(sbox, player) / 2.0f * player->water_level;
     a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound, position, random(0.9f, 1.1f));
-    r_add_partfx_enter_water(sbox, &sbox->renderer, position);
+    r_add_partfx_enter_water(sbox, &sbox->renderer, position, player->velocity);
 }
 
 static void exit_water(sbox_t* sbox, player_t* player) {
@@ -403,98 +389,6 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     }
 }
 
-static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
-    item_t* item = inventory_get_item(sbox, &player->inventory);
-    if (!item)
-        return;
-    
-    weapon_t* weapon = &item->data.weapon;
-
-    vec3 start;
-    start[0] = player->position[0];
-    start[1] = player->position[1] + get_height(sbox, player) / 2.0f;
-    start[2] = player->position[2];
-    
-    camera_t* camera = &sbox->renderer.camera;
-    vec3 dir;
-    glm_vec3_copy(camera->forward, dir);
-
-    dir[0] += random(-weapon->spread, weapon->spread);
-    dir[1] += random(-weapon->spread, weapon->spread);
-    dir[2] += random(-weapon->spread, weapon->spread);
-
-    glm_vec3_norm(dir);
-
-    float max_distance = 100.0f;
-    trace_result_t trace;
-
-    if (player->buttons & PLAYER_BUTTON_FIRE) {
-        if (sbox->time - weapon->last_fire < weapon->fire_rate)
-            return;
-        
-        weapon->last_fire = sbox->time;
-        a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
-        player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ? 0.02 : 0.12f;
-    
-        bool hit = phys_line_trace(start, dir, max_distance, entlist, &trace);
-        if (hit) {
-            printf("%g %g %g\n", trace.normal[0], trace.normal[1], trace.normal[2]);
-
-            sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
-            a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
-
-            r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace);
-        }
-
-        r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
-            (hit) ? trace.distance : max_distance);
-    }
-}
-
-static void tick_item_position(sbox_t* sbox, player_t* player) {
-    vec3 target;
-    if (player->buttons & PLAYER_BUTTON_AIM) {
-        target[0] = 0.0f;
-        target[1] = 0.0f;
-        target[2] = 0.2f;
-    } else {
-        target[0] = VIEWMODEL_POS_X;
-        target[1] = VIEWMODEL_POS_Y;
-        target[2] = VIEWMODEL_POS_Z;
-    }
-
-    float aim_speed = 18.0f;
-    player->item_position[0] = interp_to(player->item_position[0], target[0], aim_speed, sbox->dt);
-    player->item_position[1] = interp_to(player->item_position[1], target[1], aim_speed, sbox->dt);
-    player->item_position[2] = interp_to(player->item_position[2], target[2], aim_speed, sbox->dt);
-}
-
-static void tick_item_anim(sbox_t* sbox, player_t* player) {
-    if (player->target_speed < 1.0f || !player->is_grounded) {
-        float reset_speed = 5.0f;
-        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
-        player->item_anim[1] = interp_to(player->item_anim[1], 0.0f, reset_speed, sbox->dt);
-        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, sbox->dt);
-        return;
-    }
-
-    vec3 anim;
-    if (player->buttons & PLAYER_BUTTON_AIM) {
-        anim[0] = 0.0f;
-        anim[1] = 0.0f;
-        anim[2] = 0.0f;
-    } else {
-        anim[0] = sin(sbox->time * 2.5f) * 0.01f;
-        anim[1] = sin(sbox->time * 10.0f) * 0.025f;
-        anim[2] = sin(sbox->time * 5.0f) * 0.025f;
-    }
-
-    float set_speed = 6.5f;
-    player->item_anim[0] = interp_to(player->item_anim[0], anim[0], set_speed, sbox->dt);
-    player->item_anim[1] = interp_to(player->item_anim[1], anim[1], set_speed, sbox->dt);
-    player->item_anim[2] = interp_to(player->item_anim[2], anim[2], set_speed, sbox->dt);
-}
-
 static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);
@@ -502,7 +396,7 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
     float xz_speed = glm_vec3_dot(velocity, velocity);
 
     bool play_sound = player->is_grounded &&
-        sbox->time - player->last_step_time > get_step_rate(sbox, player) &&
+        sbox->time - player->last_step_time >= player_get_step_rate(sbox, player) &&
         xz_speed > 1.0f;
     
     if (play_sound) {
@@ -518,120 +412,6 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
         }
 
         player->last_step_time = sbox->time;
-    }
-}
-
-static void reset_input(sbox_t* sbox, player_t* player) {
-    glm_vec3_zero(player->move_input);
-    glm_vec3_zero(player->target_dir);
-    player->buttons = 0;
-}
-
-void player_input(sbox_t* sbox, player_t* player) {
-    reset_input(sbox, player);
-    if (sbox->ui_state != UI_STATE_IN_GAME)
-        return;
-
-    camera_t* camera = &sbox->renderer.camera;
-    
-    if (sbox->keys[SDL_SCANCODE_Z])
-        camera_add_pitch(camera, -m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_X])
-        camera_add_pitch(camera, m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_LEFT])
-        camera_add_yaw(camera, -m_sens.value);
-
-    if (sbox->keys[SDL_SCANCODE_RIGHT])
-        camera_add_yaw(camera, m_sens.value);
-
-    /*if (sbox->mxdt != 0.0f)
-        camera_add_yaw(camera, sbox->mxdt * m_sens.value);
-
-    if (sbox->mydt != 0.0f)
-        camera_add_pitch(camera, sbox->mydt * -m_sens.value);*/
-    
-    if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP]) {
-        player->move_input[2] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->forward, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_S] || sbox->keys[SDL_SCANCODE_DOWN]) {
-        player->move_input[2] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->forward, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_D]) {
-        player->move_input[0] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->right, player->target_dir);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_A]) {
-        player->move_input[0] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->right, player->target_dir);
-    }
-
-    if (glm_vec3_dot(player->move_input, player->move_input) > 0.0f)
-        glm_vec3_norm(player->move_input);
-
-    if (sbox->keys[SDL_SCANCODE_SPACE])
-        player->buttons |= PLAYER_BUTTON_JUMP;
-    
-    if (sbox->keys[SDL_SCANCODE_LCTRL])
-        player->buttons |= PLAYER_BUTTON_CROUCH;
-
-    if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL]) {
-        player->buttons |= PLAYER_BUTTON_FIRE;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_G]) {
-        sbox->keys[SDL_SCANCODE_G] = false;
-        player_t* bot = gm_spawn_player(sbox);
-        player_teleport(sbox, bot, player->look_trace.point);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_LALT]) {
-        player->buttons |= PLAYER_BUTTON_AIM;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_B]) {
-        sbox->keys[SDL_SCANCODE_B] = false;
-        cvar_toggle(sbox, "edit_mode");
-    }
-
-    if (sbox->keys[SDL_SCANCODE_C]) {
-        sbox->keys[SDL_SCANCODE_C] = false;
-        player->is_thirdperson = !player->is_thirdperson;
-    }
-
-    if (sbox->keys[SDL_SCANCODE_1]) {
-        sbox->keys[SDL_SCANCODE_1] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 0);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_2]) {
-        sbox->keys[SDL_SCANCODE_2] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 1);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_3]) {
-        sbox->keys[SDL_SCANCODE_3] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 2);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_4]) {
-        sbox->keys[SDL_SCANCODE_4] = false;
-        inventory_select_hotbar_slot(sbox, &player->inventory, 3);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_I]) {
-        sbox->keys[SDL_SCANCODE_I] = false;
-        inventory_toggle(sbox, &player->inventory);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_F3]) {
-        sbox->keys[SDL_SCANCODE_F3] = false;
     }
 }
 
@@ -654,68 +434,10 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     
     tick_camera(sbox, player, camera);
     trace_look_ray(sbox, player, camera, entlist);
-    tick_item(sbox, player, entlist);
-    tick_item_position(sbox, player);
-    tick_item_anim(sbox, player);
+    player_tick_item(sbox, player);
     player_tick_body(sbox, player);
     tick_step_sounds(sbox, player);
     edit_tick(sbox, &player->editor, player);
-}
-
-static void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (player->is_thirdperson || edit_mode.value || !player->is_me) return;
-    item_t* item = inventory_get_item(sbox, &player->inventory);
-    if (!item) return;
-
-    drawcall_t drawcall;
-    drawcall.entity = malloc(strlen("viewmodel"));
-	strcpy(drawcall.entity, "viewmodel");
-    
-    drawcall.mesh = item->mesh;
-    memcpy(drawcall.materials, item->materials, sizeof(material_t*) * MAX_MATERIALS);
-
-    vec3 position;
-    glm_vec3_copy(renderer->camera.position, position);
-
-    vec3 forward;
-    glm_vec3_copy(renderer->camera.forward, forward);
-    glm_vec3_scale(forward, player->item_position[2] + player->item_anim[2], forward);
-    glm_vec3_add(position, forward, position);
-    
-    vec3 right;
-    glm_vec3_copy(renderer->camera.right, right);
-    glm_vec3_scale(right, player->item_position[0] + player->item_anim[0], right);
-    glm_vec3_add(position, right, position);
-
-    vec3 up;
-    glm_vec3_copy(renderer->camera.up, up);
-    glm_vec3_scale(up, player->item_position[1] + player->item_anim[1], up);
-    glm_vec3_add(position, up, position);
-
-    vec3 scale = {1.0f, 1.0f, 1.0f};
-
-    quat rotation;
-    glm_quat_identity(rotation);
-    glm_quat(rotation, rad(renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
-    glm_quat(rotation, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
-
-    bbox_t bbox = {0};
-
-    drawcall.local_bbox = drawcall.mesh->bbox;
-
-    glm_mat4_identity(drawcall.model);
-    glm_translate(drawcall.model, position);
-    glm_scale(drawcall.model, scale);
-    glm_quat_rotate(drawcall.model, rotation, drawcall.model);
-    drawcall.world_bbox = bbox;
-
-    glm_vec3_copy(position, drawcall.position);
-    glm_vec3_copy(scale, drawcall.scale);
-    glm_quat_rotate(GLM_MAT4_IDENTITY, rotation, drawcall.rotation);
-
-    drawcall.dist_to_camera = 0.0f;
-    drawcall.is_translucent = true;
-    r_add_drawcall(renderer, drawcall);
 }
 
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
@@ -746,4 +468,15 @@ void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position) {
     position[0] = player->position[0];
     position[1] = player->position[1] - get_height(sbox, player) / 2.0f;
     position[2] = player->position[2];
+}
+
+float player_get_step_rate(sbox_t* sbox, player_t* player) {
+    float speed;
+    switch (player->move_mode) {
+    case MOVE_WALK: speed = 0.55f; break;
+    case MOVE_CROUCH: speed = 0.8f; break;
+    default: unreachable(sbox);
+    }
+    
+    return speed;
 }

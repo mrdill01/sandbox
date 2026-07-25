@@ -43,8 +43,21 @@ typedef enum {
 } body_part_index_t;
 
 typedef struct {
+    quat bones[NUM_BODY_PARTS];
+} pose_t;
+
+typedef struct {
     body_part_t parts[NUM_BODY_PARTS];
     quat rotation;
+
+    pose_t default_pose;
+    pose_t current_pose;
+    pose_t walk_a;
+    pose_t walk_b;
+
+    float walk_timer;
+    bool walk_cycle;
+    float idle_timer;
 } body_t;
 
 typedef struct player_t {
@@ -76,7 +89,9 @@ typedef struct player_t {
 
 player_t* player_new(sbox_t* sbox);
 void player_free(sbox_t* sbox, player_t* player);
+
 void player_input(sbox_t* sbox, player_t* player);
+
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist);
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
@@ -85,6 +100,10 @@ void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
 void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
+float player_get_step_rate(sbox_t* sbox, player_t* player);
+
+void player_tick_item(sbox_t* sbox, player_t* player);
+void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
 void player_init_body(sbox_t* sbox, player_t* player);
 void player_tick_body(sbox_t* sbox, player_t* player);
