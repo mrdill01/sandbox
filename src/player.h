@@ -10,15 +10,18 @@ typedef struct sbox_t sbox_t;
 typedef struct camera_t camera_t;
 typedef struct entlist_t entlist_t;
 
+#define PLAYER_THIRDPERSON_CAMERA_LENGTH 3.0f
+
 #define PLAYER_BUTTON_JUMP 1
 #define PLAYER_BUTTON_CROUCH 2
-#define PLAYER_BUTTON_FIRE 4
-#define PLAYER_BUTTON_AIM 8
+#define PLAYER_BUTTON_SPRINT 4
+#define PLAYER_BUTTON_FIRE 8
+#define PLAYER_BUTTON_AIM 16
 
 typedef enum {
     MOVE_WALK,
-    MOVE_SPRINT,
     MOVE_CROUCH,
+    MOVE_SPRINT,
 } move_mode_t;
 
 typedef struct body_part_t {
@@ -61,7 +64,10 @@ typedef struct {
 } body_t;
 
 typedef struct player_t {
+    int id;
     bool is_me;
+    bool is_bot;
+    bbox_t bbox;
     move_mode_t move_mode;
     vec3 position;
     vec3 velocity;
@@ -88,7 +94,7 @@ typedef struct player_t {
     editor_t editor;
 } player_t;
 
-player_t* player_new(sbox_t* sbox);
+player_t* player_new(sbox_t* sbox, int id, bool is_bot);
 void player_free(sbox_t* sbox, player_t* player);
 
 void player_input(sbox_t* sbox, player_t* player);
@@ -109,5 +115,7 @@ void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer);
 void player_init_body(sbox_t* sbox, player_t* player);
 void player_tick_body(sbox_t* sbox, player_t* player);
 void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer);
+
+void bot_tick(sbox_t* sbox, player_t* player);
 
 #endif

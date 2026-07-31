@@ -102,6 +102,8 @@ void a_init(sbox_t* sbox, audio_t* audio) {
         sound_load(sbox, audio, "res/sounds/bullet_hit_grass.wav");
     audio->bullet_hit_sounds[PHYS_MAT_WATER] =
         sound_load(sbox, audio, "res/sounds/bullet_hit_stone.wav");
+    audio->bullet_hit_sounds[PHYS_MAT_PLAYER] =
+        sound_load(sbox, audio, "res/sounds/bullet_hit_player.wav");
 
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
     audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");

@@ -35,6 +35,19 @@ void entity_init_prop(sbox_t* sbox,
     *out = entity;
 }
 
+void entity_init_vehicle(sbox_t* sbox,
+	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
+{
+    entity_t* entity = NULL;
+	init_common(name, ENTITY_VEHICLE, x, y, z, &entity);
+    entity->data.vehicle.mesh = mesh;
+    for (int i = 0; i < MAX_MATERIALS; i++) {
+        entity->data.vehicle.materials[i] = NULL;
+	}
+
+    *out = entity;
+}
+
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,

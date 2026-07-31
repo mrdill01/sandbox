@@ -4,6 +4,7 @@
 #include "config.h"
 #include "render.h"
 #include "audio.h"
+#include "console.h"
 #include "math.h"
 #include "entity.h"
 #include "player.h"
@@ -41,6 +42,7 @@ typedef enum {
 #define NUM_BUTTONS 3
 
 typedef struct sbox_t {
+    console_t console;
     cvar_t* cvars;
     
     bool running;
@@ -87,6 +89,7 @@ extern cvar_t r_debug_draw_colliders;
 extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
+extern cvar_t console;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 

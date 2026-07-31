@@ -48,7 +48,10 @@ typedef struct mesh_t {
     uint32_t vao;
     uint32_t vbo;
     uint32_t ebo;
-    uint32_t ntris;
+    float* vertices;
+    size_t nvertices;
+    uint32_t* indices;
+    uint32_t nindices;
     uint8_t nmaterials;
     bbox_t bbox;
     struct mesh_t* next;
@@ -146,10 +149,10 @@ typedef struct {
     char* entity;
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    mat4 model;
     vec3 position;
     mat4 rotation;
     vec3 scale;
-    mat4 model;
     bbox_t local_bbox;
     bbox_t world_bbox;
     float dist_to_camera;
@@ -208,6 +211,7 @@ typedef struct {
     texture_t* p_steam;
     texture_t* p_bullet_hole;
     texture_t* p_water;
+    texture_t* p_blood;
 
     particle_t particles[MAX_PARTICLES];
 

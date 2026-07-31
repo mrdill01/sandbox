@@ -276,7 +276,7 @@ static void draw_hud(sbox_t* sbox, ui_t* ui) {
     }
 
     char text[32];
-    sprintf(text, "HEALTH %d", (int)sbox->player->health);
+    sprintf(text, "health %d", (int)sbox->player->health);
     float font_size = 64.0f;
     float width = ui_measure_text(text, font_size);
     ui_draw_text(sbox, ui, text, (vec2){r_width.value - width - 48.0f, r_height.value - font_size},
@@ -324,6 +324,33 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
         sbox->running = false;
 }
 
+static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
+    int width = 500.0f;
+    int height = 400.0f; 
+    int title_height = 40.0f;
+
+    ui_draw_texture(sbox,
+        ui,
+        ui->pixel,
+        (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f},
+        (vec2){width, title_height},
+        (vec4){0.0f, 0.0f, 1.0f, 0.8f});
+
+    ui_draw_text(sbox, ui,
+        "CONSOLE", (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, 48.0f, COLOR_WHITE);
+
+    ui_draw_texture(sbox,
+        ui,
+        ui->pixel,
+        (vec2){r_width.value / 2.0f - width / 2.0f, title_height},
+        (vec2){width, height},
+        (vec4){0.0f, 0.0f, 1.0f, 0.4f});
+
+        return;
+    ui_draw_text(sbox, ui,
+        con->history, (vec2){r_width.value / 2.0f - width / 2.0f, title_height}, 32.0f, COLOR_WHITE);
+}
+
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
     r_set_shader(renderer, ui->shader);
     glEnable(GL_BLEND);
@@ -347,6 +374,10 @@ void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
         break;
     }
     default: unreachable(sbox);
+    }
+
+    if (console.value) {
+        draw_console(sbox, ui, &sbox->console);
     }
     
     glDisable(GL_BLEND);

@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 
     map_load(&sbox, &sbox.map);
 
-    sbox.players[0] = gm_spawn_player(&sbox);
+    sbox.players[0] = gm_spawn_player(&sbox, false);
     sbox.player = sbox.players[0];
     sbox.player->is_me = true;
 
@@ -150,6 +150,11 @@ void tick(sbox_t* sbox) {
         sbox->keys[SDL_SCANCODE_ESCAPE] = false;
         if (sbox->ui_state == UI_STATE_IN_GAME) sbox->ui_state = UI_STATE_PAUSE_MENU;
         else sbox->ui_state = UI_STATE_IN_GAME;
+    }
+
+    if (sbox->keys[SDL_SCANCODE_F1]) {
+        sbox->keys[SDL_SCANCODE_F1] = false;
+        cvar_toggle(sbox, "console");
     }
 
     if (sbox->keys[SDL_SCANCODE_F2]) {

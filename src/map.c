@@ -851,4 +851,11 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
 void map_tick(sbox_t* sbox, map_t* map) {
 	entlist_tick(sbox, &map->entlist);
     send_to_renderer(sbox, map);
+
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        player_t* player = sbox->players[i];
+        if (!player) continue;
+        if (player->position[1] < -100.0f)
+            player_add_damage(sbox, player, 100000.0f);
+    }
 }

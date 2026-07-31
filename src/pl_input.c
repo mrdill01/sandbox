@@ -32,28 +32,17 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->mydt != 0.0f)
         camera_add_pitch(camera, sbox->mydt * -m_sens.value);*/
     
-    if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP]) {
+    if (sbox->keys[SDL_SCANCODE_W] || sbox->keys[SDL_SCANCODE_UP])
         player->move_input[2] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->forward, player->target_dir);
-    }
 
-    if (sbox->keys[SDL_SCANCODE_S] || sbox->keys[SDL_SCANCODE_DOWN]) {
+    if (sbox->keys[SDL_SCANCODE_S] || sbox->keys[SDL_SCANCODE_DOWN])
         player->move_input[2] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->forward, player->target_dir);
-    }
 
-    if (sbox->keys[SDL_SCANCODE_D]) {
+    if (sbox->keys[SDL_SCANCODE_D])
         player->move_input[0] -= 1.0f;
-        glm_vec3_sub(player->target_dir, camera->right, player->target_dir);
-    }
 
-    if (sbox->keys[SDL_SCANCODE_A]) {
+    if (sbox->keys[SDL_SCANCODE_A])
         player->move_input[0] += 1.0f;
-        glm_vec3_add(player->target_dir, camera->right, player->target_dir);
-    }
-
-    if (glm_vec3_dot(player->move_input, player->move_input) > 0.0f)
-        glm_vec3_norm(player->move_input);
 
     if (sbox->keys[SDL_SCANCODE_SPACE])
         player->buttons |= PLAYER_BUTTON_JUMP;
@@ -61,19 +50,14 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_LCTRL])
         player->buttons |= PLAYER_BUTTON_CROUCH;
 
-    if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL]) {
+    if (sbox->keys[SDL_SCANCODE_LSHIFT])
+        player->buttons |= PLAYER_BUTTON_SPRINT;
+
+    if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL])
         player->buttons |= PLAYER_BUTTON_FIRE;
-    }
 
-    if (sbox->keys[SDL_SCANCODE_G]) {
-        sbox->keys[SDL_SCANCODE_G] = false;
-        player_t* bot = gm_spawn_player(sbox);
-        player_teleport(sbox, bot, player->look_trace.point);
-    }
-
-    if (sbox->keys[SDL_SCANCODE_LALT]) {
+    if (sbox->keys[SDL_SCANCODE_LALT])
         player->buttons |= PLAYER_BUTTON_AIM;
-    }
 
     if (sbox->keys[SDL_SCANCODE_B]) {
         sbox->keys[SDL_SCANCODE_B] = false;
@@ -108,5 +92,11 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_I]) {
         sbox->keys[SDL_SCANCODE_I] = false;
         inventory_toggle(sbox, &player->inventory);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_G]) {
+        sbox->keys[SDL_SCANCODE_G] = false;
+        player_t* bot = gm_spawn_player(sbox, true);
+        player_teleport(sbox, bot, player->look_trace.point);
     }
 }

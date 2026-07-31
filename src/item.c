@@ -49,7 +49,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/shooter_fire.wav");
     weapon->fire_rate = 0.1f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.08f;
+    weapon->spread = 0.1f;
+    weapon->damage = 25.0f;
 
     mesh_t* pistol_mesh = mesh_load(sbox, "res/meshes/items/pistol.obj");
     item_t* pistol = item_new(sbox, ITEM_WEAPON, "pistol", pistol_mesh, materials);
@@ -58,7 +59,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/pistol_fire.wav");
     weapon->fire_rate = 0.25f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.06f;
+    weapon->spread = 0.08f;
+    weapon->damage = 65.0f;
 }
 
 void inventory_free(sbox_t* sbox, inventory_t* inventory) {

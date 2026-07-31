@@ -74,6 +74,8 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/particles/p_bullet_hole.png", TEX_FILTER_NEAREST);
     renderer->p_water = texture_load(sbox,
         "res/textures/particles/p_water.png", TEX_FILTER_NEAREST);
+    renderer->p_blood = texture_load(sbox,
+        "res/textures/particles/p_blood.png", TEX_FILTER_NEAREST);
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
         particle_t* particle = &renderer->particles[i];
@@ -392,9 +394,9 @@ void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m) {
 
 void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
     glBindVertexArray(mesh->vao);
-    glDrawElements(GL_TRIANGLES, mesh->ntris, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh->nindices, GL_UNSIGNED_INT, 0);
     renderer->stats.drawcalls++;
-    renderer->stats.tris += mesh->ntris;
+    renderer->stats.tris += mesh->nindices;
 }
 
 void r_reset_stats(sbox_t* sbox, renderer_t* renderer) {

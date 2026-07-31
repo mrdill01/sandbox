@@ -42,7 +42,10 @@ mesh_t* mesh_new(sbox_t* sbox,
     mesh->vao = vao;
     mesh->vbo = vbo;
     mesh->ebo = ebo;
-    mesh->ntris = nindices;
+    mesh->vertices = vertices;
+    mesh->nvertices = nvertices;
+    mesh->indices = indices;
+    mesh->nindices = nindices;
     mesh->nmaterials = nmaterials;
     mesh->bbox = bbox;
 

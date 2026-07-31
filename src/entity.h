@@ -8,6 +8,7 @@
 
 typedef enum {
     ENTITY_MESH,
+    ENTITY_VEHICLE,
     ENTITY_DROPPED_ITEM,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
@@ -21,6 +22,11 @@ typedef struct {
     bool is_pickup;
     bool enable_collision;
 } entity_mesh_t;
+
+typedef struct {
+    mesh_t* mesh;
+    material_t* materials[MAX_MATERIALS];
+} entity_vehicle_t;
 
 typedef struct {
     mesh_t* mesh;
@@ -48,6 +54,7 @@ typedef struct {
 
     union {
         entity_mesh_t prop;
+        entity_vehicle_t vehicle;
         entity_dropped_item_t dropped_item;
         entity_sun_light_t sun_light;
         entity_point_light_t point_light;
@@ -60,6 +67,8 @@ typedef struct entlist_t {
 } entlist_t;
 
 void entity_init_prop(sbox_t* sbox,
+    const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
+void entity_init_vehicle(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,

@@ -48,22 +48,22 @@ static void setup_poses(sbox_t* sbox, player_t* player, body_t* body) {
     }
 
     glm_quat(body->walk_a.bones[BODY_LEFT_UPPER_LEG],
-        rad(-45.0f), 1.0f, 0.0f, 0.0f);
+        rad(-30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_RIGHT_UPPER_LEG],
-        rad(45.0f), 1.0f, 0.0f, 0.0f);
+        rad(30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_RIGHT_UPPER_ARM],
-        rad(-45.0f), 1.0f, 0.0f, 0.0f);
+        rad(-30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_LEFT_UPPER_ARM],
-        rad(45.0f), 1.0f, 0.0f, 0.0f);
+        rad(30.0f), 1.0f, 0.0f, 0.0f);
 
     glm_quat(body->walk_b.bones[BODY_LEFT_UPPER_LEG],
-        rad(45.0f), 1.0f, 0.0f, 0.0f);
+        rad(30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_RIGHT_UPPER_LEG],
-        rad(-45.0f), 1.0f, 0.0f, 0.0f);
+        rad(-30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_RIGHT_UPPER_ARM],
-        rad(45.0f), 1.0f, 0.0f, 0.0f);
+        rad(30.0f), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_LEFT_UPPER_ARM],
-        rad(-45.0f), 1.0f, 0.0f, 0.0f);
+        rad(-30.0f), 1.0f, 0.0f, 0.0f);
 }
 
 void player_init_body(sbox_t* sbox, player_t* player) {
@@ -92,7 +92,11 @@ static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, fl
 
 void player_tick_body(sbox_t* sbox, player_t* player) {
     body_t* body = &player->body;
-    glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+
+    if (player->is_me)
+        glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+    else
+        glm_quat_identity(body->rotation);
 
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);

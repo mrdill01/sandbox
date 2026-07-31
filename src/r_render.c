@@ -28,7 +28,7 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     float near = 1.0f;
     float far = 32.0f;
     bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
-    frustum = bbox_translate(&frustum, renderer->camera.position);
+    //frustum = bbox_translate(&frustum, renderer->camera.position);
     
     mat4 projection;
     glm_ortho(frustum.min[0], frustum.max[0],
@@ -41,14 +41,14 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     vec3 dir;
     glm_vec3_copy(sun_light->direction, dir);
-    glm_vec3_scale(dir, -20.0f, dir);
+    //glm_vec3_scale(dir, -20.0f, dir);
 
     vec3 position;
     glm_vec3_copy(center, position);
     glm_vec3_add(position, dir, position);
     
     vec3 target;
-    glm_vec3_zero(target);
+    glm_vec3_copy(center, target);
 
     mat4 view;
     glm_lookat(position, target, Y_AXIS, view);

@@ -1,14 +1,43 @@
 #include "physics.h"
 #include "sbox.h"
 
+static void compute_trace_normal(trace_result_t* trace, const bbox_t* bbox) {
+    vec3 center;
+    bbox_get_center(bbox, center);
+
+    vec3 size;
+    bbox_get_size(bbox, size);
+
+    vec3 local_point;
+    glm_vec3_sub(center, trace->point, local_point);
+
+    vec3 abs_point;
+    glm_vec3_abs(local_point, abs_point);
+
+    vec3 diff;
+    glm_vec3_sub(abs_point, size, diff);
+
+    float max_value = max(max(diff[0], diff[1]), diff[2]);
+    if (max_value == diff[0]) trace->normal[0] = sign(local_point[0]);
+    else if (max_value == diff[1]) trace->normal[1] = sign(local_point[1]);
+    else trace->normal[2] = sign(local_point[2]);
+}
+
 bool phys_line_trace(
-    vec3 start, vec3 dir, double max_distance, entlist_t* entlist, trace_result_t* out)
+    sbox_t* sbox,
+    vec3 start,
+    vec3 dir,
+    double max_distance,
+    entlist_t* entlist,
+    int ignore_player_id,
+    trace_result_t* out)
 {
     trace_result_t trace;
     glm_vec3_copy(start, trace.point);
     glm_vec3_zero(trace.normal);
     trace.water_level = 0.0f;
     trace.entity = NULL;
+    trace.player_id = -1;
     trace.material = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
     bool hit = false;
@@ -30,27 +59,29 @@ bool phys_line_trace(
                     continue;
                 }
 
-                vec3 center;
-                bbox_get_center(&entity->world_bbox, center);
-
-                vec3 half_size;
-                bbox_get_half_size(&entity->local_bbox, half_size);
-
-                vec3 diff;
-                glm_vec3_sub(trace.point, center, diff);
-
-                float bias = 1.0000f + PHYS_TRACE_STEP;
-                if (fabsf(diff[0]) > half_size[0] * bias)
-                    trace.normal[0] = sign(diff[0]);
-                else if (fabsf(diff[1]) > half_size[1] * bias)
-                    trace.normal[1] = sign(diff[1]);
-                else if (fabsf(diff[2]) > half_size[2] * bias)
-                    trace.normal[2] = sign(diff[2]);
-
                 hit = true;
+                compute_trace_normal(&trace, &entity->world_bbox);
                 trace.entity = entity;
                 trace.material = entity->data.prop.materials[0];
                 trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
+                goto on_hit;
+            }
+        }
+
+        for (size_t j = 0; j < MAX_PLAYERS; j++) {
+            if (j == ignore_player_id) continue;
+            
+            player_t* player = sbox->players[j];
+            if (!player) continue;
+
+            bbox_t bbox = player->bbox;
+            bbox = bbox_translate(&bbox, player->position);
+            if (bbox_point_intersects(&bbox, trace.point)) {
+                hit = true;
+                compute_trace_normal(&trace, &bbox);
+                trace.player_id = j;
+                trace.material = NULL;
+                trace.phys_mat = PHYS_MAT_PLAYER;
                 goto on_hit;
             }
         }

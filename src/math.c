@@ -2,7 +2,6 @@
 
 float sign(float num) {
     if (num < 0.0f) return -1.0f;
-    if (num == 0.0f) return 0.0f;
     if (num > 0.0f) return 1.0f;
     return 0.0f;
 }

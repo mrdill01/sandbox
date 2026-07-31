@@ -14,7 +14,14 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     weapon_t* weapon = &item->data.weapon;
 
     vec3 start;
-    player_get_top_position(sbox, player, start);
+    glm_vec3_copy(sbox->renderer.camera.position, start);
+    
+    if (player->is_thirdperson) {
+        vec3 forward;
+        glm_vec3_copy(sbox->renderer.camera.forward, forward);
+        glm_vec3_scale(forward, PLAYER_THIRDPERSON_CAMERA_LENGTH, forward);
+        glm_vec3_add(start, forward, start);
+    }
     
     camera_t* camera = &sbox->renderer.camera;
     vec3 dir;
@@ -40,14 +47,15 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
         player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ? 0.02 : 0.12f;
     
-        bool hit = phys_line_trace(start, dir, max_distance, entlist, &trace);
+        bool hit = phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace);
         if (hit) {
-            printf("%g %g %g\n", trace.normal[0], trace.normal[1], trace.normal[2]);
-
             sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
             a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
-
             r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace);
+
+            if (trace.player_id != -1) {
+                player_add_damage(sbox, sbox->players[trace.player_id], weapon->damage);
+            }
         }
 
         r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
@@ -76,7 +84,7 @@ static void tick_item_position(sbox_t* sbox, player_t* player) {
 static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
     if (!item) return;
 
-    if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY) {
+    if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY - 0.2f) {
         player->item_anim[1] = -0.65f;
         player->item_anim_angles[0] = -90.0f;
         player->item_anim_angles[1] = 35.0f;
@@ -90,19 +98,35 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
             -3.0f : -15.0f;
     }
 
-    float reset_speed = 7.0f;
-    player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 0.0f, reset_speed,
-        sbox->dt);
-    player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 0.0f, reset_speed,
-        sbox->dt);
-    player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, reset_speed,
-        sbox->dt);
+    if (player->move_mode == MOVE_SPRINT) {
+        float anim_speed = 7.0f;
+        player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 35.0f, anim_speed,
+            sbox->dt);
+        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 35.0f, anim_speed,
+            sbox->dt);
+        player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, anim_speed,
+            sbox->dt);
+
+        player->item_anim[1] = -0.05f;
+        
+    } else {
+        float reset_speed = 7.0f;
+        player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 0.0f, reset_speed,
+            sbox->dt);
+        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 0.0f, reset_speed,
+            sbox->dt);
+        player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, reset_speed,
+            sbox->dt);
+    }
 
     if (player->target_speed < 1.0f || !player->is_grounded) {
         float reset_speed = 5.0f;
         player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
-        player->item_anim[1] = interp_to(player->item_anim[1], 0.0f, reset_speed, sbox->dt);
         player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, sbox->dt);
+
+        float y = clamp(-player->velocity[1], -0.024f, 0.024f);
+        float y_speed = 7.0f;
+        player->item_anim[1] = interp_to(player->item_anim[1], y, y_speed, sbox->dt);
         return;
     }
 
@@ -112,9 +136,13 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         anim[1] = 0.0f;
         anim[2] = 0.0f;
     } else {
-        anim[0] = sin(sbox->time * 2.5f) * 0.01f;
-        anim[1] = sin(sbox->time * 10.0f) * 0.025f;
-        anim[2] = sin(sbox->time * 5.0f) * 0.025f;
+        float speed = 1.0f;
+        if (player->move_mode == MOVE_SPRINT)
+            speed *= 2.0f;
+        
+        anim[0] = sin(sbox->time * 2.5f * speed) * 0.01f;
+        anim[1] = sin(sbox->time * 10.0f * speed) * 0.025f;
+        anim[2] = sin(sbox->time * 5.0f * speed) * 0.025f;
     }
 
     float set_speed = 6.5f;
@@ -161,21 +189,21 @@ void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 
     vec3 scale = {1.0f, 1.0f, 1.0f};
 
-    quat pitch;
     quat yaw;
-    glm_quat(pitch, rad(-renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
+    quat pitch;
     glm_quat(yaw, rad(-renderer->camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+    glm_quat(pitch, rad(-renderer->camera.angles[0]), 1.0f, 0.0f, 0.0f);
 
     quat rotation;
     glm_quat_identity(rotation);
-    glm_quat_mul(rotation, pitch, rotation);
     glm_quat_mul(rotation, yaw, rotation);
+    glm_quat_mul(rotation, pitch, rotation);
 
-    quat anim_pitch;
     quat anim_yaw;
+    quat anim_pitch;
     quat anim_roll;
-    glm_quat(anim_pitch, rad(player->item_anim_angles[0]), 1.0f, 0.0f, 0.0f);
     glm_quat(anim_yaw, rad(player->item_anim_angles[1]), 0.0f, 1.0f, 0.0f);
+    glm_quat(anim_pitch, rad(player->item_anim_angles[0]), 1.0f, 0.0f, 0.0f);
     glm_quat(anim_roll, rad(player->item_anim_angles[2]), 0.0f, 0.0f, 1.0f);
 
     glm_quat_mul(rotation, anim_pitch, rotation);

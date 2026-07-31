@@ -14,24 +14,30 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t t
             random(-10.0f, 10.0f),
             random(-10.0f, 10.0f)};
         
+        texture_t* texture = renderer->p_fire;
+        if (trace.phys_mat == PHYS_MAT_PLAYER)
+            texture = renderer->p_blood;
+
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
-            trace.point, velocity, renderer->p_fire,
-            1.0f, random(0.05f, 0.075f), random(0.1f, 0.15f));
+            trace.point, velocity, texture,
+            1.0f, random(0.025f, 0.05f), random(0.1f, 0.15f));
         particle->apply_gravity = true;
     }
 
-    vec3 bullet_hole_position;
-    glm_vec3_copy(trace.point, bullet_hole_position);
-    
-    vec3 offset;
-    glm_vec3_copy(trace.normal, offset);
-    glm_vec3_scale(offset, 0.05f, offset);
+    if (trace.phys_mat != PHYS_MAT_PLAYER) {
+        vec3 bullet_hole_position;
+        glm_vec3_copy(trace.point, bullet_hole_position);
+        
+        vec3 offset;
+        glm_vec3_copy(trace.normal, offset);
+        glm_vec3_scale(offset, 0.025f, offset);
 
-    glm_vec3_add(bullet_hole_position, offset, bullet_hole_position);
+        glm_vec3_sub(bullet_hole_position, offset, bullet_hole_position);
 
-    r_add_particle(sbox, &sbox->renderer,
-        bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
-        1.0f, random(0.08f, 0.12f), 15.0f);
+        r_add_particle(sbox, &sbox->renderer,
+            bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
+            1.0f, random(0.065f, 0.085f), 15.0f);
+    }
 }
 
 void r_add_partfx_shoot_beam(
@@ -60,7 +66,7 @@ void r_add_partfx_shoot_beam(
         
         r_add_particle(sbox, &sbox->renderer,
             position, velocity, renderer->p_steam,
-            0.125f, random(0.04f, 0.08f), random(0.5f, 1.0f));
+            0.25f, random(0.04f, 0.065f), random(0.5f, 1.0f));
     }
 }
 

@@ -4,11 +4,12 @@
 
 #define HEIGHT 1.5f
 #define HEIGHT_CROUCH 0.75f
-#define RADIUS 0.5f
+#define RADIUS 0.4f
 #define JUMPFORCE 2.775f
 #define MAX_STEDOWN 0.5f
-#define MAX_SPEED_WALK 3.2f
+#define MAX_SPEED_WALK 3.0f
 #define MAX_SPEED_CROUCH 2.2f
+#define MAX_SPEED_SPRINT 4.0f
 #define ACCEL 10.0f
 #define AIR_ACCEL 2.0f
 #define STOPSPEED 2.5f
@@ -16,16 +17,19 @@
 #define FRICTION 5.0f
 #define FRICTION_WATER 2.0f
 #define AIR_CONTROL 0.0f
-#define THIRDPERSON_CAMERA_BOOM_LENGTH 3.0f
 #define INTERP_HEIGHT_SPEED 5.5f
 #define MAX_INTERACT_DISTANCE 8.0f
 
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
 
-player_t* player_new(sbox_t* sbox) {
+player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player_t* player = malloc(sizeof(player_t));
+    player->id = id;
     player->is_me = false;
+    player->is_bot = is_bot;
+    player->bbox = bbox_new((vec3){-RADIUS, -HEIGHT / 2.0f, -RADIUS},
+        (vec3){RADIUS, HEIGHT / 2.0f, RADIUS});
     player->move_mode = MOVE_WALK;
     glm_vec3_copy((vec3){0.0f, 2.0f, -4.5f}, player->position);
     glm_vec3_zero(player->velocity);
@@ -69,6 +73,7 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
     case MOVE_WALK: speed = MAX_SPEED_WALK; break;
     case MOVE_CROUCH: speed = MAX_SPEED_CROUCH; break;
+    case MOVE_SPRINT: speed = MAX_SPEED_SPRINT; break;
     default: unreachable(sbox);
     }
 
@@ -80,7 +85,8 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
 
 static float get_height(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
-    case MOVE_WALK: return HEIGHT;
+    case MOVE_WALK:
+    case MOVE_SPRINT: return HEIGHT;
     case MOVE_CROUCH: return HEIGHT_CROUCH;
     default: unreachable(sbox);
     }
@@ -128,6 +134,9 @@ static void move_water(sbox_t* sbox, player_t* player) {
     apply_friction(sbox, player, FRICTION_WATER);
     accelerate(sbox, player, player->target_speed, ACCEL);
 
+    for (int i = 0; i < 3; i++)
+        player->velocity[i] *= 0.7f;
+
     if ((player->buttons & PLAYER_BUTTON_JUMP) && player->is_grounded && !player->head_blocked) {
         player->velocity[1] = JUMPFORCE;
         player->is_jumping = true;
@@ -152,14 +161,14 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     float y_speed = player->velocity[1];
     player->velocity[1] = 0.0f;
     float speed = 0.0f;
-    if (glm_vec3_dot(player->velocity, player->velocity) > 0.0f)
+    if (glm_vec3_dot(player->velocity, player->velocity) != 0.0f)
         speed = glm_vec3_norm(player->velocity);
 
     float dot = glm_vec3_dot(player->velocity, player->target_dir);
     float k = 32;
     k *= AIR_CONTROL * dot * dot * sbox->dt;
 
-    if (dot > 0.0f) {
+    if (dot != 0.0f) {
         for (int i = 0; i < 3; i++)
             player->velocity[i] *= speed + player->target_dir[i] * k;
         glm_vec3_norm(player->velocity);
@@ -204,7 +213,7 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     player->fall_distance = 0.0f;
     player->is_jumping = false;
     player->height -= 0.3f;
-    player->item_anim[1] -= 0.04f;
+    player->item_anim[1] = -0.035f;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
@@ -238,7 +247,7 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
     
     bool was_in_water = player->water_level > 0.0f;
 
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
         player->ground_mat = trace.phys_mat;
         player->water_level = trace.water_level;
@@ -270,7 +279,7 @@ static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, 
     float max_distance = MAX_STEDOWN;
     trace_result_t trace;
     
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace))
+    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace))
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
 }
 
@@ -283,7 +292,7 @@ static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     
     player->head_blocked = false;
 
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
+    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->head_blocked = true;
         player->velocity[1] *= -1;
     }
@@ -298,7 +307,7 @@ static void trace_walls(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 dir;
     glm_vec3_zero(dir);
     float speed = glm_vec3_dot(player->velocity, player->velocity);
-    if (speed) {
+    if (speed != 0.0f) {
         glm_vec3_copy(player->velocity, dir);
         glm_vec3_norm(dir);
     }
@@ -306,9 +315,18 @@ static void trace_walls(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     float max_distance = speed * sbox->dt;
     trace_result_t trace;
 
-    if (phys_line_trace(start, dir, max_distance, entlist, &trace)) {
-        player->position[0] = trace.point[0];
-        player->position[2] = trace.point[2];
+    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
+        float vel_dot_normal = glm_vec3_dot(player->velocity, trace.normal);
+
+        vec3 slide;
+        glm_vec3_scale(trace.normal, vel_dot_normal, slide);
+        glm_vec3_sub(player->velocity, slide, slide);
+
+        glm_vec3_copy(slide, player->velocity);
+
+        player->position[0] = trace.point[0] - dir[0] * 0.1f;
+        player->position[1] = trace.point[1] - dir[1] * 0.1f;
+        player->position[2] = trace.point[2] - dir[2] * 0.1f;
     }
 }
 
@@ -340,10 +358,15 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
         get_height(sbox, player) / 2.0f, INTERP_HEIGHT_SPEED, sbox->dt);
 
     camera->position[0] = player->position[0];
-    camera->position[1] = player->position[1] + player->height;
+    camera->position[1] = player->position[1] + player->height- 0.1f;
     camera->position[2] = player->position[2];
 
     if (player->is_thirdperson) {
+        vec3 y_offset;
+        glm_vec3_copy(camera->up, y_offset);
+        glm_vec3_scale(y_offset, 0.3f, y_offset);
+        glm_vec3_add(camera->position, y_offset, camera->position);
+
         vec3 dir;
         glm_vec3_copy(camera->forward, dir);
         glm_vec3_inv(dir);
@@ -351,10 +374,16 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
         vec3 position;
         glm_vec3_copy(camera->position, position);
 
-        float camera_distance = THIRDPERSON_CAMERA_BOOM_LENGTH;
+        float camera_distance = PLAYER_THIRDPERSON_CAMERA_LENGTH;
         trace_result_t trace;
 
-        if (phys_line_trace(position, dir, camera_distance, &sbox->map.entlist, &trace))
+        if (phys_line_trace(sbox,
+            position,
+            dir,
+            camera_distance,
+            &sbox->map.entlist,
+            player->id,
+            &trace))
             camera_distance = trace.distance - 0.1f;
 
         vec3 offset;
@@ -366,16 +395,25 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
 
 static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
     vec3 start;
-    start[0] = player->position[0];
-    start[1] = player->position[1] + get_height(sbox, player) / 2.0f;
-    start[2] = player->position[2];
+    glm_vec3_copy(camera->position, start);
+    
+    if (player->is_thirdperson) {
+        vec3 forward;
+        glm_vec3_copy(sbox->renderer.camera.forward, forward);
+        glm_vec3_scale(forward, PLAYER_THIRDPERSON_CAMERA_LENGTH, forward);
+        glm_vec3_add(start, forward, start);
+    }
     
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
     float max_distance = 8.0f;
 
-    if (phys_line_trace(start, dir, max_distance, entlist, &player->look_trace)) {
+    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &player->look_trace)) {
         if (player->buttons & PLAYER_BUTTON_FIRE) {
+            if (player->look_trace.entity && player->look_trace.entity->type == ENTITY_VEHICLE) {
+
+            }
+
             if (edit_mode.value) {
                  if (player->editor.selection) {
                     player->editor.selection->data.prop.enable_collision = true;
@@ -418,10 +456,22 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
 
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
     if (player->buttons & PLAYER_BUTTON_CROUCH) set_move_mode(player, MOVE_CROUCH);
+    else if (player->buttons & PLAYER_BUTTON_SPRINT) set_move_mode(player, MOVE_SPRINT);
     else set_move_mode(player, MOVE_WALK);
 
+    vec3 forward;
+    glm_vec3_copy(camera->forward, forward);
+    glm_vec3_scale(forward, player->move_input[2], forward);
+
+    vec3 right;
+    glm_vec3_copy(camera->right, right);
+    glm_vec3_scale(right, player->move_input[0], right);
+
+    glm_vec3_add(player->target_dir, forward, player->target_dir);
+    glm_vec3_add(player->target_dir, right, player->target_dir);
+
     player->target_speed = 0.0f;
-    if (glm_vec3_dot(player->target_dir, player->target_dir) > 0.0f)
+    if (glm_vec3_dot(player->target_dir, player->target_dir) != 0.0f)
         player->target_speed = glm_vec3_norm(player->target_dir) * get_max_speed(sbox, player);
 
     move_and_collide(sbox, player, entlist);
@@ -439,6 +489,9 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     player_tick_body(sbox, player);
     tick_step_sounds(sbox, player);
     edit_tick(sbox, &player->editor, player);
+
+    if (player->is_bot)
+        bot_tick(sbox, player);
 }
 
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
@@ -476,6 +529,7 @@ float player_get_step_rate(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
     case MOVE_WALK: speed = 0.55f; break;
     case MOVE_CROUCH: speed = 0.8f; break;
+    case MOVE_SPRINT: speed = 0.3f; break;
     default: unreachable(sbox);
     }
     
