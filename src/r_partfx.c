@@ -36,7 +36,22 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t t
 
         r_add_particle(sbox, &sbox->renderer,
             bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
-            1.0f, random(0.065f, 0.085f), 15.0f);
+            1.0f, random(0.065f, 0.085f), 30.0f);
+    }
+}
+
+void r_add_partfx_shoot_hit_water(sbox_t* sbox, renderer_t* renderer, trace_result_t trace) {
+    for (int i = 0; i < 100; i++) {
+        vec3 velocity;
+        glm_vec3_zero(velocity);
+        velocity[0] += random(-1.5f, 1.5f);
+        velocity[1] = random(1.5f, 3.0f);
+        velocity[2] += random(-1.5f, 1.5f);
+
+        particle_t* particle =
+            r_add_particle(sbox, &sbox->renderer, trace.enter_water_point, velocity, renderer->p_water,
+                random(0.1f, 1.0f), random(0.11f, 0.14f), 3.0f);
+        particle->apply_gravity = true;
     }
 }
 
@@ -111,6 +126,41 @@ void r_add_partfx_enter_water(
             r_add_particle(sbox, &sbox->renderer, new_position, new_velocity, renderer->p_water,
                 random(0.1f, 1.0f), random(0.11f, 0.14f), 3.0f);
         particle->apply_gravity = true;
+    }
+}
+
+void r_add_partfx_explode(
+    sbox_t* sbox, renderer_t* renderer, vec3 position, float radius)
+{
+    for (int i = 0; i < 100; i++) {
+        /*vec3 velocity;
+        glm_vec3_copy(trace.normal, velocity);
+        glm_vec3_scale(velocity, 10.0f, velocity);*/
+
+        vec3 velocity = {
+            random(-4.0f, 4.0f),
+            random(-4.0f, 4.0f),
+            random(-4.0f, 4.0f)};
+        
+        particle_t* particle = r_add_particle(sbox, &sbox->renderer,
+            position, velocity, renderer->p_fire,
+            1.0f, random(0.25f, 0.65f), random(0.15f, 0.2f));
+        particle->apply_gravity = true;
+    }
+
+    for (int i = 0; i < 20; i++) {
+        vec3 velocity = {
+            random(-2.0f, 2.0f),
+            random(2.0f, 4.0f),
+            random(-2.0f, 2.0f)};
+
+        vec3 new_position = {
+            position[0] + random(-0.5f, 0.5f),
+            position[1] + random(-0.5f, 0.5f),
+            position[2] + random(-0.5f, 0.5f)};
+        glm_vec3_zero(velocity);
+        r_add_particle(sbox, &sbox->renderer, new_position, velocity,
+            renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f));
     }
 }
 

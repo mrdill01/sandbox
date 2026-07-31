@@ -3,6 +3,45 @@
 
 #include "../include/gl.h"
 
+static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* inventory) {
+    r_set_shader(renderer, renderer->item_shader);
+    glViewport(0, 0, ITEM_PREVIEW_RES, ITEM_PREVIEW_RES);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    camera_t camera;
+    camera_init(sbox, &camera);
+    camera.position[2] = -3.0f;
+
+    camera_get_projection_matrix(&camera, r_width.value, r_height.value,
+        renderer->projection);
+    camera_get_view_matrix(&camera, renderer->view);
+        
+    r_set_mat4(sbox, renderer, "view", renderer->view);
+    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+
+    for (int i = 0; i < INVENTORY_SLOTS; i++) {
+        item_t* item = inventory->items[i];
+        if (!item) continue;
+
+        mat4 model;
+        glm_mat4_identity(model);
+        r_set_mat4(sbox, renderer, "model", model);
+
+        for (int i = 0; i < MAX_MATERIALS; i++) {
+            const material_t* material = item->materials[i];
+            r_set_material(sbox, renderer, material, i);
+        }
+
+        r_draw_mesh(renderer, item->mesh);
+    }
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+}
+
 static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->sun_shadow_shader);
     r_set_framebuffer(renderer, renderer->sun_shadow_buffer);
@@ -102,7 +141,7 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->gbuffer);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
-    glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
@@ -366,10 +405,19 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
+    if (!sbox->map.is_loaded) {
+        ui_render(sbox, &renderer->ui, renderer);
+        r_clear_drawcalls(renderer);
+        r_reset_stats(sbox, renderer);
+        SDL_GL_SwapWindow(sbox->window);
+        return;
+    }
+
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (!sbox->players[i]) continue;
         player_render(sbox, sbox->players[i], renderer);
     }
+    render_items(sbox, renderer, &sbox->player->inventory);
     render_shadows(sbox, renderer);
     render_gbuffer(sbox, renderer);
     render_skybox(sbox, renderer);

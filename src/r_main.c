@@ -1,5 +1,6 @@
 #include "render.h"
 #include "sbox.h"
+#include "item.h"
 
 #include "../include/gl.h"
 
@@ -35,6 +36,8 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
     renderer->line_shader = shader_load(sbox,
         "line", "res/shaders/line.vs", "res/shaders/line.fs");
+    renderer->item_shader = shader_load(sbox,
+        "item", "res/shaders/item.vs", "res/shaders/item.fs");
     renderer->active_shader = NULL;
     
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
@@ -49,6 +52,12 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     renderer->gbuffer = NULL;
     renderer->screen_buffer = NULL;
     renderer->sun_shadow_buffer = NULL;
+    for (int i = 0; i < INVENTORY_SLOTS; i++) {
+        renderer->item_fbos[i] = framebuffer_new(sbox);
+        framebuffer_add_texture(sbox,
+            renderer->item_fbos[i], ITEM_PREVIEW_RES, ITEM_PREVIEW_RES, TEX_FORMAT_RGBA);
+        framebuffer_finish(sbox, renderer->item_fbos[i]);
+    }
     r_on_resize(sbox);
 
     glm_mat4_identity(renderer->projection);
@@ -186,7 +195,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
+		drawcall->dist_to_camera = glm_vec3_norm(tmp);
 	}
 
 	qsort(renderer->drawcalls, renderer->ndrawcalls,
@@ -200,7 +209,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
+		drawcall->dist_to_camera = glm_vec3_norm(tmp);
 	}
 
 	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,
@@ -209,6 +218,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
         material_t* material = drawcall->materials[0];
+        if (!material) continue;
         if (strcmp(material->name, "water") == 0) {
             material->scrollx += material->scroll_speed * sbox->dt;
             material->scrolly += material->scroll_speed * sbox->dt;
@@ -218,6 +228,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
     for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
         material_t* material = drawcall->materials[0];
+        if (!material) continue;
+        printf("scroll %g\n", material->scrollx);
         if (strcmp(material->name, "water") == 0) {
             material->scrollx += material->scroll_speed * sbox->dt;
             material->scrolly += material->scroll_speed * sbox->dt;

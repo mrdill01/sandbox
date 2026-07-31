@@ -28,6 +28,8 @@ void item_free(sbox_t* sbox, item_t* item) {
 }
 
 void inventory_init(sbox_t* sbox, inventory_t* inventory) {
+    info(sbox, "loading inventory...");
+
     for (int i = 0; i < INVENTORY_SLOTS; i++)
         inventory->items[i] = NULL;
     inventory->item_slot = 0;
@@ -43,7 +45,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
         1, 1, false, PHYS_MAT_METAL);
     material_t* materials[MAX_MATERIALS] = {test};
 
-    item_t* shooter = item_new(sbox, ITEM_WEAPON, "shooter", shooter_mesh, materials);
+    item_t* shooter = item_new(sbox, ITEM_WEAPON, "Shooter", shooter_mesh, materials);
     inventory_give_item(sbox, inventory, shooter);
     weapon_t* weapon = &shooter->data.weapon;
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/shooter_fire.wav");
@@ -51,9 +53,13 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->last_fire = 0.0f;
     weapon->spread = 0.1f;
     weapon->damage = 25.0f;
+    weapon->is_projectile = false;
+    weapon->projectile_mesh = NULL;
+    weapon->projectile_material = NULL;
+    weapon->projectile_speed = 0.0f;
 
     mesh_t* pistol_mesh = mesh_load(sbox, "res/meshes/items/pistol.obj");
-    item_t* pistol = item_new(sbox, ITEM_WEAPON, "pistol", pistol_mesh, materials);
+    item_t* pistol = item_new(sbox, ITEM_WEAPON, "Pistol", pistol_mesh, materials);
     inventory_give_item(sbox, inventory, pistol);
     weapon = &pistol->data.weapon;
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/pistol_fire.wav");
@@ -61,6 +67,28 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->last_fire = 0.0f;
     weapon->spread = 0.08f;
     weapon->damage = 65.0f;
+    weapon->is_projectile = false;
+    weapon->projectile_mesh = NULL;
+    weapon->projectile_material = NULL;
+    weapon->projectile_speed = 0.0f;
+
+    mesh_t* rocket_launcher_mesh = mesh_load(sbox, "res/meshes/items/rocket_launcher.obj");
+    item_t* rocket_launcher = item_new(sbox, ITEM_WEAPON, "Rocket Launcher",
+        rocket_launcher_mesh, materials);
+    inventory_give_item(sbox, inventory, rocket_launcher);
+    weapon = &rocket_launcher->data.weapon;
+    weapon->fire_sound = sound_load(sbox, &sbox->audio,
+        "res/sounds/weapons/rocket_launcher_fire.wav");
+    weapon->fire_rate = 0.65f;
+    weapon->last_fire = 0.0f;
+    weapon->spread = 0.08f;
+    weapon->damage = 65.0f;
+    weapon->is_projectile = true;
+    weapon->projectile_mesh = mesh_load(sbox, "res/meshes/items/rocket.obj");
+    weapon->projectile_material = sbox->renderer.default_material;
+    weapon->projectile_speed = 20.0f;
+
+    info(sbox, "inventory loaded.");
 }
 
 void inventory_free(sbox_t* sbox, inventory_t* inventory) {

@@ -1,7 +1,13 @@
 #include "map.h"
 #include "sbox.h"
 
+void map_init(sbox_t* sbox, map_t* map) {
+    map->is_loaded = false;
+}
+
 void map_load(sbox_t* sbox, map_t* map) {
+    info(sbox, "loading map...");
+    
 	entlist_init(sbox, &map->entlist);
 
     mesh_t* floor_mesh = mesh_load(sbox, "res/meshes/floor.obj");
@@ -29,7 +35,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* ship_mesh = mesh_load(sbox, "res/meshes/ship.obj");
     mesh_t* dock_mesh = mesh_load(sbox, "res/meshes/dock.obj");
     mesh_t* vinyl_mesh = mesh_load(sbox, "res/meshes/vinyl.obj");
-    mesh_t* player_mesh = mesh_load(sbox, "res/meshes/player.obj");
     mesh_t* cactus_mesh = mesh_load(sbox, "res/meshes/nature/cactus.obj");
     mesh_t* rock_mesh = mesh_load(sbox, "res/meshes/nature/rock.obj");
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
@@ -215,7 +220,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/water_n.png",
         1, 1, true, PHYS_MAT_WATER);
     water->is_water = true;
-    water->scroll_speed = 0.05f;
+    water->scroll_speed = 0.5f;
 
     material_t* sand = material_load(sbox,
         "sand",
@@ -815,12 +820,6 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    entity_init_prop(sbox, "player_thirdperson", 0.0f, 0.0f, 0.0f, player_mesh, &entity);
-    entity_prop_set_material(sbox, entity, cactus, 0);
-    entity->data.prop.is_visible = false;
-    entity->data.prop.enable_collision = false;
-    entlist_add(sbox, &map->entlist, entity);
-
     const char* paths[6] = {
         "res/textures/skies/sky_right.png",
         "res/textures/skies/sky_left.png",
@@ -832,6 +831,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     map->skybox = texture_load_cubemap(sbox, paths);
 
     info(sbox, "map loaded!");
+    map->is_loaded = true;
     sbox->ui_state = UI_STATE_IN_GAME;
 }
 
@@ -842,6 +842,8 @@ void map_free(sbox_t* sbox, map_t* map) {
 static void send_to_renderer(sbox_t* sbox, map_t* map) {
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
+        if (!entity) continue;
+
         drawcall_t drawcall;
         if (entity_get_drawcall(sbox, entity, &drawcall))
             r_add_drawcall(&sbox->renderer, drawcall);
@@ -849,6 +851,8 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
 }
 
 void map_tick(sbox_t* sbox, map_t* map) {
+	if (!sbox->map.is_loaded) return;
+
 	entlist_tick(sbox, &map->entlist);
     send_to_renderer(sbox, map);
 
@@ -856,6 +860,6 @@ void map_tick(sbox_t* sbox, map_t* map) {
         player_t* player = sbox->players[i];
         if (!player) continue;
         if (player->position[1] < -100.0f)
-            player_add_damage(sbox, player, 100000.0f);
+            player_add_damage(sbox, player, player->health);
     }
 }

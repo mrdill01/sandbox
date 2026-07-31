@@ -15,5 +15,6 @@ void con_init(sbox_t* sbox, console_t* con);
 void con_free(sbox_t* sbox, console_t* con);
 void con_submit(sbox_t* sbox, console_t* con);
 void con_add_history(sbox_t* sbox, console_t* con, const char* text);
+void con_get_history(sbox_t* sbox, console_t* con, int lines, char** history);
 
 #endif

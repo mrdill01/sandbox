@@ -24,6 +24,11 @@ typedef struct {
     float last_fire;
     float spread;
     float damage;
+    
+    float is_projectile;
+    mesh_t* projectile_mesh;
+    material_t* projectile_material;
+    float projectile_speed;
 } weapon_t;
 
 typedef struct {

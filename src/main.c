@@ -15,20 +15,17 @@ void shutdown(sbox_t* sbox);
 
 int main(int argc, char* argv[]) {
     sbox_t sbox;
-    sbox_init(&sbox);
-
     if (!init(&sbox))
         return EXIT_FAILURE;
 
+    #ifdef SBOX_DEBUG
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); 
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
+    glDisable(GL_BLEND);
     SDL_GL_SwapWindow(sbox.window);
-
-    map_load(&sbox, &sbox.map);
-
-    sbox.players[0] = gm_spawn_player(&sbox, false);
-    sbox.player = sbox.players[0];
-    sbox.player->is_me = true;
+    #endif
 
     while (sbox.running) {
         tick(&sbox);
@@ -41,6 +38,8 @@ int main(int argc, char* argv[]) {
 }
 
 bool init(sbox_t* sbox) {
+    sbox_init(sbox);
+
     info(sbox, "initializing SDL...");
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -93,7 +92,7 @@ bool init(sbox_t* sbox) {
 
     r_init(sbox, &sbox->renderer);
     a_init(sbox, &sbox->audio);
-
+    map_init(sbox, &sbox->map);
     return true;
 }
 
@@ -178,6 +177,11 @@ void tick(sbox_t* sbox) {
         sbox->keys[SDL_SCANCODE_F11] = false;
         sbox->keys[SDL_SCANCODE_RETURN] = false;
         cvar_toggle(sbox, "r_fullscreen");
+    }
+
+    if (sbox->keys[SDL_SCANCODE_N]) {
+        sbox->keys[SDL_SCANCODE_N] = false;
+        cvar_toggle(sbox, "noclip");
     }
 }
 

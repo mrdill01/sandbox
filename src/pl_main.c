@@ -5,11 +5,12 @@
 #define HEIGHT 1.5f
 #define HEIGHT_CROUCH 0.75f
 #define RADIUS 0.4f
-#define JUMPFORCE 2.775f
+#define JUMPFORCE 3.0f
 #define MAX_STEDOWN 0.5f
-#define MAX_SPEED_WALK 3.0f
+#define MAX_SPEED_WALK 3.2f
 #define MAX_SPEED_CROUCH 2.2f
 #define MAX_SPEED_SPRINT 4.0f
+#define MAX_SPEED_FLIGHT 5.0f
 #define ACCEL 10.0f
 #define AIR_ACCEL 2.0f
 #define STOPSPEED 2.5f
@@ -62,6 +63,15 @@ void player_free(sbox_t* sbox, player_t* player) {
 }
 
 static void set_move_mode(player_t* player, move_mode_t new_mode) {
+    if (new_mode == MOVE_SPRINT &&
+        (player->buttons & PLAYER_BUTTON_FIRE ||
+            player->buttons & PLAYER_BUTTON_AIM ||
+            player->move_input[2] != 1.0f))
+    {
+        player->move_mode = MOVE_WALK;
+        return;
+    }
+    
     if (player->move_mode == MOVE_CROUCH && new_mode != MOVE_CROUCH && player->head_blocked)
         return;
 
@@ -74,11 +84,12 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
     case MOVE_WALK: speed = MAX_SPEED_WALK; break;
     case MOVE_CROUCH: speed = MAX_SPEED_CROUCH; break;
     case MOVE_SPRINT: speed = MAX_SPEED_SPRINT; break;
+    case MOVE_FLIGHT: speed = MAX_SPEED_FLIGHT; break;
     default: unreachable(sbox);
     }
 
     if (player->buttons & PLAYER_BUTTON_AIM)
-        speed *= 0.5f;
+        speed *= 0.65f;
     
     return speed;
 }
@@ -86,7 +97,8 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
 static float get_height(sbox_t* sbox, player_t* player) {
     switch (player->move_mode) {
     case MOVE_WALK:
-    case MOVE_SPRINT: return HEIGHT;
+    case MOVE_SPRINT:
+    case MOVE_FLIGHT: return HEIGHT;
     case MOVE_CROUCH: return HEIGHT_CROUCH;
     default: unreachable(sbox);
     }
@@ -125,6 +137,16 @@ static void accelerate(sbox_t* sbox, player_t* player, float target_speed, float
 
     player->velocity[0] += accel_speed * player->target_dir[0];
     player->velocity[2] += accel_speed * player->target_dir[2];
+}
+
+static void move_flight(sbox_t* sbox, player_t* player) {
+    float accel;
+    if (glm_vec3_dot(player->velocity, player->target_dir) < 0.0f)
+        accel = AIR_STOPSPEED;
+    else
+        accel = AIR_ACCEL;
+    
+    accelerate(sbox, player, player->target_speed, accel);
 }
 
 static void move_water(sbox_t* sbox, player_t* player) {
@@ -214,6 +236,12 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     player->is_jumping = false;
     player->height -= 0.3f;
     player->item_anim[1] = -0.035f;
+
+    if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
+        float fall_damage = powf(-player->velocity[1], 1.4f);
+        player_add_damage(sbox, player, fall_damage);
+        printf("%g - %g\n", player->velocity[1], fall_damage);
+    }
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {
@@ -239,6 +267,8 @@ static void exit_water(sbox_t* sbox, player_t* player) {
 }
 
 static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
+    if (player->move_mode == MOVE_FLIGHT) return;
+
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, -1.0f, 0.0f};
@@ -476,7 +506,9 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     move_and_collide(sbox, player, entlist);
 
-    if (player->water_level > 0.0f)
+    if (noclip.value)
+        move_flight(sbox, player);
+    else if (player->water_level > 0.0f)
         move_water(sbox, player);
     else if (player->is_grounded)
         move_ground(sbox, player);
@@ -500,10 +532,28 @@ void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 }
 
 void player_add_damage(sbox_t* sbox, player_t* player, float damage) {
-    if (damage < 0.0f) return;
+    if (player_is_dead(player) || damage < 0.0f) return;
 
     player->health -= damage;
     player->health = clamp(player->health, 0.0f, 100.0f);
+
+    if (player_is_dead(player)) {
+        player->death_time = sbox->time;
+        player->is_thirdperson = true;
+        sbox->ui_state = UI_STATE_DEAD;
+    }
+}
+
+bool player_is_dead(player_t* player) {
+    return player->health == 0.0f;
+}
+
+void player_respawn(sbox_t* sbox, player_t* player) {
+    glm_vec3_zero(player->velocity);
+    player->is_thirdperson = r_third_person.value;
+    player->health = 100.0f;
+    sbox->ui_state = UI_STATE_IN_GAME;
+    player_teleport(sbox, player, (vec3){0.0f, 2.0f, -4.5f});
 }
 
 void player_teleport(sbox_t* sbox, player_t* player, vec3 destination) {
@@ -531,6 +581,10 @@ float player_get_step_rate(sbox_t* sbox, player_t* player) {
     case MOVE_CROUCH: speed = 0.8f; break;
     case MOVE_SPRINT: speed = 0.3f; break;
     default: unreachable(sbox);
+    }
+
+    if (player->buttons & PLAYER_BUTTON_AIM) {
+        speed *= 1.0 / 0.65f;
     }
     
     return speed;

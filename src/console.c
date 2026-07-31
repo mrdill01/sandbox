@@ -3,7 +3,8 @@
 
 void con_init(sbox_t* sbox, console_t* con) {
     con->input = NULL;
-    con->history = NULL;
+    con->history = malloc(1);
+    strcpy(con->history, "\0");
     con->history_len = 0;
 }
 
@@ -19,5 +20,16 @@ void con_submit(sbox_t* sbox, console_t* con) {
 void con_add_history(sbox_t* sbox, console_t* con, const char* text) {
     con->history_len += strlen(text);
     con->history = realloc(con->history, con->history_len + 1);
+    con->history[con->history_len] = '\0';
     strcat(con->history, text);
+}
+
+void con_get_history(sbox_t* sbox, console_t* con, int lines, char** history) {
+    int lines_gathered = 0;
+    for (int i = con->history_len - 1; i >= 0; i--) {
+        char ch = con->history[i];
+        if (ch == '\n') {
+            lines_gathered++;
+        }
+    }
 }

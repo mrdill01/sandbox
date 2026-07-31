@@ -24,6 +24,7 @@ typedef struct trace_result_t {
     vec3 normal;
     float distance;
     float water_level;
+    vec3 enter_water_point;
     entity_t* entity;
     int player_id;
     material_t* material;

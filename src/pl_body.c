@@ -93,10 +93,14 @@ static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, fl
 void player_tick_body(sbox_t* sbox, player_t* player) {
     body_t* body = &player->body;
 
-    if (player->is_me)
+    if (player->is_me) {
         glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
-    else
+
+        if (player_is_dead(player))
+            glm_quat(body->rotation, rad(-90.0f), 1.0f, 0.0f, 0.0f);
+    } else {
         glm_quat_identity(body->rotation);
+    }
 
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);
@@ -155,10 +159,10 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 
         quat rotation;
         glm_quat_identity(rotation);
-        glm_quat_mul(rotation, body->rotation, rotation);
-        glm_quat_mul(rotation, part->rotation, rotation);
+        glm_quat_mul(body->rotation, rotation, rotation);
+        glm_quat_mul(part->rotation, rotation, rotation);
         if (part->parent)
-            glm_quat_mul(rotation, part->parent->rotation, rotation);
+            glm_quat_mul(part->parent->rotation, rotation, rotation);
 
         vec3 target_offset;
         glm_quat_rotatev(rotation, part->offset, target_offset);
@@ -169,8 +173,6 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 
         vec3 rotated_offset;
         glm_quat_rotatev(rotation, diff, rotated_offset);
-
-        //glm_vec3_add(rotated_offset, part->offset, rotated_offset);
 
         glm_vec3_add(position, rotated_offset, position);
 

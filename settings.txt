@@ -1,11 +1,13 @@
 edit_snap_size 0.2f Edit mode snap size.
 edit_mode 0.0f Enable edit mode.
-console 1 Show developer console.
+noclip 0 Enables flight / disables collision.
+console 0 Show developer console.
 m_sens 5.0f Mouse sensitivity.
 a_volume 0.2f Audio volume.
 a_device (null) Audio output device (default (null)).
 r_debug_draw_colliders 0 Draw colliders.
 r_debug_menu 1 Debug menu.
+r_third_person 0 Enable third-person camera.
 r_shadow_res 1024.0 Shadow resolution.
 r_shadows 1 Enable shadows.
 r_fov 75.0f Field-of-view.

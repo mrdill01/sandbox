@@ -36,6 +36,7 @@ bool phys_line_trace(
     glm_vec3_copy(start, trace.point);
     glm_vec3_zero(trace.normal);
     trace.water_level = 0.0f;
+    glm_vec3_zero(trace.enter_water_point);
     trace.entity = NULL;
     trace.player_id = -1;
     trace.material = NULL;
@@ -55,6 +56,13 @@ bool phys_line_trace(
             
             if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
                 if (entity->data.prop.materials[0]->is_water) {
+                    if (trace.enter_water_point[0] == 0.0f &&
+                        trace.enter_water_point[1] == 0.0f &&
+                        trace.enter_water_point[2] == 0.0f)
+                    {
+                        glm_vec3_copy(trace.point, trace.enter_water_point);
+                    }
+                    
                     trace.water_level = trace.distance / max_distance;
                     continue;
                 }

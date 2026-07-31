@@ -21,3 +21,9 @@ player_t* gm_spawn_player(sbox_t* sbox, bool is_bot) {
 
     return sbox->players[id];
 }
+
+void gm_respawn_player(sbox_t* sbox, player_t* player) {
+    if (sbox->time - player->death_time < PLAYER_RESPAWN_TIME)
+        return;
+    player_respawn(sbox, player);
+}

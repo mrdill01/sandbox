@@ -9,6 +9,17 @@ static void reset_input(sbox_t* sbox, player_t* player) {
 
 void player_input(sbox_t* sbox, player_t* player) {
     reset_input(sbox, player);
+    if (!player->is_me) return;
+    
+    if (player_is_dead(player)) {
+        if (sbox->keys[SDL_SCANCODE_SPACE]) {
+            sbox->keys[SDL_SCANCODE_SPACE] = false;
+            gm_respawn_player(sbox, player);
+        }
+
+        return;
+    }
+
     if (sbox->ui_state != UI_STATE_IN_GAME)
         return;
 
@@ -25,6 +36,11 @@ void player_input(sbox_t* sbox, player_t* player) {
 
     if (sbox->keys[SDL_SCANCODE_RIGHT])
         camera_add_yaw(camera, m_sens.value);
+
+    if (sbox->keys[SDL_SCANCODE_V]) {
+        sbox->keys[SDL_SCANCODE_V] = false;
+        player_add_damage(sbox, player, 10.0f);
+    }
 
     /*if (sbox->mxdt != 0.0f)
         camera_add_yaw(camera, sbox->mxdt * m_sens.value);

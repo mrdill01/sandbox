@@ -10,6 +10,7 @@
 #define MAX_MATERIALS 4
 #define MAX_LINES 4096
 #define MAX_PARTICLES 8192
+#define ITEM_PREVIEW_RES 256
 #define FPS_SAMPLE_RATE 45
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
@@ -190,6 +191,7 @@ typedef struct {
     shader_t* partfx_shader;
     shader_t* screen_shader;
     shader_t* line_shader;
+    shader_t* item_shader;
     shader_t* active_shader;
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
@@ -198,6 +200,7 @@ typedef struct {
     framebuffer_t* gbuffer;
     framebuffer_t* screen_buffer;
     framebuffer_t* sun_shadow_buffer;
+    framebuffer_t* item_fbos[32];
 
     mat4 projection;
     mat4 view;
@@ -302,12 +305,16 @@ void r_render_lines(sbox_t* sbox, renderer_t* renderer);
 
 void r_add_partfx_shoot_hit(
     sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
+void r_add_partfx_shoot_hit_water(
+    sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
 void r_add_partfx_shoot_beam(
     sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance);
 void r_add_partfx_hit_ground(
     sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 void r_add_partfx_enter_water(
     sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
+void r_add_partfx_explode(
+    sbox_t* sbox, renderer_t* renderer, vec3 position, float radius);
 
 particle_t* r_add_particle(
     sbox_t* sbox,

@@ -1,15 +1,17 @@
 #include "entity.h"
 #include "sbox.h"
 
-static void init_common(
-	const char* name, entity_type_t type, float x, float y, float z, entity_t** out)
+void entity_init_common(
+	const char* name, entity_type_t type, vec3 position, entity_t** out)
 {
 	if (!out) return;
 
     entity_t* entity = malloc(sizeof(entity_t));
-	entity->name = name;
+	entity->is_free = false;
+	entity->name = malloc(strlen(name) + 1);
+	strcpy(entity->name, name);
 	entity->type = type;
-	glm_vec3_copy((vec3){x, y, z}, entity->position);
+	glm_vec3_copy(position, entity->position);
     glm_quat_identity(entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
 	entity->local_bbox = (bbox_t){0};
@@ -22,7 +24,7 @@ void entity_init_prop(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
-	init_common(name, ENTITY_MESH, x, y, z, &entity);
+	entity_init_common(name, ENTITY_MESH, (vec3){x, y, z}, &entity);
     entity->data.prop.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.prop.materials[i] = NULL;
@@ -39,7 +41,7 @@ void entity_init_vehicle(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
-	init_common(name, ENTITY_VEHICLE, x, y, z, &entity);
+	entity_init_common(name, ENTITY_VEHICLE, (vec3){x, y, z}, &entity);
     entity->data.vehicle.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.vehicle.materials[i] = NULL;
@@ -56,7 +58,7 @@ void entity_init_sun_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	init_common(name, ENTITY_SUN_LIGHT, x, y, z, &entity);
+	entity_init_common(name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(dir, entity->data.sun_light.direction);
 	glm_vec3_norm(entity->data.sun_light.direction);
 	glm_vec3_copy(color, entity->data.sun_light.color);
@@ -71,35 +73,57 @@ void entity_init_point_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	init_common(name, ENTITY_POINT_LIGHT, x, y, z, &entity);
+	entity_init_common(name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(color, entity->data.point_light.color);
 
 	*out = entity;
 }
 
-static void compute_bounding_box(entity_t* entity) {
-	if (entity->type != ENTITY_MESH) return;
-	
-	entity->local_bbox = entity->data.prop.mesh->bbox;
-
-	mat4 rotation;
-	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, rotation);
-	entity->world_bbox = entity->local_bbox;
-	entity->world_bbox = bbox_rotate(&entity->world_bbox, rotation);
-	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
-	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
-}
-
 void entity_free(sbox_t* sbox, entity_t* entity) {
 	if (!entity) return;
+	free(entity->name);
     free(entity);
 }
 
+static mesh_t* get_mesh(sbox_t* sbox, entity_t* entity) {
+	switch (entity->type) {
+	case ENTITY_MESH: return entity->data.prop.mesh;
+	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
+	default: return NULL;
+	}
+}
+
+static void get_materials(sbox_t* sbox,
+	entity_t* entity,
+	material_t** materials,
+	size_t* nmaterials)
+{
+	switch (entity->type) {
+	case ENTITY_MESH: {
+		memcpy(materials, entity->data.prop.materials,
+			sizeof(material_t*) * entity->data.prop.mesh->nmaterials);
+		*nmaterials = entity->data.prop.mesh->nmaterials;
+		break;
+	}
+	case ENTITY_PROJECTILE: {
+		memcpy(materials, entity->data.projectile.materials,
+			sizeof(material_t*) * entity->data.projectile.mesh->nmaterials);
+		*nmaterials = entity->data.projectile.mesh->nmaterials;
+		break;
+	}
+	default: break;
+	}
+
+	*nmaterials = MAX_MATERIALS;
+}
+
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
-	if (!drawcall)
+	if (!drawcall || entity->is_free)
 		return false;
 	
-	if (entity->type != ENTITY_MESH && entity->type != ENTITY_DROPPED_ITEM)
+	if (entity->type != ENTITY_MESH &&
+		entity->type != ENTITY_DROPPED_ITEM &&
+		entity->type != ENTITY_PROJECTILE)
 		return false;
 
 	if (entity->type == ENTITY_MESH && !entity->data.prop.is_visible)
@@ -111,20 +135,23 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	drawcall->entity = malloc(strlen(entity->name));
 	strcpy(drawcall->entity, entity->name);
 
-	drawcall->mesh = entity->data.prop.mesh;
-	memcpy(drawcall->materials, entity->data.prop.materials,
-		sizeof(material_t*) * MAX_MATERIALS);
+	drawcall->mesh = get_mesh(sbox, entity);
+
+	material_t* materials[4] = {0};
+	size_t nmaterials = 0;
+	get_materials(sbox, entity, materials, &nmaterials);
+	memcpy(drawcall->materials, materials, sizeof(material_t*) * MAX_MATERIALS);
 
 	int n = 0;
 	for (int i = 0; i < MAX_MATERIALS; i++)
-		if (entity->data.prop.materials[i])
+		if (materials[i])
 			n++;
 
-	if (n != entity->data.prop.mesh->nmaterials) {
+	/*if (n != nmaterials) {
 		error(sbox, "entity %s doesn't have the proper number of materials (have %d, need %d)",
-			entity->name, n, entity->data.prop.mesh->nmaterials);
+			entity->name, n, nmaterials);
 		return false;
-	}
+	}*/
 
 	drawcall->local_bbox = entity->data.prop.mesh->bbox;
 
@@ -180,11 +207,25 @@ void entlist_free(sbox_t* sbox, entlist_t* entlist) {
 	free(entlist->ents);
 }
 
+static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
+	mesh_t* mesh = get_mesh(sbox, entity);
+	if (!mesh) return;
+	
+	entity->local_bbox = mesh->bbox;
+
+	mat4 rotation;
+	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, rotation);
+	entity->world_bbox = entity->local_bbox;
+	entity->world_bbox = bbox_rotate(&entity->world_bbox, rotation);
+	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
+	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
+}
+
 void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
-		if (!entity) continue;
-		compute_bounding_box(entity);
+		if (!entity || entity->is_free) continue;
+		compute_bounding_box(sbox, entity);
 
 		switch (entity->type) {
 		case ENTITY_MESH: {
@@ -192,6 +233,14 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 			if (prop->is_pickup) {
     			glm_quat(entity->rotation, rad(sbox->time * ITEM_SPIN_RATE), 0.0f, 1.0f, 0.0f);
 			}
+			break;
+		}
+		case ENTITY_PROJECTILE: {
+			entity_tick_projectile(sbox, entity, &entity->data.projectile);
+			break;
+		}
+		case ENTITY_EXPLOSION: {
+			entity_tick_explosion(sbox, entity, &entity->data.explosion);
 			break;
 		}
 		default: break;
@@ -206,9 +255,17 @@ void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
 	entlist->ents[entlist->len++] = entity;
 }
 
+void entlist_remove(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
+	if (!entity) return;
+	info(sbox, "remove entity %s", entity->name);
+	entity->is_free = true;
+}
+
 entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
+		if (!entity) continue;
+
 		if (strcmp(entity->name, name) == 0)
 			return entity;
 	}

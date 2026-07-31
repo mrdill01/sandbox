@@ -1,5 +1,5 @@
-#ifndef CORE_H
-#define CORE_H
+#ifndef SBOX_H
+#define SBOX_H
 
 #include "config.h"
 #include "render.h"
@@ -21,7 +21,7 @@
 #include <SDL2/SDL.h>
 
 #define SBOX_VERSION "sbox 1.0"
-#define SBOX_DEBUG
+//#define SBOX_DEBUG
 //#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG
@@ -33,9 +33,11 @@
 #define MAX_PLAYERS 32
 
 typedef enum {
+    UI_STATE_MAIN_MENU,
     UI_STATE_LOADING,
     UI_STATE_IN_GAME,
     UI_STATE_PAUSE_MENU,
+    UI_STATE_DEAD,
 } ui_state_t;
 
 #define NUM_KEYS 512
@@ -84,12 +86,14 @@ extern cvar_t r_vsync;
 extern cvar_t r_fov;
 extern cvar_t r_shadows;
 extern cvar_t r_shadow_res;
+extern cvar_t r_third_person;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
 extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
 extern cvar_t console;
+extern cvar_t noclip;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 

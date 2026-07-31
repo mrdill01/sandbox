@@ -11,6 +11,7 @@ typedef struct camera_t camera_t;
 typedef struct entlist_t entlist_t;
 
 #define PLAYER_THIRDPERSON_CAMERA_LENGTH 3.0f
+#define PLAYER_RESPAWN_TIME 3.0f
 
 #define PLAYER_BUTTON_JUMP 1
 #define PLAYER_BUTTON_CROUCH 2
@@ -22,6 +23,7 @@ typedef enum {
     MOVE_WALK,
     MOVE_CROUCH,
     MOVE_SPRINT,
+    MOVE_FLIGHT,
 } move_mode_t;
 
 typedef struct body_part_t {
@@ -90,6 +92,7 @@ typedef struct player_t {
     vec3 item_anim;
     vec3 item_anim_angles;
     float health;
+    float death_time;
     body_t body;
     editor_t editor;
 } player_t;
@@ -103,6 +106,8 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
 void player_add_damage(sbox_t* sbox, player_t* player, float damage);
+bool player_is_dead(player_t* player);
+void player_respawn(sbox_t* sbox, player_t* player);
 void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);

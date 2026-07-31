@@ -17,12 +17,14 @@ cvar_t r_vsync = {"r_vsync", "0", true, "Vertical sync."};
 cvar_t r_fov = {"r_fov", "75.0f", true, "Field-of-view."};
 cvar_t r_shadows = {"r_shadows", "1", true, "Enable shadows."};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
+cvar_t r_third_person = {"r_third_person", "0", true, "Enable third-person camera."};
 cvar_t r_debug_menu = {"r_debug_menu", "1", true, "Debug menu."};
 cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, "Draw colliders."};
 cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
 cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
 cvar_t m_sens = {"m_sens", "5.0f", true, "Mouse sensitivity."};
-cvar_t console = {"console", "1", true, "Show developer console."};
+cvar_t console = {"console", "0", true, "Show developer console."};
+cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
 
@@ -49,12 +51,14 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_fov, NULL);
     cvar_register(sbox, &r_shadows, NULL);
     cvar_register(sbox, &r_shadow_res, NULL);
+    cvar_register(sbox, &r_third_person, NULL);
     cvar_register(sbox, &r_debug_menu, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
     cvar_register(sbox, &console, NULL);
+    cvar_register(sbox, &noclip, NULL);
     cvar_register(sbox, &edit_mode, NULL);
     cvar_register(sbox, &edit_snap_size, NULL);
 
@@ -84,7 +88,11 @@ void sbox_init(sbox_t* sbox) {
 	sbox->textures = NULL;
 	sbox->materials = NULL;
 
+	#ifdef SBOX_DEBUG
 	sbox->ui_state = UI_STATE_LOADING;
+	#else
+	sbox->ui_state = UI_STATE_MAIN_MENU;
+	#endif
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		sbox->players[i] = NULL;
@@ -106,13 +114,12 @@ void sbox_tick(sbox_t* sbox) {
 	for (int i = 0; i < MAX_PLAYERS; i++) {
 		player_t* player = sbox->players[i];
 		if (!player) continue;
-		if (player->is_me)
-			player_input(sbox, sbox->player);
+		player_input(sbox, sbox->player);
 		player_tick(sbox, sbox->players[i], &sbox->renderer.camera, &sbox->map.entlist);
 	}
 
-    map_tick(sbox, &sbox->map);
 	r_tick(sbox, &sbox->renderer);
+	map_tick(sbox, &sbox->map);
 }
 
 void sbox_reload_resources(sbox_t* sbox) {
@@ -141,12 +148,14 @@ void info(sbox_t* sbox, const char* msg, ...) {
 	va_list args;
 	va_start(args, msg);
 	size_t len = vsnprintf(buffer, MAX_MSG_LEN, msg, args);
+	buffer[len] = '\0';
 	va_end(args);
 
-	buffer[len] = '\0';
-	printf("%s", buffer);
-	strcat(buffer, "\n");
-	//con_add_history(sbox, &sbox->console, buffer);
+	char text[MAX_MSG_LEN + 32];
+	sprintf(text, "%s\n", buffer);
+
+	printf(text);
+	con_add_history(sbox, &sbox->console, text);
 }
 
 void error(sbox_t* sbox, const char* msg, ...) {
@@ -154,13 +163,14 @@ void error(sbox_t* sbox, const char* msg, ...) {
 	va_list args;
 	va_start(args, msg);
 	size_t len = vsnprintf(buffer, MAX_MSG_LEN, msg, args);
+	buffer[len] = '\0';
 	va_end(args);
 
-	buffer[len] = '\0';
-	printf("%s", buffer);
-	sprintf(buffer, "error: %s", buffer);
-	strcat(buffer, "\n");
-	//con_add_history(sbox, &sbox->console, buffer);
+	char text[MAX_MSG_LEN + 32];
+	sprintf(text, "error: %s\n", buffer);
+
+	printf(text);
+	con_add_history(sbox, &sbox->console, text);
 
 	#ifdef SBOX_DEBUG
 	exit(EXIT_FAILURE);

@@ -46,20 +46,37 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         weapon->last_fire = sbox->time;
         a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
         player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ? 0.02 : 0.12f;
-    
-        bool hit = phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace);
-        if (hit) {
-            sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
-            a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
-            r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace);
 
-            if (trace.player_id != -1) {
-                player_add_damage(sbox, sbox->players[trace.player_id], weapon->damage);
+        if (weapon->is_projectile) {
+            vec3 velocity;
+            glm_vec3_copy(sbox->renderer.camera.forward, velocity);
+            glm_vec3_scale(velocity, weapon->projectile_speed, velocity);
+
+            entity_t* projectile = NULL;
+            entity_init_projectile(sbox, "rocket", start,
+                weapon->projectile_mesh, velocity, &projectile);
+            projectile->data.projectile.materials[0] = weapon->projectile_material;
+            entlist_add(sbox, &sbox->map.entlist, projectile);
+
+        } else {
+            bool hit = phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace);
+            if (hit) {
+                sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
+                a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
+                r_add_partfx_shoot_hit(sbox, &sbox->renderer, trace);
+
+                if (trace.water_level > 0.0f) {
+                    r_add_partfx_shoot_hit_water(sbox, &sbox->renderer, trace);
+                }
+
+                if (trace.player_id != -1) {
+                    player_add_damage(sbox, sbox->players[trace.player_id], weapon->damage);
+                }
             }
-        }
 
-        r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
-            (hit) ? trace.distance : max_distance);
+            r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
+                (hit) ? trace.distance : max_distance);
+        }
     }
 }
 
@@ -102,12 +119,12 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         float anim_speed = 7.0f;
         player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 35.0f, anim_speed,
             sbox->dt);
-        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 35.0f, anim_speed,
+        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 25.0f, anim_speed,
             sbox->dt);
         player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, anim_speed,
             sbox->dt);
 
-        player->item_anim[1] = -0.05f;
+        player->item_anim[1] = -0.065f;
         
     } else {
         float reset_speed = 7.0f;

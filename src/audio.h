@@ -28,6 +28,7 @@ typedef struct {
     sound_t* bullet_hit_sounds[PHYS_MAT_MAX];
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
+    sound_t* explosion_sound;
     sound_t* inventory_open_sound;
     sound_t* inventory_close_sound;
     sound_t* hotbar_select_sound;
