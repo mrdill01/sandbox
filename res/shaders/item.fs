@@ -139,4 +139,5 @@ void main() {
     vec3 ambient = vec3(0.5f, 0.5f, 0.9f) * sample.albedo.rgb * sample.ao;
 
     frag_color = vec4(direct + ambient, sample.albedo.a);
+    frag_color = vec4(vs_uv, 0.0f, 1.0f);
 }

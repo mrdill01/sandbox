@@ -44,13 +44,13 @@ void r_add_partfx_shoot_hit_water(sbox_t* sbox, renderer_t* renderer, trace_resu
     for (int i = 0; i < 100; i++) {
         vec3 velocity;
         glm_vec3_zero(velocity);
-        velocity[0] += random(-1.5f, 1.5f);
-        velocity[1] = random(1.5f, 3.0f);
-        velocity[2] += random(-1.5f, 1.5f);
+        velocity[0] += random(-2.5f, 2.5f);
+        velocity[1] = random(2.5f, 4.25f);
+        velocity[2] += random(-2.5f, 2.5f);
 
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, trace.enter_water_point, velocity, renderer->p_water,
-                random(0.1f, 1.0f), random(0.11f, 0.14f), 3.0f);
+                0.2f, random(0.11f, 0.14f), 3.0f);
         particle->apply_gravity = true;
     }
 }
@@ -85,6 +85,19 @@ void r_add_partfx_shoot_beam(
     }
 }
 
+void r_add_partfx_projectile_smoke(
+    sbox_t* sbox, renderer_t* renderer, vec3 position)
+{
+    vec3 velocity = {
+        random(-0.2f, 0.2f),
+        random(-0.2f, 0.2f),
+        random(-0.2f, 0.2f)};
+
+    r_add_particle(sbox, &sbox->renderer,
+        position, velocity, renderer->p_steam,
+        0.35f, random(0.125f, 0.175f), random(1.3f, 1.5f));
+}
+
 void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material) {
     for (int i = 0; i < 20; i++) {
         vec3 velocity = {
@@ -100,8 +113,11 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
             position[0] + random(-0.35f, 0.35f),
             position[1] + random(-0.35f, 0.35f),
             position[2] + random(-0.35f, 0.35f)};
-        glm_vec3_zero(velocity);
-        r_add_particle(sbox, &sbox->renderer, smoke_position, velocity,
+        vec3 smoke_velocity = {
+            random(-0.25f, 0.25f),
+            random(-0.25f, 0.25f),
+            random(-0.25f, 0.25f)};
+        r_add_particle(sbox, &sbox->renderer, smoke_position, smoke_velocity,
             renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f));
     }
 }
@@ -124,41 +140,35 @@ void r_add_partfx_enter_water(
 
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, new_position, new_velocity, renderer->p_water,
-                random(0.1f, 1.0f), random(0.11f, 0.14f), 3.0f);
+                0.3f, random(0.11f, 0.14f), 3.0f);
         particle->apply_gravity = true;
     }
 }
 
-void r_add_partfx_explode(
+void r_add_partfx_explosion(
     sbox_t* sbox, renderer_t* renderer, vec3 position, float radius)
 {
-    for (int i = 0; i < 100; i++) {
-        /*vec3 velocity;
-        glm_vec3_copy(trace.normal, velocity);
-        glm_vec3_scale(velocity, 10.0f, velocity);*/
-
+    for (int i = 0; i < 50; i++) {
         vec3 velocity = {
-            random(-4.0f, 4.0f),
-            random(-4.0f, 4.0f),
-            random(-4.0f, 4.0f)};
+            random(-3.0f, 3.0f),
+            random(-3.0f, 3.0f),
+            random(-3.0f, 3.0f)};
         
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
             position, velocity, renderer->p_fire,
-            1.0f, random(0.25f, 0.65f), random(0.15f, 0.2f));
-        particle->apply_gravity = true;
+            random(0.5f, 1.0f), random(0.45f, 0.65f), random(0.3f, 0.4f));
     }
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 25; i++) {
         vec3 velocity = {
-            random(-2.0f, 2.0f),
-            random(2.0f, 4.0f),
-            random(-2.0f, 2.0f)};
+            random(-0.25f, 0.25f),
+            random(-0.25f, 0.25f),
+            random(-0.25f, 0.25f)};
 
         vec3 new_position = {
-            position[0] + random(-0.5f, 0.5f),
-            position[1] + random(-0.5f, 0.5f),
-            position[2] + random(-0.5f, 0.5f)};
-        glm_vec3_zero(velocity);
+            position[0] + random(-0.25f, 0.25f),
+            position[1] + random(-0.25f, 0.25f),
+            position[2] + random(-0.25f, 0.25f)};
         r_add_particle(sbox, &sbox->renderer, new_position, velocity,
             renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f));
     }
@@ -172,7 +182,8 @@ particle_t* r_add_particle(
     texture_t* texture,
     float alpha,
     float size,
-    float lifetime) {
+    float lifetime)
+{
     particle_t* particle = NULL;
     for (int i = 0; i < MAX_PARTICLES; i++) {
         if (renderer->particles[i].is_free) {
@@ -237,6 +248,7 @@ void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->partfx_shader);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
+    glDepthMask(GL_FALSE);
 
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
@@ -259,6 +271,7 @@ void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
     r_set_framebuffer(renderer, NULL);
 }
 

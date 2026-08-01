@@ -1,4 +1,5 @@
 #include "sbox.h"
+#include "net.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -25,6 +26,8 @@ cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
 cvar_t m_sens = {"m_sens", "5.0f", true, "Mouse sensitivity."};
 cvar_t console = {"console", "0", true, "Show developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
+cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
+cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
 cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
 
@@ -59,8 +62,13 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &m_sens, NULL);
     cvar_register(sbox, &console, NULL);
     cvar_register(sbox, &noclip, NULL);
+    cvar_register(sbox, &sv_timescale, NULL);
+    cvar_register(sbox, &sv_respawn_time, NULL);
     cvar_register(sbox, &edit_mode, NULL);
     cvar_register(sbox, &edit_snap_size, NULL);
+
+	sbox->cmds = NULL;
+	cmd_init(sbox);
 
 	cfg_write(sbox, DEFAULT_CFG_PATH);
 
@@ -88,11 +96,9 @@ void sbox_init(sbox_t* sbox) {
 	sbox->textures = NULL;
 	sbox->materials = NULL;
 
-	#ifdef SBOX_DEBUG
-	sbox->ui_state = UI_STATE_LOADING;
-	#else
-	sbox->ui_state = UI_STATE_MAIN_MENU;
-	#endif
+	net_init(sbox);
+	sv_init(sbox, &sbox->server);
+	cl_init(sbox, &sbox->client);
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		sbox->players[i] = NULL;
@@ -101,13 +107,19 @@ void sbox_init(sbox_t* sbox) {
 void sbox_free(sbox_t* sbox) {
     map_free(sbox, &sbox->map);
 	con_free(sbox, &sbox->console);
+	cl_disconnect(sbox, &sbox->client);
+	sv_stop(sbox, &sbox->server);
+	net_free(sbox);
 }
 
 void sbox_tick(sbox_t* sbox) {
 	sbox->last = sbox->now;
 	sbox->now = SDL_GetPerformanceCounter();
-   	sbox->dt = (sbox->now - sbox->last) / (double)SDL_GetPerformanceFrequency();
+   	sbox->dt = (sbox->now - sbox->last) / (double)SDL_GetPerformanceFrequency() * sv_timescale.value;
 	sbox->time += sbox->dt;
+
+	sv_tick(sbox, &sbox->server);
+	cl_tick(sbox, &sbox->client);
 
 	a_tick(sbox, &sbox->audio, sbox->player, &sbox->renderer.camera);
 	
@@ -118,8 +130,8 @@ void sbox_tick(sbox_t* sbox) {
 		player_tick(sbox, sbox->players[i], &sbox->renderer.camera, &sbox->map.entlist);
 	}
 
-	r_tick(sbox, &sbox->renderer);
 	map_tick(sbox, &sbox->map);
+	r_tick(sbox, &sbox->renderer);
 }
 
 void sbox_reload_resources(sbox_t* sbox) {

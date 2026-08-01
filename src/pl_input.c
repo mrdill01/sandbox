@@ -110,9 +110,17 @@ void player_input(sbox_t* sbox, player_t* player) {
         inventory_toggle(sbox, &player->inventory);
     }
 
-    if (sbox->keys[SDL_SCANCODE_G]) {
-        sbox->keys[SDL_SCANCODE_G] = false;
+    if (sbox->keys[SDL_SCANCODE_J]) {
+        sbox->keys[SDL_SCANCODE_J] = false;
         player_t* bot = gm_spawn_player(sbox, true);
         player_teleport(sbox, bot, player->look_trace.point);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_G]) {
+        sbox->keys[SDL_SCANCODE_G] = false;
+        if (sv_timescale.value == 1.0f)
+            cvar_set(sbox, "sv_timescale", "0.1f");
+        else
+            cvar_set(sbox, "sv_timescale", "1.0f");
     }
 }

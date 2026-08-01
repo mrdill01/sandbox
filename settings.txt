@@ -1,5 +1,7 @@
 edit_snap_size 0.2f Edit mode snap size.
 edit_mode 0.0f Enable edit mode.
+sv_respawn_time 3.0f How long for players to respawn.
+sv_timescale 1.0f Set to values less than 1.0 for slow-motion.
 noclip 0 Enables flight / disables collision.
 console 0 Show developer console.
 m_sens 5.0f Mouse sensitivity.

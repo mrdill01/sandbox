@@ -240,7 +240,6 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
         float fall_damage = powf(-player->velocity[1], 1.4f);
         player_add_damage(sbox, player, fall_damage);
-        printf("%g - %g\n", player->velocity[1], fall_damage);
     }
 }
 

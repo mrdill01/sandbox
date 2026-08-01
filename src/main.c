@@ -11,7 +11,7 @@
 
 bool init(sbox_t* sbox);
 void tick(sbox_t* sbox);
-void shutdown(sbox_t* sbox);
+void quit(sbox_t* sbox);
 
 int main(int argc, char* argv[]) {
     sbox_t sbox;
@@ -19,11 +19,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     #ifdef SBOX_DEBUG
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); 
+    cmd_run(&sbox, "host", NULL);
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
-    glDisable(GL_BLEND);
     SDL_GL_SwapWindow(sbox.window);
     #endif
 
@@ -32,8 +29,7 @@ int main(int argc, char* argv[]) {
         r_render(&sbox, &sbox.renderer);
     }
 
-    shutdown(&sbox);
-
+    quit(&sbox);
     return EXIT_SUCCESS;
 }
 
@@ -185,7 +181,7 @@ void tick(sbox_t* sbox) {
     }
 }
 
-void shutdown(sbox_t* sbox) {
+void quit(sbox_t* sbox) {
     info(sbox, "shutting down...");
 
     r_free(sbox, &sbox->renderer);

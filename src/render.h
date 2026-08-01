@@ -28,6 +28,7 @@ typedef struct trace_result_t trace_result_t;
 
 typedef struct camera_t {
     vec3 position;
+    quat rotation;
     vec3 angles;
     vec3 right;
     vec3 up;
@@ -309,11 +310,13 @@ void r_add_partfx_shoot_hit_water(
     sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
 void r_add_partfx_shoot_beam(
     sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance);
+void r_add_partfx_projectile_smoke(
+    sbox_t* sbox, renderer_t* renderer, vec3 position);
 void r_add_partfx_hit_ground(
     sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 void r_add_partfx_enter_water(
     sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
-void r_add_partfx_explode(
+void r_add_partfx_explosion(
     sbox_t* sbox, renderer_t* renderer, vec3 position, float radius);
 
 particle_t* r_add_particle(

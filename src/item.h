@@ -23,6 +23,7 @@ typedef struct {
     float fire_rate;
     float last_fire;
     float spread;
+    float recoil;
     float damage;
     
     float is_projectile;

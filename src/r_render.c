@@ -337,6 +337,7 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
@@ -361,6 +362,8 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = drawcall->materials[i];
+            if (!material) continue;
+            r_set_int(sbox, renderer, "is_water", strcmp(material->name, "water") == 0);
             r_set_material(sbox, renderer, material, i);
         }
 
@@ -369,6 +372,7 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     }
 
     glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 

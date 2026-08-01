@@ -11,7 +11,6 @@ typedef struct camera_t camera_t;
 typedef struct entlist_t entlist_t;
 
 #define PLAYER_THIRDPERSON_CAMERA_LENGTH 3.0f
-#define PLAYER_RESPAWN_TIME 3.0f
 
 #define PLAYER_BUTTON_JUMP 1
 #define PLAYER_BUTTON_CROUCH 2

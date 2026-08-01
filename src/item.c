@@ -52,6 +52,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_rate = 0.1f;
     weapon->last_fire = 0.0f;
     weapon->spread = 0.1f;
+    weapon->recoil = 0.15f;
     weapon->damage = 25.0f;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
@@ -66,6 +67,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_rate = 0.25f;
     weapon->last_fire = 0.0f;
     weapon->spread = 0.08f;
+    weapon->recoil = 0.12f;
     weapon->damage = 65.0f;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
@@ -82,7 +84,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_rate = 0.65f;
     weapon->last_fire = 0.0f;
     weapon->spread = 0.08f;
-    weapon->damage = 65.0f;
+    weapon->recoil = 0.9f;
+    weapon->damage = 140.0f;
     weapon->is_projectile = true;
     weapon->projectile_mesh = mesh_load(sbox, "res/meshes/items/rocket.obj");
     weapon->projectile_material = sbox->renderer.default_material;

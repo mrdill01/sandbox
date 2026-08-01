@@ -2,9 +2,11 @@
 #define SBOX_H
 
 #include "config.h"
+#include "console.h"
+#include "server.h"
+#include "client.h"
 #include "render.h"
 #include "audio.h"
-#include "console.h"
 #include "math.h"
 #include "entity.h"
 #include "player.h"
@@ -21,7 +23,7 @@
 #include <SDL2/SDL.h>
 
 #define SBOX_VERSION "sbox 1.0"
-//#define SBOX_DEBUG
+#define SBOX_DEBUG
 //#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG
@@ -46,6 +48,7 @@ typedef enum {
 typedef struct sbox_t {
     console_t console;
     cvar_t* cvars;
+    cmd_t* cmds;
     
     bool running;
     uint64_t now;
@@ -68,6 +71,9 @@ typedef struct sbox_t {
     mesh_t* meshes;
     texture_t* textures;
     material_t* materials;
+
+    server_t server;
+    client_t client;
 
     audio_t audio;
 
@@ -94,6 +100,8 @@ extern cvar_t a_volume;
 extern cvar_t m_sens;
 extern cvar_t console;
 extern cvar_t noclip;
+extern cvar_t sv_timescale;
+extern cvar_t sv_respawn_time;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 

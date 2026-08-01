@@ -23,7 +23,7 @@ player_t* gm_spawn_player(sbox_t* sbox, bool is_bot) {
 }
 
 void gm_respawn_player(sbox_t* sbox, player_t* player) {
-    if (sbox->time - player->death_time < PLAYER_RESPAWN_TIME)
+    if (sbox->time - player->death_time < sv_respawn_time.value)
         return;
     player_respawn(sbox, player);
 }

@@ -1,6 +1,9 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include "config.h"
+#include "command.h"
+
 #include <stddef.h>
 
 typedef struct sbox_t sbox_t;

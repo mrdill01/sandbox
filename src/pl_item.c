@@ -45,7 +45,8 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         
         weapon->last_fire = sbox->time;
         a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
-        player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ? 0.02 : 0.12f;
+        player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ?
+            weapon->recoil * 0.1f : weapon->recoil;
 
         if (weapon->is_projectile) {
             vec3 velocity;
@@ -56,6 +57,7 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             entity_init_projectile(sbox, "rocket", start,
                 weapon->projectile_mesh, velocity, &projectile);
             projectile->data.projectile.materials[0] = weapon->projectile_material;
+            glm_quat_copy(camera->rotation, projectile->rotation);
             entlist_add(sbox, &sbox->map.entlist, projectile);
 
         } else {

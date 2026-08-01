@@ -38,6 +38,7 @@ struct SunLight {
 uniform Material materials[MAX_MATERIALS];
 uniform SunLight sun_light;
 uniform vec3 view_position;
+uniform int is_water;
 
 mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
     vec3 dp1 = dFdx(p);
@@ -115,6 +116,15 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     return (kd * sample.albedo.rgb / PI + specular) * radiance * n_dot_l;
 }
 
+float linearize_depth(float depth) {
+    float ndc = depth * 2.0f - 1.0f;
+    float near = 0.01f;
+    float far = 100.0f;
+    float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
+    linear_depth /= far; 
+    return linear_depth;
+}
+
 void main() {
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
     uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
@@ -138,5 +148,13 @@ void main() {
 
     vec3 ambient = vec3(0.5f, 0.5f, 0.9f) * sample.albedo.rgb * sample.ao;
 
-    frag_color = vec4(direct + ambient, sample.albedo.a);
+    vec3 color = direct + ambient;
+    float alpha = sample.albedo.a;
+
+    if (is_water == 1) {
+        float depth = linearize_depth(gl_FragCoord.z);
+        alpha = mix(0.04f, 1.0f, pow(sample.albedo.a * depth, 0.7f));
+    }
+
+    frag_color = vec4(color, alpha);
 }

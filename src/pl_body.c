@@ -74,13 +74,6 @@ void player_init_body(sbox_t* sbox, player_t* player) {
     body->walk_cycle = false;
 }
 
-static void apply_pose(sbox_t* sbox, player_t* player, pose_t* pose) {
-    body_t* body = &player->body;
-    for (int i = 0; i < NUM_BODY_PARTS; i++) {
-        glm_quat_copy(pose->bones[i], body->current_pose.bones[i]);
-    }
-}
-
 static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, float t) {
     body_t* body = &player->body;
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
@@ -94,8 +87,8 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
     body_t* body = &player->body;
 
     if (player->is_me) {
-        glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
-
+        //glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+        glm_quat_copy(sbox->renderer.camera.rotation, body->rotation);
         if (player_is_dead(player))
             glm_quat(body->rotation, rad(-90.0f), 1.0f, 0.0f, 0.0f);
     } else {
@@ -131,7 +124,6 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
     }
 
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
-        body_part_t* part = &body->parts[i];
         glm_quat_copy(body->current_pose.bones[i], body->parts[i].rotation);
     }
 }

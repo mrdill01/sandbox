@@ -4,6 +4,8 @@
 #include "math.h"
 #include "render.h"
 
+#include <stddef.h>
+
 #define ITEM_SPIN_RATE 24.0f
 
 typedef enum {
@@ -28,7 +30,9 @@ typedef struct {
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    vec3 start;
     vec3 velocity;
+    float last_particle;
 } entity_projectile_t;
 
 typedef struct {
@@ -64,6 +68,7 @@ typedef struct {
     vec3 scale;
     bbox_t local_bbox;
     bbox_t world_bbox;
+    float spawn_time;
 
     union {
         entity_mesh_t prop;
@@ -82,7 +87,7 @@ typedef struct entlist_t {
 } entlist_t;
 
 void entity_init_common(
-	const char* name, entity_type_t type, vec3 position, entity_t** out);
+	sbox_t* sbox, const char* name, entity_type_t type, vec3 position, entity_t** out);
 void entity_init_prop(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_projectile(sbox_t* sbox,
@@ -102,6 +107,8 @@ void entity_free(sbox_t* sbox, entity_t* entity);
 void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t* projectile);
 void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* explosion);
 
+mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity);
+void entity_get_materials(sbox_t* sbox, entity_t* entity, material_t** materials, size_t* nmaterials);
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
 
 void entity_prop_set_material(sbox_t* sbox,

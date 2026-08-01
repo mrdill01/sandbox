@@ -163,15 +163,8 @@ static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
     text_position[0] += button_size[0] + 16.0f;
     ui_draw_text_thick(sbox, ui, "MAIN MENU", text_position, 64.0f, 12, COLOR_WHITE);
 
-    if (ui_draw_button(sbox, ui, "START GAME", position, button_size)) {
-        sbox->ui_state = UI_STATE_IN_GAME;
-
-        map_load(sbox, &sbox->map);
-
-        sbox->players[0] = gm_spawn_player(sbox, false);
-        sbox->player = sbox->players[0];
-        sbox->player->is_me = true;
-    }
+    if (ui_draw_button(sbox, ui, "START GAME", position, button_size))
+        cmd_run(sbox, "host", NULL);
 
     position[1] += button_size[1];
     ui_draw_button(sbox, ui, "SETTINGS", position, button_size);
@@ -191,9 +184,9 @@ static void draw_loading_screen(sbox_t* sbox, ui_t* ui) {
 
     float font_size = 64.0f;
     vec2 position = {
-        r_width.value / 2.0f - ui_measure_text("MATCH LOADING...", font_size) / 2.0f,
+        r_width.value / 2.0f - ui_measure_text("LOADING GAME...", font_size) / 2.0f,
         r_height.value / 2.0f - font_size / 2.0f};
-    ui_draw_text_thick(sbox, ui, "MATCH LOADING...", position, font_size, 12, COLOR_WHITE);
+    ui_draw_text_thick(sbox, ui, "LOADING GAME...", position, font_size, 12, COLOR_WHITE);
 }
 
 static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
@@ -223,6 +216,21 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     position[1] += spacing;
     sprintf(text, "water level: %g", sbox->player->water_level);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
+
+    position[1] += spacing;
+    sprintf(text, "server: %s", (sbox->server.is_running) ? "running" : "stopped");
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
+    if (sbox->client.is_connected)
+        sprintf(text, "client: connected (%d ms)", cl_get_ping(sbox, &sbox->client));
+    else
+        sprintf(text, "client: disconnected");
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
 
     position[1] += spacing;
     sprintf(text, "draw calls: %d", renderer->stats.drawcalls);
@@ -369,9 +377,8 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
     ui_draw_button(sbox, ui, "SETTINGS", position, button_size);
 
     position[1] += button_size[1];
-    if (ui_draw_button(sbox, ui, "DISCONNECT", position, button_size)) {
-        sbox->ui_state = UI_STATE_MAIN_MENU;
-    }
+    if (ui_draw_button(sbox, ui, "DISCONNECT", position, button_size))
+        cmd_run(sbox, "disconnect", NULL);
 }
 
 static void draw_death_screen(sbox_t* sbox, ui_t* ui) {
@@ -396,12 +403,12 @@ static void draw_death_screen(sbox_t* sbox, ui_t* ui) {
     font_size = 32.0f;
     char buffer[64];
 
-    if (sbox->time - sbox->player->death_time >= PLAYER_RESPAWN_TIME) {
+    if (sbox->time - sbox->player->death_time >= sv_respawn_time.value) {
         strcpy(buffer, "Press [SPACE] to respawn");
     
     } else {
-        sprintf(buffer, "Respawn in %d...",
-            (int)(PLAYER_RESPAWN_TIME - (sbox->time - sbox->player->death_time) + 1));
+        sprintf(buffer, "Respawn in %.2f...",
+            sv_respawn_time.value - (sbox->time - sbox->player->death_time));
     }
 
     text_width = ui_measure_text(buffer, font_size);

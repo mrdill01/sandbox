@@ -4,7 +4,8 @@
 #define PITCH_LIMIT 89.99
 
 void camera_init(sbox_t* sbox, camera_t* camera) {
-    glm_vec3_copy((vec3)GLM_VEC3_ZERO_INIT, camera->position);
+    glm_vec3_zero(camera->position);
+    glm_quat_identity(camera->rotation);
     vec3 angles = {0.0f, 90.0f, 0.0f};
     glm_vec3_copy(angles, camera->angles);
     glm_vec3_copy(X_AXIS, camera->right);
@@ -16,6 +17,19 @@ void camera_init(sbox_t* sbox, camera_t* camera) {
 }
 
 void camera_tick(sbox_t* sbox, camera_t* camera) {
+    quat yaw;
+    quat roll;
+    quat pitch;
+
+    glm_quat(yaw, rad(-camera->angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+    glm_quat(roll, rad(camera->angles[2]), 0.0f, 0.0f, 1.0f);
+    glm_quat(pitch, rad(-camera->angles[0]), 1.0f, 0.0f, 0.0f);
+
+    glm_quat_identity(camera->rotation);
+    glm_quat_mul(camera->rotation, yaw, camera->rotation);
+    glm_quat_mul(camera->rotation, roll, camera->rotation);
+    glm_quat_mul(camera->rotation, pitch, camera->rotation);
+
     camera->forward[0] = cos(rad(camera->angles[1])) * cos(rad(camera->angles[0]));
     camera->forward[1] = sin(rad(camera->angles[0]));
     camera->forward[2] = sin(rad(camera->angles[1])) * cos(rad(camera->angles[0]));

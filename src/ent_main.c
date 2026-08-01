@@ -2,7 +2,7 @@
 #include "sbox.h"
 
 void entity_init_common(
-	const char* name, entity_type_t type, vec3 position, entity_t** out)
+	sbox_t* sbox, const char* name, entity_type_t type, vec3 position, entity_t** out)
 {
 	if (!out) return;
 
@@ -16,6 +16,7 @@ void entity_init_common(
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
 	entity->local_bbox = (bbox_t){0};
 	entity->world_bbox = (bbox_t){0};
+	entity->spawn_time = sbox->time;
 
 	*out = entity;
 }
@@ -24,7 +25,7 @@ void entity_init_prop(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
-	entity_init_common(name, ENTITY_MESH, (vec3){x, y, z}, &entity);
+	entity_init_common(sbox, name, ENTITY_MESH, (vec3){x, y, z}, &entity);
     entity->data.prop.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.prop.materials[i] = NULL;
@@ -41,7 +42,7 @@ void entity_init_vehicle(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
-	entity_init_common(name, ENTITY_VEHICLE, (vec3){x, y, z}, &entity);
+	entity_init_common(sbox, name, ENTITY_VEHICLE, (vec3){x, y, z}, &entity);
     entity->data.vehicle.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
         entity->data.vehicle.materials[i] = NULL;
@@ -58,7 +59,7 @@ void entity_init_sun_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	entity_init_common(name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
+	entity_init_common(sbox, name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(dir, entity->data.sun_light.direction);
 	glm_vec3_norm(entity->data.sun_light.direction);
 	glm_vec3_copy(color, entity->data.sun_light.color);
@@ -73,7 +74,7 @@ void entity_init_point_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	entity_init_common(name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
+	entity_init_common(sbox, name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(color, entity->data.point_light.color);
 
 	*out = entity;
@@ -85,7 +86,7 @@ void entity_free(sbox_t* sbox, entity_t* entity) {
     free(entity);
 }
 
-static mesh_t* get_mesh(sbox_t* sbox, entity_t* entity) {
+mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
 	switch (entity->type) {
 	case ENTITY_MESH: return entity->data.prop.mesh;
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
@@ -93,7 +94,7 @@ static mesh_t* get_mesh(sbox_t* sbox, entity_t* entity) {
 	}
 }
 
-static void get_materials(sbox_t* sbox,
+void entity_get_materials(sbox_t* sbox,
 	entity_t* entity,
 	material_t** materials,
 	size_t* nmaterials)
@@ -101,20 +102,20 @@ static void get_materials(sbox_t* sbox,
 	switch (entity->type) {
 	case ENTITY_MESH: {
 		memcpy(materials, entity->data.prop.materials,
-			sizeof(material_t*) * entity->data.prop.mesh->nmaterials);
-		*nmaterials = entity->data.prop.mesh->nmaterials;
+			sizeof(material_t*) * MAX_MATERIALS);
+		if (nmaterials)
+			*nmaterials = entity->data.prop.mesh->nmaterials;
 		break;
 	}
 	case ENTITY_PROJECTILE: {
 		memcpy(materials, entity->data.projectile.materials,
-			sizeof(material_t*) * entity->data.projectile.mesh->nmaterials);
-		*nmaterials = entity->data.projectile.mesh->nmaterials;
+			sizeof(material_t*) * MAX_MATERIALS);
+		if (nmaterials)
+			*nmaterials = entity->data.projectile.mesh->nmaterials;
 		break;
 	}
 	default: break;
 	}
-
-	*nmaterials = MAX_MATERIALS;
 }
 
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
@@ -135,11 +136,11 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	drawcall->entity = malloc(strlen(entity->name));
 	strcpy(drawcall->entity, entity->name);
 
-	drawcall->mesh = get_mesh(sbox, entity);
+	drawcall->mesh = entity_get_mesh(sbox, entity);
 
 	material_t* materials[4] = {0};
 	size_t nmaterials = 0;
-	get_materials(sbox, entity, materials, &nmaterials);
+	entity_get_materials(sbox, entity, materials, &nmaterials);
 	memcpy(drawcall->materials, materials, sizeof(material_t*) * MAX_MATERIALS);
 
 	int n = 0;
@@ -208,7 +209,7 @@ void entlist_free(sbox_t* sbox, entlist_t* entlist) {
 }
 
 static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
-	mesh_t* mesh = get_mesh(sbox, entity);
+	mesh_t* mesh = entity_get_mesh(sbox, entity);
 	if (!mesh) return;
 	
 	entity->local_bbox = mesh->bbox;

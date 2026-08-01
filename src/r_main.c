@@ -195,7 +195,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm(tmp);
+		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
 	}
 
 	qsort(renderer->drawcalls, renderer->ndrawcalls,
@@ -209,7 +209,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
 		vec3 tmp;
 		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm(tmp);
+		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
 	}
 
 	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,
@@ -217,22 +217,25 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
-        material_t* material = drawcall->materials[0];
-        if (!material) continue;
-        if (strcmp(material->name, "water") == 0) {
-            material->scrollx += material->scroll_speed * sbox->dt;
-            material->scrolly += material->scroll_speed * sbox->dt;
+        for (int i = 0; i < MAX_MATERIALS; i++) {
+            material_t* material = drawcall->materials[i];
+            if (!material) continue;
+            if (strcmp(material->name, "water") == 0) {
+                material->scrollx += material->scroll_speed * sbox->dt;
+                material->scrolly += material->scroll_speed * sbox->dt;
+            }
         }
     }
 
     for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
-        material_t* material = drawcall->materials[0];
-        if (!material) continue;
-        printf("scroll %g\n", material->scrollx);
-        if (strcmp(material->name, "water") == 0) {
-            material->scrollx += material->scroll_speed * sbox->dt;
-            material->scrolly += material->scroll_speed * sbox->dt;
+        for (int i = 0; i < MAX_MATERIALS; i++) {
+            material_t* material = drawcall->materials[i];
+            if (!material) continue;
+            if (strcmp(material->name, "water") == 0) {
+                material->scrollx += material->scroll_speed * sbox->dt;
+                material->scrolly += material->scroll_speed * sbox->dt;
+            }
         }
     }
 }

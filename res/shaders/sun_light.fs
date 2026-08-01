@@ -69,23 +69,23 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
 vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     vec3 l = -light.direction;
     vec3 h = normalize(view_dir + l);
-    float attenuation = 1.0;
+    float attenuation = 1.0f;
     vec3 radiance = light.color * attenuation;
 
     float ndf = distribution_ggx(sample.normal, h, sample.roughness);   
     float g = geometry_smith(sample.normal, view_dir, l, sample.roughness);      
-    vec3 f = fresnel_schlick(max(dot(h, view_dir), 0.0), f0);
+    vec3 f = fresnel_schlick(max(dot(h, view_dir), 0.0f), f0);
         
     vec3 numerator = ndf * g * f; 
-    float denominator = 4.0 * max(dot(sample.normal, view_dir), 0.0) *
-        max(dot(sample.normal, l), 0.0) + 0.0001;
+    float denominator = 4.0f * max(dot(sample.normal, view_dir), 0.0f) *
+        max(dot(sample.normal, l), 0.0f) + 0.0001f;
     vec3 specular = numerator / denominator;
     
     vec3 ks = f;
-    vec3 kd = vec3(1.0) - ks;
-    kd *= 1.0 - sample.metallic;	  
+    vec3 kd = vec3(1.0f) - ks;
+    kd *= 1.0f - sample.metallic;	  
 
-    float n_dot_l = max(dot(sample.normal, l), 0.0);        
+    float n_dot_l = max(dot(sample.normal, l), 0.0f);        
     return (kd * sample.albedo / PI + specular) * radiance * n_dot_l * (1.0f - sample.shadow);
 }
 

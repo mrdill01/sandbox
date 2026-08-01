@@ -220,7 +220,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/water_n.png",
         1, 1, true, PHYS_MAT_WATER);
     water->is_water = true;
-    water->scroll_speed = 0.5f;
+    water->scroll_speed = 0.05f;
 
     material_t* sand = material_load(sbox,
         "sand",
@@ -837,6 +837,7 @@ void map_load(sbox_t* sbox, map_t* map) {
 
 void map_free(sbox_t* sbox, map_t* map) {
     entlist_free(sbox, &map->entlist);
+    map->is_loaded = false;
 }
 
 static void send_to_renderer(sbox_t* sbox, map_t* map) {
@@ -844,9 +845,10 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
         entity_t* entity = sbox->map.entlist.ents[i];
         if (!entity) continue;
 
-        drawcall_t drawcall;
-        if (entity_get_drawcall(sbox, entity, &drawcall))
+        drawcall_t drawcall = {0};
+        if (entity_get_drawcall(sbox, entity, &drawcall)) {
             r_add_drawcall(&sbox->renderer, drawcall);
+        }
     }
 }
 
