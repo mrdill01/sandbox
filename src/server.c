@@ -41,7 +41,13 @@ void sv_tick(sbox_t* sbox, server_t* server) {
     while (enet_host_service(server->host, &event, NET_TIMEOUT_MSEC) > 0) {
         switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT: {
-            info(sbox, "[server] client connected");
+            char ip[32];
+            enet_address_get_host_ip(&event.peer->address, ip, 32);
+            info(sbox, "[server] client connected from %s", ip);
+
+            ENetPacket* packet = enet_packet_create("welcome", strlen("welcome"), ENET_PACKET_FLAG_RELIABLE);
+            enet_peer_send(event.peer, 0, packet);
+            
             break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {

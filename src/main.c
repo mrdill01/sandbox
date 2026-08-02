@@ -11,7 +11,7 @@
 
 bool init(sbox_t* sbox);
 void tick(sbox_t* sbox);
-void quit(sbox_t* sbox);
+void quit_game(sbox_t* sbox);
 
 int main(int argc, char* argv[]) {
     sbox_t sbox;
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
 
     #ifdef SBOX_DEBUG
-    cmd_run(&sbox, "host", NULL);
+    cmd_run(&sbox, "host", NULL, 0);
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
     SDL_GL_SwapWindow(sbox.window);
     #endif
@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
         r_render(&sbox, &sbox.renderer);
     }
 
-    quit(&sbox);
+    quit_game(&sbox);
     return EXIT_SUCCESS;
 }
 
@@ -167,6 +167,16 @@ void tick(sbox_t* sbox) {
         cvar_toggle(sbox, "r_debug_draw_colliders");
     }
 
+    if (sbox->keys[SDL_SCANCODE_F5]) {
+        sbox->keys[SDL_SCANCODE_F5] = false;
+        if (r_debug_buffer.value == 0) cvar_set(sbox, "r_debug_buffer", "1");
+        else if (r_debug_buffer.value == 1) cvar_set(sbox, "r_debug_buffer", "2");
+        else if (r_debug_buffer.value == 2) cvar_set(sbox, "r_debug_buffer", "3");
+        else if (r_debug_buffer.value == 3) cvar_set(sbox, "r_debug_buffer", "4");
+        else if (r_debug_buffer.value == 4) cvar_set(sbox, "r_debug_buffer", "5");
+        else if (r_debug_buffer.value == 5) cvar_set(sbox, "r_debug_buffer", "0");
+    }
+
     if (sbox->keys[SDL_SCANCODE_F11] ||
         (sbox->keys[SDL_SCANCODE_LALT] && sbox->keys[SDL_SCANCODE_RETURN]))
     {
@@ -181,7 +191,7 @@ void tick(sbox_t* sbox) {
     }
 }
 
-void quit(sbox_t* sbox) {
+void quit_game(sbox_t* sbox) {
     info(sbox, "shutting down...");
 
     r_free(sbox, &sbox->renderer);

@@ -63,11 +63,15 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_SPACE])
         player->buttons |= PLAYER_BUTTON_JUMP;
     
-    if (sbox->keys[SDL_SCANCODE_LCTRL])
+    if (sbox->keys[SDL_SCANCODE_LCTRL]) {
         player->buttons |= PLAYER_BUTTON_CROUCH;
+        player->move_input[1] -= 1.0f;
+    }
 
-    if (sbox->keys[SDL_SCANCODE_LSHIFT])
+    if (sbox->keys[SDL_SCANCODE_LSHIFT]) {
         player->buttons |= PLAYER_BUTTON_SPRINT;
+        player->move_input[1] += 1.0f;
+    }
 
     if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL])
         player->buttons |= PLAYER_BUTTON_FIRE;

@@ -18,6 +18,7 @@ item_t* item_new(sbox_t* sbox,
     item->count = 0;
     item->mesh = mesh;
     memcpy(item->materials, materials, sizeof(material_t*) * MAX_MATERIALS);
+    item->yaw = 90.0f;
     return item;
 }
 
@@ -51,7 +52,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/shooter_fire.wav");
     weapon->fire_rate = 0.1f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.1f;
+    weapon->min_spread = 0.075f;
+    weapon->max_spread = 0.2f;
     weapon->recoil = 0.15f;
     weapon->damage = 25.0f;
     weapon->is_projectile = false;
@@ -66,7 +68,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->fire_sound = sound_load(sbox, &sbox->audio, "res/sounds/weapons/pistol_fire.wav");
     weapon->fire_rate = 0.25f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.08f;
+    weapon->min_spread = 0.065f;
+    weapon->max_spread = 0.25f;
     weapon->recoil = 0.12f;
     weapon->damage = 65.0f;
     weapon->is_projectile = false;
@@ -83,13 +86,14 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
         "res/sounds/weapons/rocket_launcher_fire.wav");
     weapon->fire_rate = 0.65f;
     weapon->last_fire = 0.0f;
-    weapon->spread = 0.08f;
-    weapon->recoil = 0.9f;
+    weapon->min_spread = 0.01f;
+    weapon->max_spread = 0.125f;
+    weapon->recoil = 1.0f;
     weapon->damage = 140.0f;
     weapon->is_projectile = true;
     weapon->projectile_mesh = mesh_load(sbox, "res/meshes/items/rocket.obj");
     weapon->projectile_material = sbox->renderer.default_material;
-    weapon->projectile_speed = 20.0f;
+    weapon->projectile_speed = 16.0f;
 
     info(sbox, "inventory loaded.");
 }

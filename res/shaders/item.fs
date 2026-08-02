@@ -36,7 +36,6 @@ struct SunLight {
 };
 
 uniform Material materials[MAX_MATERIALS];
-uniform SunLight sun_light;
 uniform vec3 view_position;
 
 mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
@@ -92,11 +91,11 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
     return f0 + (1.0f - f0) * pow(clamp(1.0f - cos_theta, 0.0f, 1.0f), 5.0f);
 }
 
-vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
-    vec3 l = -sun_light.direction;
+vec3 draw_light(vec3 view_dir, vec3 light_dir, vec3 f0, vec3 light_color, MaterialSample sample) {
+    vec3 l = -light_dir;
     vec3 h = normalize(view_dir + l);
     float attenuation = 1.0;
-    vec3 radiance = sun_light.color * attenuation;
+    vec3 radiance = light_color * attenuation;
 
     float ndf = distribution_ggx(sample.normal, h, sample.roughness);   
     float g = geometry_smith(sample.normal, view_dir, l, sample.roughness);      
@@ -116,6 +115,10 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
 }
 
 void main() {
+    SunLight sun_light;
+    sun_light.direction = vec3(-1.0f, -1.0f, -1.0f);
+    sun_light.color = vec3(4.0f);
+
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
     uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
 
@@ -134,10 +137,9 @@ void main() {
     f0 = mix(f0, sample.albedo.rgb, sample.metallic);
 
     vec3 direct = vec3(0.0);
-    direct += draw_light(view_dir, f0, sample);
+    direct += draw_light(view_dir, sun_light.direction, f0, sun_light.color, sample);
 
     vec3 ambient = vec3(0.5f, 0.5f, 0.9f) * sample.albedo.rgb * sample.ao;
 
     frag_color = vec4(direct + ambient, sample.albedo.a);
-    frag_color = vec4(vs_uv, 0.0f, 1.0f);
 }

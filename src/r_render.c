@@ -5,29 +5,57 @@
 
 static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* inventory) {
     r_set_shader(renderer, renderer->item_shader);
-    glViewport(0, 0, ITEM_PREVIEW_RES, ITEM_PREVIEW_RES);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-
-    camera_t camera;
-    camera_init(sbox, &camera);
-    camera.position[2] = -3.0f;
-
-    camera_get_projection_matrix(&camera, r_width.value, r_height.value,
-        renderer->projection);
-    camera_get_view_matrix(&camera, renderer->view);
-        
-    r_set_mat4(sbox, renderer, "view", renderer->view);
-    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
     for (int i = 0; i < INVENTORY_SLOTS; i++) {
         item_t* item = inventory->items[i];
         if (!item) continue;
 
+        r_set_framebuffer(renderer, renderer->item_fbos[i]);
+        glViewport(0, 0, ITEM_PREVIEW_RES, ITEM_PREVIEW_RES);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        camera_t camera;
+        camera_init(sbox, &camera);
+
+        vec3 center;
+        bbox_get_center(&item->mesh->bbox, center);
+        glm_vec3_copy(center, camera.position);
+
+        vec3 size;
+        bbox_get_size(&item->mesh->bbox, size);
+
+        camera.position[2] = -size[2] * 1.4f;
+        camera.position[1] += 0.2f;
+
+        mat4 view;
+        mat4 projection;
+        camera_get_view_matrix(&camera, view);
+        camera_get_projection_matrix(&camera, ITEM_PREVIEW_RES, ITEM_PREVIEW_RES, projection);
+            
+        r_set_mat4(sbox, renderer, "view", view);
+        r_set_mat4(sbox, renderer, "projection", projection);
+
+        r_set_vec3(sbox, renderer, "view_position", camera.position);
+
         mat4 model;
         glm_mat4_identity(model);
+
+        quat yaw;
+        glm_quat(yaw, rad(item->yaw), 0.0f, 1.0f, 0.0f);
+        item->yaw += sbox->dt * 90.0f;
+
+        quat roll;
+        glm_quat(roll, rad(180.0f), 0.0f, 0.0f, 1.0f);
+
+        glm_quat_rotate(model, yaw, model);
+        glm_quat_rotate(model, roll, model);
+
         r_set_mat4(sbox, renderer, "model", model);
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
@@ -36,10 +64,13 @@ static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* invent
         }
 
         r_draw_mesh(renderer, item->mesh);
+
+        r_set_framebuffer(renderer, NULL);
     }
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
 }
 
 static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
@@ -67,8 +98,8 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     float near = 1.0f;
     float far = 32.0f;
     bbox_t frustum = bbox_new((vec3){-far, -far, near}, (vec3){far, far, far});
-    //frustum = bbox_translate(&frustum, renderer->camera.position);
     
+    //frustum = bbox_translate(&frustum, renderer->camera.position);
     mat4 projection;
     glm_ortho(frustum.min[0], frustum.max[0],
         frustum.min[1], frustum.max[1],
@@ -80,36 +111,28 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     vec3 dir;
     glm_vec3_copy(sun_light->direction, dir);
-    //glm_vec3_scale(dir, -20.0f, dir);
+    glm_vec3_scale(dir, -20.0f, dir);
 
     vec3 position;
     glm_vec3_copy(center, position);
-    glm_vec3_add(position, dir, position);
     
     vec3 target;
     glm_vec3_copy(center, target);
+    glm_vec3_add(target, dir, target);
 
     mat4 view;
-    glm_lookat(position, target, Y_AXIS, view);
+    glm_lookat((vec3){5.0f, 20.0f, 10.25f}, (vec3){0.1f, 0.1f, 0.1f}, Y_AXIS, view);
 
     glm_mat4_identity(sun_light->matrix);
     glm_mat4_mul(sun_light->matrix, projection, sun_light->matrix);
     glm_mat4_mul(sun_light->matrix, view, sun_light->matrix);
-
     r_set_mat4(sbox, renderer, "matrix", sun_light->matrix);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
-        if (!drawcall->materials[0]) continue;
+        //if (!drawcall->materials[0]) continue;
 
         r_set_mat4(sbox, renderer, "model", drawcall->model);
-
-        r_set_int(sbox, renderer, "albedo", 0);
-        r_set_texture(renderer, drawcall->materials[0]->albedo, 0);
-
-        r_set_float(sbox, renderer, "tilex", drawcall->materials[0]->tilex);
-        r_set_float(sbox, renderer, "tiley", drawcall->materials[0]->tiley);
-
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
     }
@@ -119,15 +142,25 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
         if (!drawcall->materials[0]) continue;
         
         r_set_mat4(sbox, renderer, "model", drawcall->model);
-
-        r_set_int(sbox, renderer, "albedo", 0);
-        r_set_texture(renderer, drawcall->materials[0]->albedo, 0);
-
+        r_set_texture(sbox, renderer, "albedo", drawcall->materials[0]->albedo, 0);
         r_set_float(sbox, renderer, "tilex", drawcall->materials[0]->tilex);
         r_set_float(sbox, renderer, "tiley", drawcall->materials[0]->tiley);
         
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
+    }
+
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        particle_t* particle = &renderer->particles[i];
+        if (particle->is_free) continue;
+
+        mat4 model;
+        glm_mat4_identity(model);
+        glm_translate(model, particle->position);
+        r_set_mat4(sbox, renderer, "model", model);
+        r_set_texture(sbox, renderer, "albedo", particle->texture, 0);
+
+        r_draw_mesh(renderer, particle->mesh);
     }
 
     glDisable(GL_DEPTH_TEST);
@@ -195,8 +228,7 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
     glm_mat4_inv(projection, projection);
     r_set_mat4(sbox, renderer, "inv_projection", projection);
 
-    r_set_int(sbox, renderer, "cubemap", 0);
-    r_set_texture(renderer, sbox->map.skybox, 0);
+    r_set_texture(sbox, renderer, "cubemap", sbox->map.skybox, 0);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
 
@@ -210,14 +242,10 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->ambient_light_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
-    r_set_int(sbox, renderer, "gbuffer.position", 0);
-    r_set_int(sbox, renderer, "gbuffer.albedo_roughness", 1);
-    r_set_int(sbox, renderer, "gbuffer.normal", 2);
-    r_set_int(sbox, renderer, "gbuffer.depth", 3);
-    r_set_texture(renderer, renderer->gbuffer->textures[0], 0);
-    r_set_texture(renderer, renderer->gbuffer->textures[1], 1);
-    r_set_texture(renderer, renderer->gbuffer->textures[2], 2);
-    r_set_texture(renderer, renderer->gbuffer->textures[3], 3);
+    r_set_texture(sbox, renderer, "gbuffer.position", renderer->gbuffer->textures[0], 0);
+    r_set_texture(sbox, renderer, "gbuffer.albedo_roughness", renderer->gbuffer->textures[1], 1);
+    r_set_texture(sbox, renderer, "gbuffer.normal", renderer->gbuffer->textures[2], 2);
+    r_set_texture(sbox, renderer, "gbuffer.depth", renderer->gbuffer->textures[3], 3);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
     r_set_framebuffer(renderer, NULL);
@@ -230,28 +258,21 @@ static void render_sun_light(sbox_t* sbox, renderer_t* renderer) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    r_set_int(sbox, renderer, "gbuffer.position", 0);
-    r_set_int(sbox, renderer, "gbuffer.albedo_roughness", 1);
-    r_set_int(sbox, renderer, "gbuffer.normal", 2);
-    r_set_int(sbox, renderer, "gbuffer.depth", 3);
-    r_set_texture(renderer, renderer->gbuffer->textures[0], 0);
-    r_set_texture(renderer, renderer->gbuffer->textures[1], 1);
-    r_set_texture(renderer, renderer->gbuffer->textures[2], 2);
-    r_set_texture(renderer, renderer->gbuffer->textures[3], 3);
+    r_set_texture(sbox, renderer, "gbuffer.position", renderer->gbuffer->textures[0], 0);
+    r_set_texture(sbox, renderer, "gbuffer.albedo_roughness", renderer->gbuffer->textures[1], 1);
+    r_set_texture(sbox, renderer, "gbuffer.normal", renderer->gbuffer->textures[2], 2);
+    r_set_texture(sbox, renderer, "gbuffer.depth", renderer->gbuffer->textures[3], 3);
 
     r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
 
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENTITY_SUN_LIGHT) continue;
+        if (!entity || entity->type != ENTITY_SUN_LIGHT) continue;
         entity_sun_light_t* sun_light = &entity->data.sun_light;
 
         r_set_vec3(sbox, renderer, "light.direction", sun_light->direction);
         r_set_vec3(sbox, renderer, "light.color", sun_light->color);
-
-        r_set_int(sbox, renderer, "light.shadow", 4);
-        r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 4);
-
+        r_set_texture(sbox, renderer, "light.shadow", renderer->sun_shadow_buffer->textures[0], 4);
         r_set_mat4(sbox, renderer, "light.matrix",
             (r_shadows.value) ? sun_light->matrix : GLM_MAT4_IDENTITY);
 
@@ -281,20 +302,16 @@ static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    r_set_int(sbox, renderer, "gbuffer.position", 0);
-    r_set_int(sbox, renderer, "gbuffer.albedo_roughness", 1);
-    r_set_int(sbox, renderer, "gbuffer.normal", 2);
-    r_set_int(sbox, renderer, "gbuffer.depth", 3);
-    r_set_texture(renderer, renderer->gbuffer->textures[0], 0);
-    r_set_texture(renderer, renderer->gbuffer->textures[1], 1);
-    r_set_texture(renderer, renderer->gbuffer->textures[2], 2);
-    r_set_texture(renderer, renderer->gbuffer->textures[3], 3);
+    r_set_texture(sbox, renderer, "gbuffer.position", renderer->gbuffer->textures[0], 0);
+    r_set_texture(sbox, renderer, "gbuffer.albedo_roughness", renderer->gbuffer->textures[1], 1);
+    r_set_texture(sbox, renderer, "gbuffer.normal", renderer->gbuffer->textures[2], 2);
+    r_set_texture(sbox, renderer, "gbuffer.depth", renderer->gbuffer->textures[3], 3);
 
     r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
 
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENTITY_POINT_LIGHT) continue;
+        if (!entity || entity->type != ENTITY_POINT_LIGHT) continue;
         entity_point_light_t* point_light = &entity->data.point_light;
 
         r_set_vec3(sbox, renderer, "light.position", entity->position);
@@ -345,6 +362,9 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
     r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
+    r_set_vec2(sbox, renderer, "screen_size",
+        (vec2){r_width.value * r_scale.value, r_height.value * r_scale.value});
+    r_set_texture(sbox, renderer, "g_depth", renderer->gbuffer->textures[3], 5);
 
     entity_t* sun_entity = entlist_find_by_name(sbox, &sbox->map.entlist, "sun");
     if (!sun_entity || sun_entity->type != ENTITY_SUN_LIGHT) {
@@ -355,6 +375,8 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     entity_sun_light_t* sun_light = &sun_entity->data.sun_light;
     r_set_vec3(sbox, renderer, "sun_light.direction", sun_light->direction);
     r_set_vec3(sbox, renderer, "sun_light.color", sun_light->color);
+    r_set_texture(sbox, renderer, "sun_light.shadow", renderer->sun_shadow_buffer->textures[0], 6);
+    r_set_mat4(sbox, renderer, "sun_light.matrix", sun_light->matrix);
 
     for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
@@ -383,14 +405,13 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->screen_shader);
     glViewport(0, 0, r_width.value, r_height.value);
 
-    r_set_int(sbox, renderer, "screen", 0);
-    r_set_int(sbox, renderer, "depth", 1);
-    r_set_int(sbox, renderer, "position", 2);
-    r_set_int(sbox, renderer, "debug", 3);
-    r_set_texture(renderer, renderer->screen_buffer->textures[0], 0);
-    r_set_texture(renderer, renderer->gbuffer->textures[3], 1);
-    r_set_texture(renderer, renderer->gbuffer->textures[0], 2);
-    r_set_texture(renderer, renderer->sun_shadow_buffer->textures[0], 3);
+    r_set_texture(sbox, renderer, "screen", renderer->screen_buffer->textures[0], 0);
+    r_set_texture(sbox, renderer, "g_position", renderer->gbuffer->textures[0], 1);
+    r_set_texture(sbox, renderer, "g_albedo_roughness", renderer->gbuffer->textures[1], 2);
+    r_set_texture(sbox, renderer, "g_normal", renderer->gbuffer->textures[2], 3);
+    r_set_texture(sbox, renderer, "g_depth", renderer->gbuffer->textures[3], 4);
+    r_set_texture(sbox, renderer, "sun_shadow", renderer->sun_shadow_buffer->textures[0], 5);
+    r_set_int(sbox, renderer, "debug_buffer", (int)r_debug_buffer.value);
 
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
@@ -400,7 +421,7 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     vec3 sun_direction = {0.0f, 0.0f, 0.0f};
     for (size_t i = 0; i < sbox->map.entlist.len; i++) {
         entity_t* entity = sbox->map.entlist.ents[i];
-        if (entity->type != ENTITY_SUN_LIGHT) continue;
+        if (!entity || entity->type != ENTITY_SUN_LIGHT) continue;
         glm_vec3_copy(entity->data.sun_light.direction, sun_direction);
     }
     r_set_vec3(sbox, renderer, "sun_direction", sun_direction);
@@ -421,6 +442,7 @@ void r_render(sbox_t* sbox, renderer_t* renderer) {
         if (!sbox->players[i]) continue;
         player_render(sbox, sbox->players[i], renderer);
     }
+
     render_items(sbox, renderer, &sbox->player->inventory);
     render_shadows(sbox, renderer);
     render_gbuffer(sbox, renderer);

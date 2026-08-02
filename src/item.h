@@ -22,7 +22,8 @@ typedef struct {
     sound_t* fire_sound;
     float fire_rate;
     float last_fire;
-    float spread;
+    float min_spread;
+    float max_spread;
     float recoil;
     float damage;
     
@@ -38,6 +39,7 @@ typedef struct {
     int count;
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    float yaw;
     union {
         weapon_t weapon;
     } data;

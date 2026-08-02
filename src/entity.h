@@ -28,10 +28,12 @@ typedef struct {
 } entity_mesh_t;
 
 typedef struct {
+    int owner_id;
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
     vec3 start;
     vec3 velocity;
+    float damage;
     float last_particle;
 } entity_projectile_t;
 
@@ -42,6 +44,7 @@ typedef struct {
 
 typedef struct {
     float radius;
+    float damage;
 } entity_explosion_t;
 
 typedef struct {
@@ -60,7 +63,7 @@ typedef struct {
 } entity_point_light_t;
 
 typedef struct {
-    bool is_free;
+    int id;
     char* name;
     entity_type_t type;
     vec3 position;
@@ -91,7 +94,13 @@ void entity_init_common(
 void entity_init_prop(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_projectile(sbox_t* sbox,
-    const char* name, vec3 position, mesh_t* mesh, vec3 velocity, entity_t** out);
+    const char* name,
+    vec3 position,
+    int owner_id,
+    mesh_t* mesh,
+    vec3 velocity,
+    float damage,
+    entity_t** out);
 void entity_init_vehicle(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_explosion(sbox_t* sbox,

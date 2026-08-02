@@ -94,8 +94,7 @@ float compute_shadow(vec4 frag_pos_light_space, vec3 normal) {
     proj_coords = proj_coords * 0.5f + 0.5f;
     float closest_depth = texture(light.shadow, proj_coords.xy).r;
     float current_depth = proj_coords.z;
-    vec3 light_dir = light.direction;
-    float bias = max(0.002 * (1.0 - dot(normal, light_dir)), 0.0005);
+    float bias = max(0.002 * (1.0 - dot(normal, light.direction)), 0.0005);
 
     float shadow = 0.0f;
     vec2 texel_size = 1.0f / textureSize(light.shadow, 0);

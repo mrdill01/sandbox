@@ -30,6 +30,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* bench_mesh = mesh_load(sbox, "res/meshes/bench.obj");
     mesh_t* stone_wall_mesh = mesh_load(sbox, "res/meshes/stone_wall.obj");
     mesh_t* water_mesh = mesh_load(sbox, "res/meshes/water.obj");
+    mesh_t* underwater_mesh = mesh_load(sbox, "res/meshes/underwater.obj");
     mesh_t* car_mesh = mesh_load(sbox, "res/meshes/car.obj");
     mesh_t* helicopter_mesh = mesh_load(sbox, "res/meshes/helicopter.obj");
     mesh_t* ship_mesh = mesh_load(sbox, "res/meshes/ship.obj");
@@ -125,7 +126,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/wood2.png",
         "res/textures/materials/wood2_r.png",
         "res/textures/materials/wood2_n.png",
-        2, 2, false, PHYS_MAT_WOOD);
+        1.5f, 1.5f, false, PHYS_MAT_WOOD);
 
     material_t* wood3 = material_load(sbox,
         "wood3",
@@ -695,7 +696,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, water, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "underwater", 0.0f, -2.0f, 0.0f, water_mesh, &entity);
+    entity_init_prop(sbox, "underwater", 0.0f, -2.0f, 0.0f, underwater_mesh, &entity);
     entity_prop_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 

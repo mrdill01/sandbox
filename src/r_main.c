@@ -78,7 +78,14 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
 
     renderer->p_fire = texture_load(sbox, "res/textures/particles/p_fire.png", TEX_FILTER_NEAREST);
     renderer->p_smoke = texture_load(sbox, "res/textures/particles/p_smoke.png", TEX_FILTER_NEAREST);
-    renderer->p_steam = texture_load(sbox, "res/textures/particles/p_steam.png", TEX_FILTER_NEAREST);
+    renderer->p_steam[0] =
+        texture_load(sbox, "res/textures/particles/p_steam.png", TEX_FILTER_NEAREST);
+    renderer->p_steam[1] =
+        texture_load(sbox, "res/textures/particles/p_steam2.png", TEX_FILTER_NEAREST);
+    renderer->p_steam[2] =
+        texture_load(sbox, "res/textures/particles/p_steam3.png", TEX_FILTER_NEAREST);
+    renderer->p_steam[3] =
+        texture_load(sbox, "res/textures/particles/p_steam4.png", TEX_FILTER_NEAREST);
     renderer->p_bullet_hole = texture_load(sbox,
         "res/textures/particles/p_bullet_hole.png", TEX_FILTER_NEAREST);
     renderer->p_water = texture_load(sbox,
@@ -305,10 +312,13 @@ void r_set_shader(renderer_t* renderer, shader_t* shader) {
     renderer->active_shader = shader;
 }
 
-void r_set_texture(renderer_t* renderer, texture_t* texture, int slot) {
+void r_set_texture(
+    sbox_t* sbox, renderer_t* renderer, const char* name, texture_t* texture, int slot)
+{
     if (!texture) return;
     renderer->stats.textures++;
 
+    r_set_int(sbox, renderer, name, slot);
     glActiveTexture(GL_TEXTURE0 + slot);
 
     int type = GL_TEXTURE_2D;
@@ -329,24 +339,24 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
 
     char slot_name[32];
     snprintf(slot_name, 32, "materials[%d].albedo", slot);
-    r_set_int(sbox, renderer, slot_name, nmaterial_textures * slot + 0);
-    r_set_texture(renderer,
+    r_set_texture(sbox, renderer,
+        slot_name,
         (material->albedo) ?
             material->albedo :
             renderer->default_material->albedo,
         nmaterial_textures * slot + 0);
     
     snprintf(slot_name, 32, "materials[%d].roughness", slot);
-    r_set_int(sbox, renderer, slot_name, nmaterial_textures * slot + 1);
-    r_set_texture(renderer,
+    r_set_texture(sbox, renderer,
+        slot_name,
         (material->roughness) ?
             material->roughness :
             renderer->default_material->roughness,
         nmaterial_textures * slot + 1);
 
     snprintf(slot_name, 32, "materials[%d].normal", slot);
-    r_set_int(sbox, renderer, slot_name, nmaterial_textures * slot + 2);
-    r_set_texture(renderer,
+    r_set_texture(sbox, renderer,
+        slot_name,
         (material->normal) ?
             material->normal :
             renderer->default_material->normal,

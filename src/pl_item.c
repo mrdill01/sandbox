@@ -27,9 +27,14 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
 
-    dir[0] += random(-weapon->spread, weapon->spread);
-    dir[1] += random(-weapon->spread, weapon->spread);
-    dir[2] += random(-weapon->spread, weapon->spread);
+    float spread = lerp(
+        weapon->min_spread,
+        weapon->max_spread,
+        1.0f - player_get_accuracy(sbox, player));
+    
+    dir[0] += random(-spread, spread);
+    dir[1] += random(-spread, spread);
+    dir[2] += random(-spread, spread);
 
     glm_vec3_norm(dir);
 
@@ -50,12 +55,12 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
 
         if (weapon->is_projectile) {
             vec3 velocity;
-            glm_vec3_copy(sbox->renderer.camera.forward, velocity);
+            glm_vec3_copy(dir, velocity);
             glm_vec3_scale(velocity, weapon->projectile_speed, velocity);
 
             entity_t* projectile = NULL;
-            entity_init_projectile(sbox, "rocket", start,
-                weapon->projectile_mesh, velocity, &projectile);
+            entity_init_projectile(sbox, "rocket", start, player->id,
+                weapon->projectile_mesh, velocity, weapon->damage, &projectile);
             projectile->data.projectile.materials[0] = weapon->projectile_material;
             glm_quat_copy(camera->rotation, projectile->rotation);
             entlist_add(sbox, &sbox->map.entlist, projectile);
@@ -182,8 +187,7 @@ void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
     if (!item) return;
 
     drawcall_t drawcall;
-    drawcall.entity = malloc(strlen("viewmodel"));
-	strcpy(drawcall.entity, "viewmodel");
+    drawcall.entity = NULL;
     
     drawcall.mesh = item->mesh;
     memcpy(drawcall.materials, item->materials, sizeof(material_t*) * MAX_MATERIALS);
@@ -242,6 +246,6 @@ void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
     glm_quat_rotate(GLM_MAT4_IDENTITY, rotation, drawcall.rotation);
 
     drawcall.dist_to_camera = 0.0f;
-    drawcall.is_translucent = true;
+    drawcall.is_translucent = false;
     r_add_drawcall(renderer, drawcall);
 }

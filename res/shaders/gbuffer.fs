@@ -52,6 +52,15 @@ vec3 perturb_normal(vec3 normal, vec3 view_dir, vec2 uv) {
     return normalize(tbn * map);
 }
 
+float linearize_depth(float depth) {
+    float ndc = depth * 2.0f - 1.0f;
+    float near = 0.01f;
+    float far = 100.0f;
+    float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
+    linear_depth /= far;
+    return linear_depth;
+}
+
 void main() {
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
     uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
@@ -60,5 +69,5 @@ void main() {
     g_normal = perturb_normal(vs_normal, view_dir, uv);
     g_albedo_roughness.rgb = texture(materials[vs_mat].albedo, uv).rgb;
     g_albedo_roughness.a = texture(materials[vs_mat].roughness, uv).r;
-    g_depth.r = gl_FragCoord.z;
+    g_depth.r = linearize_depth(gl_FragCoord.z);
 }

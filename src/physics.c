@@ -72,7 +72,11 @@ bool phys_line_trace(
                 trace.entity = entity;
                 trace.material = entity->data.prop.materials[0];
                 trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
-                goto on_hit;
+
+                if (out)
+                    *out = trace;
+
+                return hit;
             }
         }
 
@@ -90,12 +94,14 @@ bool phys_line_trace(
                 trace.player_id = j;
                 trace.material = NULL;
                 trace.phys_mat = PHYS_MAT_PLAYER;
-                goto on_hit;
+
+                if (out)
+                    *out = trace;
+
+                return true;
             }
         }
     }
-
-    on_hit:
 
     if (out)
         *out = trace;

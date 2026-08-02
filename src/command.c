@@ -4,11 +4,13 @@
 #include "net.h"
 
 cmd_t host = {"host", "Hosts a new game."};
-cmd_t disconnect = {"disconnect", "Leaves the game."};
+cmd_t disconnect = {"disconnect", "Disconnects from the server."};
+cmd_t quit = {"quit", "Quits the game."};
 
 void cmd_init(sbox_t* sbox) {
     cmd_register(sbox, &host);
     cmd_register(sbox, &disconnect);
+    cmd_register(sbox, &quit);
 }
 
 void cmd_register(sbox_t* sbox, cmd_t* cmd) {
@@ -28,7 +30,7 @@ static cmd_t* cmd_find(sbox_t* sbox, const char* name) {
     return NULL;
 }
 
-void cmd_run(sbox_t* sbox, const char* name, const char** args) {
+void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     cmd_t* cmd = cmd_find(sbox, name);
     if (!cmd) {
         error(sbox, "command not found: %s", name);
@@ -53,6 +55,16 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args) {
         sv_stop(sbox, &sbox->server);
         
         map_free(sbox, &sbox->map);
+        sbox->player = NULL;
+        for (int i = 0; i < MAX_PLAYERS; i++)
+		    sbox->players[i] = NULL;
+        
         sbox->ui_state = UI_STATE_MAIN_MENU;
+        return;
+    }
+
+    if (strcmp(cmd->name, "quit") == 0) {
+        sbox->running = false;
+        return;
     }
 }

@@ -7,7 +7,7 @@ void entity_init_common(
 	if (!out) return;
 
     entity_t* entity = malloc(sizeof(entity_t));
-	entity->is_free = false;
+	entity->id = -1;
 	entity->name = malloc(strlen(name) + 1);
 	strcpy(entity->name, name);
 	entity->type = type;
@@ -119,7 +119,7 @@ void entity_get_materials(sbox_t* sbox,
 }
 
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
-	if (!drawcall || entity->is_free)
+	if (!entity || !drawcall)
 		return false;
 	
 	if (entity->type != ENTITY_MESH &&
@@ -202,8 +202,12 @@ void entlist_init(sbox_t* sbox, entlist_t* entlist) {
 }
 
 void entlist_free(sbox_t* sbox, entlist_t* entlist) {
-	for (size_t i = 0; i < entlist->len; i++)
-		entity_free(sbox, entlist->ents[i]);
+	for (size_t i = 0; i < entlist->len; i++) {
+		entity_t* entity = entlist->ents[i];
+		if (!entity) continue;
+		entity_free(sbox, entity);
+	}
+
 	info(sbox, "freed %d entities", entlist->len);
 	free(entlist->ents);
 }
@@ -225,7 +229,7 @@ static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
 void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
-		if (!entity || entity->is_free) continue;
+		if (!entity) continue;
 		compute_bounding_box(sbox, entity);
 
 		switch (entity->type) {
@@ -251,15 +255,31 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 
 void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
 	if (!entity) return;
-	info(sbox, "add entity %s", entity->name);
-	entlist->ents = realloc(entlist->ents, sizeof(entity_t*) * (entlist->len + 1));
-	entlist->ents[entlist->len++] = entity;
+	int slot = -1;
+
+	for (int i = 0; i < entlist->len; i++) {
+		entity_t* entity = entlist->ents[i];
+		if (!entity) {
+			slot = i;
+			break;
+		}
+	}
+
+	if (slot == -1) {
+		entlist->ents = realloc(entlist->ents, sizeof(entity_t*) * (entlist->len + 1));
+		entlist->ents[entlist->len++] = entity;
+		slot = entlist->len - 1;
+	} else {
+		entlist->ents[slot] = entity;
+	}
+
+	entity->id = slot;
 }
 
 void entlist_remove(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
-	if (!entity) return;
-	info(sbox, "remove entity %s", entity->name);
-	entity->is_free = true;
+	if (!entity || entity->id == -1) return;
+	entlist->ents[entity->id] = NULL;
+	entity_free(sbox, entity);
 }
 
 entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name) {

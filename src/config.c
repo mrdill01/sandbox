@@ -11,13 +11,15 @@ void cvar_register(sbox_t* sbox, cvar_t* cvar, on_change_t on_change) {
 
 void cvar_set(sbox_t* sbox, const char* name, const char* value) {
     cvar_t* cvar = cvar_find(sbox, name);
-    if (!cvar)
+    if (!cvar) {
         error(sbox, "cvar not found: %s", name);
+		return;
+	}
     
     cvar->string = value;
     cvar->value = atof(value);
 
-    info(sbox, "set %s to %g", name, cvar->value);
+    info(sbox, "set %s to %s", name, cvar->string);
 
     if (cvar->on_change)
         cvar->on_change(sbox);

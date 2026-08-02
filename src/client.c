@@ -4,14 +4,16 @@
 
 void cl_init(sbox_t* sbox, client_t* client) {
     info(sbox, "cl_init()...");
-    client->is_connected = false;
     client->host = NULL;
     client->peer = NULL;
+    client->out_buffer = NULL;
+    client->out_buffer_len = 0;
+    client->out_buffer_cap = 0;
     info(sbox, "client initialized!");
 }
 
 void cl_connect(sbox_t* sbox, client_t* client, const char* ip, int port) {
-    if (client->is_connected) {
+    if (cl_is_connected(sbox, client)) {
         cl_disconnect(sbox, client);
     }
 
@@ -33,26 +35,40 @@ void cl_connect(sbox_t* sbox, client_t* client, const char* ip, int port) {
         return;
     }
 
-    ENetPacket* packet = enet_packet_create("hello", strlen("hello"), ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send(client->peer, 0, packet);
+    int len = strlen(cl_name.string);
+    if (len > NET_MAX_PLAYER_NAME) {
+        len = NET_MAX_PLAYER_NAME;
+        error(sbox, "name too long (max %d characters)", NET_MAX_PLAYER_NAME);
+    }
 
-    client->is_connected = true;
+    cl_write_byte(sbox, client, CL_CMD_SET_NAME);
+    cl_write_byte(sbox, client, len);
+    cl_write_bytes(sbox, client, (uint8_t*)cl_name.string, len);
+
     info(sbox, "[client] connected!");
 }
 
 void cl_disconnect(sbox_t* sbox, client_t* client) {
-    if (!client->is_connected) return;
+    if (!cl_is_connected(sbox, client)) return;
 
     info(sbox, "[client] disconnecting...");
     enet_peer_reset(client->peer);
     enet_host_destroy(client->host);
-    client->is_connected = false;
     info(sbox, "[client] disconnected!");
 }
 
 void cl_tick(sbox_t* sbox, client_t* client) {
-    if (!client->is_connected) return;
+    if (!client->host || !client->peer) return;
     
+    if (client->out_buffer_len > 0) {
+        ENetPacket* packet = enet_packet_create(
+            client->out_buffer,
+            client->out_buffer_len,
+            ENET_PACKET_FLAG_RELIABLE);
+        enet_peer_send(client->peer, 0, packet);
+        client->out_buffer_len = 0;
+    }
+
     ENetEvent event;
     while (enet_host_service(client->host, &event, NET_TIMEOUT_MSEC) > 0) {
         switch (event.type) {
@@ -67,6 +83,28 @@ void cl_tick(sbox_t* sbox, client_t* client) {
         case ENET_EVENT_TYPE_NONE: break;
         }
     }
+}
+
+void cl_write_byte(sbox_t* sbox, client_t* client, uint8_t byte) {
+    if (client->out_buffer_len + 1 > client->out_buffer_cap) {
+        if (client->out_buffer_cap == 0)
+            client->out_buffer_cap = 8;
+        else
+            client->out_buffer_cap *= 2;
+        client->out_buffer = realloc(client->out_buffer, client->out_buffer_cap);
+    }
+
+    client->out_buffer[client->out_buffer_len++] = byte;
+}
+
+void cl_write_bytes(sbox_t* sbox, client_t* client, uint8_t* bytes, size_t len) {
+    for (size_t i = 0; i < len; i++)
+        cl_write_byte(sbox, client, bytes[i]);
+}
+
+bool cl_is_connected(sbox_t* sbox, client_t* client) {
+    if (!client->peer) return false;
+    return client->peer->state == ENET_PEER_STATE_CONNECTED;
 }
 
 int cl_get_ping(sbox_t* sbox, client_t* client) {

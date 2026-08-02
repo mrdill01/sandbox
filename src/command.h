@@ -11,9 +11,10 @@ typedef struct cmd_t {
 
 extern cmd_t host;
 extern cmd_t disconnect;
+extern cmd_t quit;
 
 void cmd_init(sbox_t* sbox);
 void cmd_register(sbox_t* sbox, cmd_t* cmd);
-void cmd_run(sbox_t* sbox, const char* name, const char** args);
+void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc);
 
 #endif

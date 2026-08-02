@@ -1,5 +1,6 @@
 edit_snap_size 0.2f Edit mode snap size.
 edit_mode 0.0f Enable edit mode.
+cl_name Player Display name.
 sv_respawn_time 3.0f How long for players to respawn.
 sv_timescale 1.0f Set to values less than 1.0 for slow-motion.
 noclip 0 Enables flight / disables collision.
@@ -7,6 +8,7 @@ console 0 Show developer console.
 m_sens 5.0f Mouse sensitivity.
 a_volume 0.2f Audio volume.
 a_device (null) Audio output device (default (null)).
+r_debug_buffer 0 0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth.
 r_debug_draw_colliders 0 Draw colliders.
 r_debug_menu 1 Debug menu.
 r_third_person 0 Enable third-person camera.

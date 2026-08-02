@@ -22,7 +22,7 @@
 
 #include <SDL2/SDL.h>
 
-#define SBOX_VERSION "sbox 1.0"
+#define SBOX_VERSION "sbox alpha 1.0"
 #define SBOX_DEBUG
 //#define SBOX_NO_AUDIO
 
@@ -95,6 +95,7 @@ extern cvar_t r_shadow_res;
 extern cvar_t r_third_person;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
+extern cvar_t r_debug_buffer;
 extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
@@ -102,6 +103,7 @@ extern cvar_t console;
 extern cvar_t noclip;
 extern cvar_t sv_timescale;
 extern cvar_t sv_respawn_time;
+extern cvar_t cl_name;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 

@@ -28,16 +28,22 @@ struct MaterialSample {
     float roughness;
     float metallic;
     float ao;
+    float depth;
+    float shadow;
 };
 
 struct SunLight {
     vec3 direction;
     vec3 color;
+    sampler2D shadow;
+    mat4 matrix;
 };
 
 uniform Material materials[MAX_MATERIALS];
 uniform SunLight sun_light;
 uniform vec3 view_position;
+uniform vec2 screen_size;
+uniform sampler2D g_depth;
 uniform int is_water;
 
 mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
@@ -93,6 +99,29 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
     return f0 + (1.0f - f0) * pow(clamp(1.0f - cos_theta, 0.0f, 1.0f), 5.0f);
 }
 
+float compute_shadow(vec4 frag_pos_light_space, vec3 normal) {
+    vec3 proj_coords = frag_pos_light_space.xyz / frag_pos_light_space.w;
+    proj_coords = proj_coords * 0.5f + 0.5f;
+    float closest_depth = texture(sun_light.shadow, proj_coords.xy).r;
+    float current_depth = proj_coords.z;
+    float bias = max(0.002 * (1.0 - dot(normal, sun_light.direction)), 0.0005);
+
+    float shadow = 0.0f;
+    vec2 texel_size = 1.0f / textureSize(sun_light.shadow, 0);
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            float depth = texture(sun_light.shadow, proj_coords.xy + vec2(x, y) * texel_size).r; 
+            shadow += (current_depth - bias) > depth  ? 1.0f : 0.0f;        
+        }
+    }
+    shadow /= 9.0;
+
+    if (proj_coords.z > 1.0f)
+        shadow = 0.0f;
+    
+    return shadow;
+}
+
 vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     vec3 l = -sun_light.direction;
     vec3 h = normalize(view_dir + l);
@@ -113,7 +142,7 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     kd *= 1.0 - sample.metallic;	  
 
     float n_dot_l = max(dot(sample.normal, l), 0.0);        
-    return (kd * sample.albedo.rgb / PI + specular) * radiance * n_dot_l;
+    return (kd * sample.albedo.rgb / PI + specular) * radiance * n_dot_l * (1.0f - sample.shadow);
 }
 
 float linearize_depth(float depth) {
@@ -121,7 +150,7 @@ float linearize_depth(float depth) {
     float near = 0.01f;
     float far = 100.0f;
     float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
-    linear_depth /= far; 
+    linear_depth /= far;
     return linear_depth;
 }
 
@@ -139,6 +168,7 @@ void main() {
     sample.roughness = texture(materials[vs_mat].roughness, uv).r;
     sample.metallic = 0.0f;
     sample.ao = 1.0f;
+    sample.shadow = compute_shadow(sun_light.matrix * vec4(sample.position, 1.0f), sample.normal);
 
     vec3 f0 = vec3(0.04); 
     f0 = mix(f0, sample.albedo.rgb, sample.metallic);
@@ -152,8 +182,20 @@ void main() {
     float alpha = sample.albedo.a;
 
     if (is_water == 1) {
-        float depth = linearize_depth(gl_FragCoord.z);
-        alpha = mix(0.04f, 1.0f, pow(sample.albedo.a * depth, 0.7f));
+        /*vec2 depth_uv = gl_FragCoord.xy / screen_size;
+        float bg_depth = texture(g_depth, depth_uv).r;
+        float surface_depth = linearize_depth(gl_FragCoord.z);
+        float depth_difference = bg_depth - surface_depth;
+
+        float water_depth = clamp(depth_difference / 3.0f, 0.0f, 1.0f);
+        //water_depth = 1.0f - exp(-water_depth * 3.0f);
+
+        float foam = clamp(1.0f - (depth_difference / 0.5f), 0.0f, 1.0f);
+
+        color = mix(vec3(0.5f, 0.75f, 1.0f), vec3(0.0f, 0.0f, 1.0f), water_depth) * color;
+        alpha = mix(0.0f, 1.0f, bg_depth);*/
+        //color = mix(vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), water_depth);
+        //color = vec3(foam);
     }
 
     frag_color = vec4(color, alpha);

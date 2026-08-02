@@ -12,8 +12,10 @@
 #define MAX_PARTICLES 8192
 #define ITEM_PREVIEW_RES 256
 #define FPS_SAMPLE_RATE 45
+#define NUM_STEAM_PARTICLES 4
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
+#define COLOR_GRAY (vec4){0.7f, 0.7f, 0.7f, 1.0f}
 #define COLOR_BLACK (vec4){0.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_MAGENTA (vec4){1.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_RED (vec4){1.0f, 0.0f, 0.0f, 1.0f}
@@ -133,15 +135,19 @@ typedef struct {
     float decay_time;
 } line_t;
 
+#define PARTICLE_FADE_OUT 1
+
 typedef struct {
     bool is_free;
     vec3 position;
     vec3 velocity;
     texture_t* texture;
     float alpha;
+    float start_alpha;
     float size;
     float spawn_time;
     float lifetime;
+    uint32_t flags;
     bool apply_gravity;
     mesh_t* mesh;
     float dist_to_camera;
@@ -212,7 +218,7 @@ typedef struct {
 
     texture_t* p_fire;
     texture_t* p_smoke;
-    texture_t* p_steam;
+    texture_t* p_steam[NUM_STEAM_PARTICLES];
     texture_t* p_bullet_hole;
     texture_t* p_water;
     texture_t* p_blood;
@@ -280,7 +286,7 @@ void ui_draw_texture(
 
 void ui_draw_text(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
-void ui_draw_text_shadow(
+void ui_draw_text_bg(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
 void ui_draw_text_thick(
     sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, int w, vec4 color);
@@ -316,6 +322,8 @@ void r_add_partfx_hit_ground(
     sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
 void r_add_partfx_enter_water(
     sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
+void r_add_partfx_step_water(
+    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
 void r_add_partfx_explosion(
     sbox_t* sbox, renderer_t* renderer, vec3 position, float radius);
 
@@ -327,7 +335,8 @@ particle_t* r_add_particle(
     texture_t* texture,
     float alpha,
     float size,
-    float lifetime);
+    float lifetime,
+    uint32_t flags);
 void r_tick_particles(sbox_t* sbox, renderer_t* renderer);
 void r_render_particles(sbox_t* sbox, renderer_t* renderer);
 int r_get_particle_count(sbox_t* sbox, renderer_t* renderer);
@@ -336,7 +345,8 @@ void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);
 
 void r_set_shader(renderer_t* renderer, shader_t* shader);
-void r_set_texture(renderer_t* renderer, texture_t* texture, int slot);
+void r_set_texture(
+    sbox_t* sbox, renderer_t* renderer, const char* name, texture_t* texture, int slot);
 void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot);
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer);
 

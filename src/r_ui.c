@@ -38,9 +38,7 @@ void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
     r_set_vec2(sbox, renderer, "src_pos", src_pos);
     r_set_vec2(sbox, renderer, "src_size", src_size);
     r_set_vec4(sbox, renderer, "color", color);
-
-    r_set_int(sbox, renderer, "sprite", 0);
-    r_set_texture(renderer, texture, 0);
+    r_set_texture(sbox, renderer, "sprite", texture, 0);
 
     r_draw_mesh(renderer, ui->quad);
 }
@@ -86,7 +84,7 @@ void ui_draw_text_shadow(
     new_position[0] += 1;
     new_position[1] += 1;
     ui_draw_text(sbox, ui, message, new_position, size, COLOR_BLACK);
-    ui_draw_text(sbox, ui, message, new_position, size, color);
+    ui_draw_text(sbox, ui, message, position, size, color);
 }
 
 void ui_draw_text_thick(
@@ -126,11 +124,20 @@ bool ui_draw_button(
     glm_vec2_copy(position, position_copy);
     glm_vec2_copy(size, size_copy);
 
-    if (is_hovered) {
+    vec4 text_color;
+    glm_vec4_copy(COLOR_GRAY, text_color);
+
+    if (is_pressed) {
+        position_copy[0] += 8.0f;
+        position_copy[1] += 8.0f;
+        size_copy[0] -= 16.0f;
+        size_copy[1] -= 16.0f;
+    } else if (is_hovered) {
         position_copy[0] += 4.0f;
         position_copy[1] += 4.0f;
         size_copy[0] -= 8.0f;
         size_copy[1] -= 8.0f;
+        glm_vec4_copy(COLOR_WHITE, text_color);
     }
 
     texture_t* texture = (is_pressed) ? ui->button_pressed : ui->button;
@@ -140,7 +147,7 @@ bool ui_draw_button(
     vec2 text_position = {
         position_copy[0] + size_copy[0] / 2.0f - ui_measure_text(message, font_size) / 2.0f,
         position_copy[1] + size_copy[1] / 2.0f - font_size / 2.0f};
-    ui_draw_text_thick(sbox, ui, message, text_position, font_size, 4, COLOR_WHITE);
+    ui_draw_text_thick(sbox, ui, message, text_position, font_size, 4, text_color);
 
     return is_hovered && sbox->prev_buttons[SDL_BUTTON_LEFT] && !sbox->buttons[SDL_BUTTON_LEFT];
 }
@@ -164,14 +171,19 @@ static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
     ui_draw_text_thick(sbox, ui, "MAIN MENU", text_position, 64.0f, 12, COLOR_WHITE);
 
     if (ui_draw_button(sbox, ui, "START GAME", position, button_size))
-        cmd_run(sbox, "host", NULL);
+        cmd_run(sbox, "host", NULL, 0);
 
     position[1] += button_size[1];
     ui_draw_button(sbox, ui, "SETTINGS", position, button_size);
 
     position[1] += button_size[1];
     if (ui_draw_button(sbox, ui, "QUIT", position, button_size))
-        sbox->running = false;
+        cmd_run(sbox, "quit", NULL, 0);
+
+    int font_size = 30.0f;
+    float width = ui_measure_text(SBOX_VERSION, font_size);
+    ui_draw_text_shadow(sbox, ui, SBOX_VERSION,
+        (vec2){r_width.value - width - 10.0f, r_height.value - font_size}, font_size, COLOR_WHITE);
 }
 
 static void draw_loading_screen(sbox_t* sbox, ui_t* ui) {
@@ -218,13 +230,17 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
+    sprintf(text, "accuracy: %g", player_get_accuracy(sbox, sbox->player));
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
 
     position[1] += spacing;
     sprintf(text, "server: %s", (sbox->server.is_running) ? "running" : "stopped");
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
-    if (sbox->client.is_connected)
+    if (cl_is_connected(sbox, &sbox->client))
         sprintf(text, "client: connected (%d ms)", cl_get_ping(sbox, &sbox->client));
     else
         sprintf(text, "client: disconnected");
@@ -258,7 +274,7 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 
     const inventory_t* inventory = &sbox->player->inventory;
     vec2 size = {48.0f, 48.0f};
-    vec2 position = {0.0f, r_height.value / 2.0f - size[1] / 2.0f};
+    vec2 position = {0.0f, r_height.value - (size[1] * 4.0f)};
 
     for (int i = 0; i < HOTBAR_SLOTS; i++) {
         item_t* item = inventory->items[i];
@@ -310,7 +326,7 @@ static void draw_inventory(sbox_t* sbox, ui_t* ui) {
     if (!inventory->is_open || edit_mode.value) return;
 
     vec2 size = {48.0f, 48.0f};
-    vec2 start = {size[0], r_height.value / 2.0f - size[1] / 2.0f};
+    vec2 start = {0.0f, r_height.value - (size[1] * 4.0f)};
 
     for (int x = 0; x < INVENTORY_WIDTH; x++) {
         for (int y = 0; y < INVENTORY_HEIGHT; y++) {
@@ -333,10 +349,11 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
     }
 
     char text[32];
-    sprintf(text, "health %d", (int)ceilf(sbox->player->health));
+    sprintf(text, "%d HP", (int)ceilf(sbox->player->health));
     float font_size = 64.0f;
     float width = ui_measure_text(text, font_size);
-    ui_draw_text(sbox, ui, text, (vec2){r_width.value - width - 48.0f, r_height.value - font_size},
+    ui_draw_text_shadow(sbox, ui, text,
+        (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
         font_size, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
 
     draw_hotbar(sbox, ui);
@@ -378,7 +395,7 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
 
     position[1] += button_size[1];
     if (ui_draw_button(sbox, ui, "DISCONNECT", position, button_size))
-        cmd_run(sbox, "disconnect", NULL);
+        cmd_run(sbox, "disconnect", NULL, 0);
 }
 
 static void draw_death_screen(sbox_t* sbox, ui_t* ui) {

@@ -111,7 +111,9 @@ void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
 
 void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
 void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
+float player_get_speed(sbox_t* sbox, player_t* player);
 float player_get_step_rate(sbox_t* sbox, player_t* player);
+float player_get_accuracy(sbox_t* sbox, player_t* player);
 
 void player_tick_item(sbox_t* sbox, player_t* player);
 void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer);
