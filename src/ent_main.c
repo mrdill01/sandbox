@@ -61,7 +61,7 @@ void entity_init_sun_light(sbox_t* sbox,
 	entity_t* entity = NULL;
 	entity_init_common(sbox, name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(dir, entity->data.sun_light.direction);
-	glm_vec3_norm(entity->data.sun_light.direction);
+	glm_normalize(entity->data.sun_light.direction);
 	glm_vec3_copy(color, entity->data.sun_light.color);
 	glm_mat4_identity(entity->data.sun_light.matrix);
 
@@ -82,7 +82,8 @@ void entity_init_point_light(sbox_t* sbox,
 
 void entity_free(sbox_t* sbox, entity_t* entity) {
 	if (!entity) return;
-	free(entity->name);
+	if (entity->name)
+		free(entity->name);
     free(entity);
 }
 
@@ -154,7 +155,7 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 		return false;
 	}*/
 
-	drawcall->local_bbox = entity->data.prop.mesh->bbox;
+	drawcall->local_bbox = drawcall->mesh->bbox;
 
 	glm_mat4_identity(drawcall->model);
 	glm_translate(drawcall->model, entity->position);

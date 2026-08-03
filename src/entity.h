@@ -33,6 +33,7 @@ typedef struct {
     material_t* materials[MAX_MATERIALS];
     vec3 start;
     vec3 velocity;
+    float speed;
     float damage;
     float last_particle;
 } entity_projectile_t;
@@ -99,6 +100,7 @@ void entity_init_projectile(sbox_t* sbox,
     int owner_id,
     mesh_t* mesh,
     vec3 velocity,
+    float speed,
     float damage,
     entity_t** out);
 void entity_init_vehicle(sbox_t* sbox,

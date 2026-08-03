@@ -35,11 +35,7 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     dir[0] += random(-spread, spread);
     dir[1] += random(-spread, spread);
     dir[2] += random(-spread, spread);
-
-    glm_vec3_norm(dir);
-
-    float max_distance = 100.0f;
-    trace_result_t trace;
+    glm_normalize(dir);
 
     if (player->buttons & PLAYER_BUTTON_FIRE) {
         if (sbox->time - weapon->last_fire < weapon->fire_rate)
@@ -60,12 +56,16 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
 
             entity_t* projectile = NULL;
             entity_init_projectile(sbox, "rocket", start, player->id,
-                weapon->projectile_mesh, velocity, weapon->damage, &projectile);
+                weapon->projectile_mesh, velocity,
+                weapon->projectile_speed, weapon->damage, &projectile);
             projectile->data.projectile.materials[0] = weapon->projectile_material;
             glm_quat_copy(camera->rotation, projectile->rotation);
             entlist_add(sbox, &sbox->map.entlist, projectile);
 
         } else {
+            float max_distance = 50.0f;
+            trace_result_t trace;
+
             bool hit = phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace);
             if (hit) {
                 sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
@@ -81,7 +81,16 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
                 }
             }
 
-            r_add_partfx_shoot_beam(sbox, &sbox->renderer, start, dir,
+            vec3 beam_start;
+            glm_vec3_copy(start, beam_start);
+            
+            vec3 forward;
+            glm_vec3_copy(camera->forward, forward);
+            glm_vec3_scale(forward, 0.25f, forward);
+
+            glm_vec3_add(beam_start, forward, beam_start);
+
+            r_add_partfx_shoot_beam(sbox, &sbox->renderer, beam_start, dir,
                 (hit) ? trace.distance : max_distance);
         }
     }

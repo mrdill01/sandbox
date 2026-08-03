@@ -15,7 +15,7 @@
 #define NUM_STEAM_PARTICLES 4
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
-#define COLOR_GRAY (vec4){0.7f, 0.7f, 0.7f, 1.0f}
+#define COLOR_GRAY (vec4){0.5f, 0.5f, 0.5f, 1.0f}
 #define COLOR_BLACK (vec4){0.0f, 0.0f, 0.0f, 1.0f}
 #define COLOR_MAGENTA (vec4){1.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_RED (vec4){1.0f, 0.0f, 0.0f, 1.0f}

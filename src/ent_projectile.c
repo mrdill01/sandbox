@@ -1,7 +1,7 @@
 #include "entity.h"
 #include "sbox.h"
 
-#define PROJECTILE_MAX_LIFETIME 5.0f
+#define PROJECTILE_MAX_LIFETIME 3.0f
 #define PROJECTILE_PARTICLE_RATE 0.0001f
 
 void entity_init_projectile(sbox_t* sbox,
@@ -10,6 +10,7 @@ void entity_init_projectile(sbox_t* sbox,
     int owner_id,
     mesh_t* mesh,
     vec3 velocity,
+    float speed,
     float damage,
     entity_t** out)
 {
@@ -22,6 +23,7 @@ void entity_init_projectile(sbox_t* sbox,
 
     glm_vec3_copy(position, entity->data.projectile.start);
     glm_vec3_copy(velocity, entity->data.projectile.velocity);
+    entity->data.projectile.speed = speed;
     entity->data.projectile.damage = damage;
     entity->data.projectile.last_particle = sbox->time;
 
@@ -34,33 +36,24 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
 
     vec3 dir;
     glm_vec3_copy(projectile->velocity, dir);
-    glm_vec3_norm(dir);
+    glm_normalize(dir);
 
-    vec3 move;
-    glm_vec3_copy(projectile->velocity, move);
-    glm_vec3_scale(move, sbox->dt, move);
+    float max_distance = projectile->speed * sbox->dt;
 
-    float max_distance = 16.0f * sbox->dt;
-    printf("%g\n", max_distance);
-
-    vec3 end;
-    end[0] = entity->position[0] + dir[0] * 0.511;
-    end[1] = entity->position[1] + dir[1] * 0.511;
-    end[2] = entity->position[2] + dir[2] * 0.511;
-    r_add_line(sbox, &sbox->renderer, entity->position, end, COLOR_BLUE, 5.0f);
-    
     entlist_t* entlist = &sbox->map.entlist;
     trace_result_t trace;
     if (phys_line_trace(
         sbox, entity->position, dir, max_distance, entlist, projectile->owner_id, &trace))
     {
-        if (trace.entity && trace.entity->name)
-            printf("%s\n", trace.entity->name);
         entity_t* explosion = NULL;
         entity_init_explosion(sbox, "explosion", entity->position, 4.0f, &explosion);
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
     } else {
+        vec3 move;
+        glm_vec3_copy(projectile->velocity, move);
+        glm_vec3_scale(move, sbox->dt, move);
+
         glm_vec3_add(entity->position, move, entity->position);
     }
 

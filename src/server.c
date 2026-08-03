@@ -1,6 +1,7 @@
 #include "server.h"
 #include "sbox.h"
 #include "net.h"
+#include "math.h"
 
 void sv_init(sbox_t* sbox, server_t* server) {
     server->is_running = false;
@@ -21,6 +22,8 @@ void sv_start(sbox_t* sbox, server_t* server, int port) {
         error(sbox, "failed to setup server (enet_host_create failed)");
         return;
     }
+
+    srand(sv_random_seed.value);
 
     server->is_running = true;
     info(sbox, "server started on port %d!", address.port);

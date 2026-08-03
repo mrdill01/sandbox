@@ -44,10 +44,6 @@ bool phys_line_trace(
     bool hit = false;
 
     for (trace.distance = 0; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
-        vec3 step;
-        glm_vec3_scale(dir, PHYS_TRACE_STEP, step);
-        glm_vec3_add(trace.point, step, trace.point);
-
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
             if (!entity) continue;
@@ -101,6 +97,10 @@ bool phys_line_trace(
                 return true;
             }
         }
+
+        vec3 step;
+        glm_vec3_scale(dir, PHYS_TRACE_STEP, step);
+        glm_vec3_add(trace.point, step, trace.point);
     }
 
     if (out)

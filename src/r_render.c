@@ -121,7 +121,7 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     glm_vec3_add(target, dir, target);
 
     mat4 view;
-    glm_lookat((vec3){5.0f, 20.0f, 10.25f}, (vec3){0.1f, 0.1f, 0.1f}, Y_AXIS, view);
+    glm_lookat((vec3){5.0f, 20.0f, 18.0f}, (vec3){0.1f, 0.1f, 0.1f}, Y_AXIS, view);
 
     glm_mat4_identity(sun_light->matrix);
     glm_mat4_mul(sun_light->matrix, projection, sun_light->matrix);
@@ -130,8 +130,6 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
-        //if (!drawcall->materials[0]) continue;
-
         r_set_mat4(sbox, renderer, "model", drawcall->model);
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
@@ -148,19 +146,6 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
         
         if (drawcall->mesh)
             r_draw_mesh(renderer, drawcall->mesh);
-    }
-
-    for (int i = 0; i < MAX_PARTICLES; i++) {
-        particle_t* particle = &renderer->particles[i];
-        if (particle->is_free) continue;
-
-        mat4 model;
-        glm_mat4_identity(model);
-        glm_translate(model, particle->position);
-        r_set_mat4(sbox, renderer, "model", model);
-        r_set_texture(sbox, renderer, "albedo", particle->texture, 0);
-
-        r_draw_mesh(renderer, particle->mesh);
     }
 
     glDisable(GL_DEPTH_TEST);

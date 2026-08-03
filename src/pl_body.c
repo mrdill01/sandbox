@@ -17,25 +17,29 @@ static void setup_rig(sbox_t* sbox, player_t* player, body_t* body) {
         sbox, "res/meshes/player/torso.obj", GLM_VEC3_ZERO, NULL);
     body->parts[BODY_HEAD] = create_body_part(
         sbox, "res/meshes/player/head.obj", (vec3){0.0f, 0.6f, 0.0f}, &body->parts[BODY_TORSO]);
+    
     body->parts[BODY_LEFT_UPPER_ARM] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_LEFT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, -0.05f, 0.0f},
+        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.0f, -0.25f, 0.0f},
             &body->parts[BODY_LEFT_UPPER_ARM]);
+    
     body->parts[BODY_RIGHT_UPPER_ARM] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_RIGHT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.25f, -0.05f, 0.0f},
+        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.0, -0.25f, 0.0f},
             &body->parts[BODY_RIGHT_UPPER_ARM]);
+    
     body->parts[BODY_LEFT_UPPER_LEG] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_LEFT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){-0.1f, -0.4f, 0.0f},
+        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.3f, 0.0f},
             &body->parts[BODY_LEFT_UPPER_LEG]);
+    
     body->parts[BODY_RIGHT_UPPER_LEG] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_RIGHT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.1f, -0.4f, 0.0f},
+        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.3f, 0.0f},
             &body->parts[BODY_RIGHT_UPPER_LEG]);
 }
 
@@ -47,23 +51,24 @@ static void setup_poses(sbox_t* sbox, player_t* player, body_t* body) {
         glm_quat_identity(body->walk_b.bones[i]);
     }
 
+    float stride = 45.0f;
     glm_quat(body->walk_a.bones[BODY_LEFT_UPPER_LEG],
-        rad(-30.0f), 1.0f, 0.0f, 0.0f);
+        rad(-stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_RIGHT_UPPER_LEG],
-        rad(30.0f), 1.0f, 0.0f, 0.0f);
+        rad(stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_RIGHT_UPPER_ARM],
-        rad(-30.0f), 1.0f, 0.0f, 0.0f);
+        rad(-stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_a.bones[BODY_LEFT_UPPER_ARM],
-        rad(30.0f), 1.0f, 0.0f, 0.0f);
+        rad(stride), 1.0f, 0.0f, 0.0f);
 
     glm_quat(body->walk_b.bones[BODY_LEFT_UPPER_LEG],
-        rad(30.0f), 1.0f, 0.0f, 0.0f);
+        rad(stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_RIGHT_UPPER_LEG],
-        rad(-30.0f), 1.0f, 0.0f, 0.0f);
+        rad(-stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_RIGHT_UPPER_ARM],
-        rad(30.0f), 1.0f, 0.0f, 0.0f);
+        rad(stride), 1.0f, 0.0f, 0.0f);
     glm_quat(body->walk_b.bones[BODY_LEFT_UPPER_ARM],
-        rad(-30.0f), 1.0f, 0.0f, 0.0f);
+        rad(-stride), 1.0f, 0.0f, 0.0f);
 }
 
 void player_init_body(sbox_t* sbox, player_t* player) {
@@ -146,36 +151,26 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         drawcall.materials[2] = NULL;
         drawcall.materials[3] = NULL;
 
-        vec3 position;
-        glm_vec3_copy(player->position, position);
-
         quat rotation;
         glm_quat_identity(rotation);
         glm_quat_mul(body->rotation, rotation, rotation);
-        glm_quat_mul(part->rotation, rotation, rotation);
-        if (part->parent)
-            glm_quat_mul(part->parent->rotation, rotation, rotation);
-
-        vec3 target_offset;
-        glm_quat_rotatev(rotation, part->offset, target_offset);
-        glm_vec3_add(position, target_offset, position);
-
-        vec3 diff;
-        glm_vec3_sub(target_offset, part->offset, diff);
-
-        vec3 rotated_offset;
-        glm_quat_rotatev(rotation, diff, rotated_offset);
-
-        glm_vec3_add(position, rotated_offset, position);
 
         glm_mat4_identity(drawcall.model);
-        glm_translate(drawcall.model, position);
+        glm_translate(drawcall.model, player->position);
+
         glm_quat_rotate(drawcall.model, rotation, drawcall.model);
 
-        drawcall.local_bbox = drawcall.mesh->bbox;
-        drawcall.world_bbox = bbox_translate(&drawcall.local_bbox, position);
+        body_part_t* it = part;
+        while (it) {
+            glm_translate(drawcall.model, it->offset);
+            glm_quat_rotate(drawcall.model, it->rotation, drawcall.model);
+            it = it->parent;
+        }
 
-        glm_vec3_copy(position, drawcall.position);
+        drawcall.local_bbox = drawcall.mesh->bbox;
+        drawcall.world_bbox = bbox_translate(&drawcall.local_bbox, player->position);
+
+        glm_vec3_copy((vec3){0.0f, 0.0f, 0.0f}, drawcall.position);
         glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, drawcall.scale);
         glm_quat_copy(rotation, *drawcall.rotation);
 

@@ -21,6 +21,7 @@ cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
 cvar_t r_third_person = {"r_third_person", "0", true, "Enable third-person camera."};
 cvar_t r_debug_menu = {"r_debug_menu", "1", true, "Debug menu."};
 cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, "Draw colliders."};
+cvar_t r_debug_draw_bullets = {"r_debug_draw_bullets", "1", true, "Draw bullet traces."};
 cvar_t r_debug_buffer = {"r_debug_buffer", "0", true,
 	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
 cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
@@ -30,6 +31,7 @@ cvar_t console = {"console", "0", true, "Show developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
 cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
+cvar_t sv_random_seed = {"sv_random_seed", "12345", true, "Random seed value."};
 cvar_t cl_name = {"cl_name", "Player", true, "Display name."};
 cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
@@ -68,6 +70,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &noclip, NULL);
     cvar_register(sbox, &sv_timescale, NULL);
     cvar_register(sbox, &sv_respawn_time, NULL);
+    cvar_register(sbox, &sv_random_seed, NULL);
     cvar_register(sbox, &cl_name, NULL);
     cvar_register(sbox, &edit_mode, NULL);
     cvar_register(sbox, &edit_snap_size, NULL);

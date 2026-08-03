@@ -59,7 +59,7 @@ void r_add_partfx_shoot_hit_water(sbox_t* sbox, renderer_t* renderer, trace_resu
 void r_add_partfx_shoot_beam(
     sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance)
 {
-    const float PARTICLES_PER_UNIT = 25.0f;
+    const float PARTICLES_PER_UNIT = 15.0f;
 
     vec3 position;
     glm_vec3_copy(start, position);
@@ -294,6 +294,7 @@ void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->partfx_shader);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
     glDepthMask(GL_FALSE);
 
     r_set_mat4(sbox, renderer, "view", renderer->view);

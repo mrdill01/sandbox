@@ -396,6 +396,11 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
     position[1] += button_size[1];
     if (ui_draw_button(sbox, ui, "DISCONNECT", position, button_size))
         cmd_run(sbox, "disconnect", NULL, 0);
+
+    int font_size = 30.0f;
+    float width = ui_measure_text(SBOX_VERSION, font_size);
+    ui_draw_text_shadow(sbox, ui, SBOX_VERSION,
+        (vec2){r_width.value - width - 10.0f, r_height.value - font_size}, font_size, COLOR_WHITE);
 }
 
 static void draw_death_screen(sbox_t* sbox, ui_t* ui) {

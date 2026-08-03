@@ -136,27 +136,31 @@ void a_free(sbox_t* sbox, audio_t* audio) {
 }
 
 void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
-    ALfloat orientation[] = {
-        camera->forward[0], camera->forward[1], camera->forward[2],
-        camera->up[0], camera->up[1], camera->up[2],
-    };
     ALenum err;
 
     alListenerf(AL_GAIN, a_volume.value);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_GAIN: %d", err);
 
-    alListener3f(AL_POSITION, camera->position[0], camera->position[1], camera->position[2]);
-    if ((err = alGetError()) != AL_NO_ERROR)
-        error(sbox, "failed to set AL_POSITION: %d", err);
+    if (camera) {
+        alListener3f(AL_POSITION, camera->position[0], camera->position[1], camera->position[2]);
+        if ((err = alGetError()) != AL_NO_ERROR)
+            error(sbox, "failed to set AL_POSITION: %d", err);
     
-    alListener3f(AL_VELOCITY, player->velocity[0], player->velocity[1], player->velocity[2]);
-    if ((err = alGetError()) != AL_NO_ERROR)
-        error(sbox, "failed to set AL_VELOCITY: %d", err);
-    
-    alListenerfv(AL_ORIENTATION, orientation);
-    if ((err = alGetError()) != AL_NO_ERROR)
-        error(sbox, "failed to set AL_ORIENTATION: %d", err);
+        ALfloat orientation[] = {
+            camera->forward[0], camera->forward[1], camera->forward[2],
+            camera->up[0], camera->up[1], camera->up[2],
+        };
+        alListenerfv(AL_ORIENTATION, orientation);
+        if ((err = alGetError()) != AL_NO_ERROR)
+            error(sbox, "failed to set AL_ORIENTATION: %d", err);
+    }
+
+    if (player) {
+        alListener3f(AL_VELOCITY, player->velocity[0], player->velocity[1], player->velocity[2]);
+        if ((err = alGetError()) != AL_NO_ERROR)
+            error(sbox, "failed to set AL_VELOCITY: %d", err);
+    }
 
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
     if ((err = alGetError()) != AL_NO_ERROR)

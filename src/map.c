@@ -327,6 +327,22 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_prop_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
+    entity_init_prop(sbox, "floor(21)", 0.0f, 2.0f, 8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, tile, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(22)", -8.0f, 2.0f, 8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, tile, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(23)", -8.0f, 2.0f, 0.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, tile, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_prop(sbox, "floor(24)", -8.0f, 2.0f, -8.0f, floor_mesh, &entity);
+    entity_prop_set_material(sbox, entity, tile, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
     entity_init_prop(sbox, "wall", 0.0f, -0.5f, 4.0f, wall_mesh, &entity);
     entity_prop_set_material(sbox, entity, brick, 0);
     entlist_add(sbox, &map->entlist, entity);
@@ -377,6 +393,15 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_init_prop(sbox, "big crate(4)", 29.0f, 0.5f, 0.5f, crate2_mesh, &entity);
     entity_prop_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
+
+    for (int i = 0; i < 32; i++) {
+        float x = random(7.0f, 30.0f);
+        float y = random(-2.5f, 0.0f);
+        float z = random(-13.0f, -24.0f);
+        entity_init_prop(sbox, "big crate", x, y, z, crate2_mesh, &entity);
+        entity_prop_set_material(sbox, entity, crate2, 0);
+        entlist_add(sbox, &map->entlist, entity);
+    }
 
     entity_init_prop(sbox, "metal panel", -1.1f, -0.5f, 3.0f, metal_panel_mesh, &entity);
     entity_prop_set_material(sbox, entity, metal3, 0);

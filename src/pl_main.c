@@ -458,8 +458,9 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
                 } else {
                     player->editor.selection = player->look_trace.entity;
                     player->editor.selection->data.prop.enable_collision = false;
-                    player->editor.trace = player->look_trace;
                 }
+
+                player->editor.trace = player->look_trace;
             }
         }
     }
