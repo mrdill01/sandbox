@@ -34,19 +34,20 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
     if (sbox->time - entity->spawn_time >= PROJECTILE_MAX_LIFETIME)
         entlist_remove(sbox, &sbox->map.entlist, entity);
 
-    vec3 dir;
-    glm_vec3_copy(projectile->velocity, dir);
-    glm_normalize(dir);
+    vec3 direction;
+    glm_vec3_copy(projectile->velocity, direction);
+    glm_normalize(direction);
 
     float max_distance = projectile->speed * sbox->dt;
 
     entlist_t* entlist = &sbox->map.entlist;
     trace_result_t trace;
     if (phys_line_trace(
-        sbox, entity->position, dir, max_distance, entlist, projectile->owner_id, &trace))
+        sbox, entity->position, direction, max_distance, entlist, projectile->owner_id, &trace))
     {
         entity_t* explosion = NULL;
-        entity_init_explosion(sbox, "explosion", entity->position, M_PI, 2.0f, 12.0f, &explosion);
+        entity_init_explosion(sbox, "explosion", entity->position, M_PI, direction,
+            2.0f, 12.0f, &explosion);
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
 

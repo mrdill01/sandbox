@@ -42,6 +42,7 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
     renderer->sphere_mesh = mesh_load(sbox, "res/meshes/sphere.obj");
+    renderer->earth_mesh = mesh_load(sbox, "res/meshes/earth.obj");
     
     renderer->default_material = material_load(sbox,
         "default",
@@ -49,6 +50,12 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/materials/default_r.png",
         "res/textures/materials/default_n.png",
         1, 1, false, PHYS_MAT_METAL);
+    renderer->earth_material = material_load(sbox,
+        "earth",
+        "res/textures/materials/earth.png",
+        "res/textures/materials/earth_r.png",
+        "res/textures/materials/earth_n.png",
+        1, 1, false, PHYS_MAT_GRASS);
 
     renderer->gbuffer = NULL;
     renderer->screen_buffer = NULL;
@@ -164,6 +171,7 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
 static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
+    return strcmp(a->materials[0]->name, b->materials[0]->name);
 	if (a->dist_to_camera > b->dist_to_camera) return 1;
 	return -1;
 }
@@ -415,14 +423,21 @@ void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m) {
 }
 
 void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
-    glBindVertexArray(mesh->vao);
-    glDrawElements(GL_TRIANGLES, mesh->nindices, GL_UNSIGNED_INT, 0);
     renderer->stats.drawcalls++;
-    renderer->stats.tris += mesh->nindices / 3;
+
+    for (size_t i = 0; i < mesh->nbuffers; i++) {
+        mesh_buffer_t* buffer = mesh->buffers[i];
+        if (!buffer) continue;
+        glBindVertexArray(buffer->vao);
+        glDrawElements(GL_TRIANGLES, buffer->nindices, GL_UNSIGNED_INT, 0);
+        renderer->stats.meshes++;
+        renderer->stats.tris += buffer->nindices / 3;
+    }
 }
 
 void r_reset_stats(sbox_t* sbox, renderer_t* renderer) {
     renderer->stats.drawcalls = 0;
+    renderer->stats.meshes = 0;
     renderer->stats.tris = 0;
     renderer->stats.textures = 0;
     renderer->stats.materials = 0;

@@ -40,6 +40,7 @@ typedef struct {
 
 typedef struct {
     float radius;
+    vec3 direction;
     float damage;
     float min_force;
     float max_force;
@@ -108,7 +109,8 @@ void entity_init_projectile(sbox_t* sbox,
 void entity_init_vehicle(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_explosion(sbox_t* sbox,
-    const char* name, vec3 position, float radius, float min_force, float max_force, entity_t** out);
+    const char* name, vec3 position, float radius, vec3 direction,
+    float min_force, float max_force, entity_t** out);
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,

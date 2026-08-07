@@ -65,6 +65,8 @@ void a_init(sbox_t* sbox, audio_t* audio) {
 
     audio->sounds = NULL;
 
+    audio->sounds_playing = 0;
+
     audio->jump_sound = sound_load(sbox, audio, "res/sounds/jump.wav");
     audio->jump_land_base_sound = sound_load(sbox, audio, "res/sounds/jump_land_base.wav");
 
@@ -165,6 +167,13 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_LINEAR_DISTANCE_CLAMPED: %d", err);
+
+    sound_t* sound = audio->sounds;
+    while (sound) {
+        if (sound_is_playing(sbox, sound))
+            audio->sounds_playing++;
+        sound = sound->next;
+    }
 }
 
 void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch) {
@@ -303,14 +312,31 @@ void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound) {
         error(sbox, "failed to delete audio buffer: %d", err);
 }
 
+bool sound_is_playing(sbox_t* sbox, sound_t* sound) {
+    ALint state;
+    ALenum err;
+    alGetSourcei(sound->source, AL_SOURCE_STATE, &state);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to get AL_SOURCE_STATE: %d", err);
+    return state == AL_PLAYING;
+}
+
 #else
 
 void a_init(sbox_t* sbox, audio_t* audio) {}
 void a_free(sbox_t* sbox, audio_t* audio) {}
 void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {}
-void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, float pitch) {}
+void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch) {}
+int a_get_max_source_count(sbox_t* sbox, audio_t* audio);
 
-sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {}
+sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {
+    return NULL;
+}
+
 void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound) {}
+
+bool sound_is_playing(sbox_t* sbox, sound_t* sound) {
+    return false;
+}
 
 #endif

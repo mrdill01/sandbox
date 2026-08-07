@@ -49,6 +49,7 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->is_thirdperson = false;
     player->height = get_height(sbox, player);
     inventory_init(sbox, &player->inventory);
+    player->walk_timer = 0.0f;
     glm_vec3_zero(player->item_position);
     glm_vec3_zero(player->item_anim);
     glm_vec3_zero(player->item_anim_angles);
@@ -325,11 +326,10 @@ static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, 1.0f, 0.0f};
-    float max_distance = 0.01f;
+    float max_distance = player->velocity[1] * sbox->dt;
     trace_result_t trace;
     
     player->head_blocked = false;
-
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->head_blocked = true;
         player->velocity[1] = 0.0f;
@@ -520,8 +520,12 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     glm_vec3_add(player->target_dir, up, player->target_dir);
 
     player->target_speed = 0.0f;
-    if (glm_vec3_dot(player->target_dir, player->target_dir) != 0.0f)
+    if (glm_vec3_dot(player->target_dir, player->target_dir) != 0.0f) {
         player->target_speed = glm_vec3_norm(player->target_dir) * get_max_speed(sbox, player);
+        player->walk_timer += sbox->dt;
+    } else {
+        player->walk_timer = 0.0f;
+    }
 
     move_and_collide(sbox, player, entlist);
 
@@ -573,6 +577,7 @@ bool player_is_dead(player_t* player) {
 
 void player_respawn(sbox_t* sbox, player_t* player) {
     glm_vec3_zero(player->velocity);
+    glm_vec3_copy((vec3){0.0f, 90.0f, 0.0f}, sbox->renderer.camera.angles);
     player->is_thirdperson = r_third_person.value;
     player->health = 100.0f;
     sbox->ui_state = UI_STATE_IN_GAME;

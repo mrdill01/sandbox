@@ -1,6 +1,8 @@
 #include "render.h"
 #include "sbox.h"
 
+#include <malloc.h>
+
 #include "../include/gl.h"
 
 #define FONT_TILE_SIZE 32.0f
@@ -153,13 +155,6 @@ bool ui_draw_button(
 }
 
 static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
-    ui_draw_texture(sbox,
-        ui,
-        ui->pixel,
-        (vec2){0.0f, 0.0f},
-        (vec2){r_width.value, r_height.value},
-        COLOR_LIGHT_BLUE);
-
     vec2 button_size = {256.0f, 48.0f};
     vec2 position = {
         r_width.value / 2.0f - (button_size[0] / 2.0f) * 2.0f,
@@ -170,8 +165,10 @@ static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
     text_position[0] += button_size[0] + 16.0f;
     ui_draw_text_thick(sbox, ui, "MAIN MENU", text_position, 64.0f, 12, COLOR_WHITE);
 
-    if (ui_draw_button(sbox, ui, "START GAME", position, button_size))
+    if (ui_draw_button(sbox, ui, "START GAME", position, button_size)) {
         cmd_run(sbox, "host", NULL, 0);
+        cmd_run(sbox, "connect", NULL, 0);
+    }
 
     position[1] += button_size[1];
     ui_draw_button(sbox, ui, "SETTINGS", position, button_size);
@@ -255,6 +252,10 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
+    sprintf(text, "meshes: %d", renderer->stats.meshes);
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
     sprintf(text, "triangles: %d", renderer->stats.tris);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
@@ -272,9 +273,11 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 
     position[1] += spacing;
 
-    position[1] += spacing;
-    sprintf(text, "audio sources: %d/%d", 0, a_get_max_source_count(sbox, &sbox->audio));
-    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+    /*position[1] += spacing;
+    sprintf(text, "audio sources: %d/%d",
+        sbox->audio.sounds_playing,
+        a_get_max_source_count(sbox, &sbox->audio));
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);*/
 }
 
 static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
@@ -363,6 +366,13 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
     ui_draw_text_shadow(sbox, ui, text,
         (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
         font_size, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
+
+    sprintf(text, "%d COINS", 32);
+    font_size = 32.0f;
+    width = ui_measure_text(text, font_size);
+    ui_draw_text_shadow(sbox, ui, text,
+        (vec2){r_width.value - width, 0.0f},
+        font_size, COLOR_YELLOW);
 
     draw_hotbar(sbox, ui);
     draw_inventory(sbox, ui);
@@ -473,9 +483,9 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
     float font_size = 25.0f;
     float spacing = font_size * 0.65f;
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < CON_LINES_PER_PAGE; i++) {
         ui_draw_text_shadow(sbox, ui,
-            con->history[i + con->history_len + con->scroll - 20],
+            con->history[i + con->history_len + con->scroll - CON_LINES_PER_PAGE],
             (vec2){r_width.value / 2.0f - width / 2.0f, title_height + spacing * i},
             font_size, COLOR_WHITE);
     }

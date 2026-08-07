@@ -24,7 +24,7 @@
 
 #define SBOX_VERSION "sbox alpha 1.0"
 #define SBOX_DEBUG
-//#define SBOX_NO_AUDIO
+#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG
 #define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);
@@ -93,6 +93,7 @@ extern cvar_t r_fov;
 extern cvar_t r_shadows;
 extern cvar_t r_shadow_res;
 extern cvar_t r_third_person;
+extern cvar_t r_viewmodel;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
 extern cvar_t r_debug_draw_bullets;
@@ -104,6 +105,7 @@ extern cvar_t console;
 extern cvar_t noclip;
 extern cvar_t sv_timescale;
 extern cvar_t sv_respawn_time;
+extern cvar_t sv_destruction;
 extern cvar_t sv_random_seed;
 extern cvar_t cl_name;
 extern cvar_t edit_mode;

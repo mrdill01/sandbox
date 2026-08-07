@@ -128,3 +128,19 @@ bool bbox_point_intersects(const bbox_t* bbox, vec3 point) {
         point[1] < bbox->max[1] &&
         point[2] < bbox->max[2];
 }
+
+bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius) {
+    float closest_x = max(bbox->min[0], min(center[0], bbox->max[0]));
+    float closest_y = max(bbox->min[1], min(center[1], bbox->max[1]));
+    float closest_z = max(bbox->min[2], min(center[2], bbox->max[2]));
+
+    float distance_x = closest_x - center[0];
+    float distance_y = closest_y - center[1];
+    float distance_z = closest_z - center[2];
+
+    float squared_distance = (distance_x * distance_x) +
+        (distance_y * distance_y) +
+        (distance_z * distance_z);
+
+    return squared_distance <= radius * radius;
+}

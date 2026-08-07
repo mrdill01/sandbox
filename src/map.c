@@ -3,6 +3,7 @@
 
 void map_init(sbox_t* sbox, map_t* map) {
     map->is_loaded = false;
+    map->skybox = NULL;
 }
 
 void map_load(sbox_t* sbox, map_t* map) {
@@ -44,6 +45,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* grass_mesh = mesh_load(sbox, "res/meshes/nature/grass.obj");
     mesh_t* pipe_mesh = mesh_load(sbox, "res/meshes/pipe.obj");
     mesh_t* pipe_bend_mesh = mesh_load(sbox, "res/meshes/pipe_bend.obj");
+    mesh_t* coin_mesh = mesh_load(sbox, "res/meshes/items/coin.obj");
     
     material_t* crate = material_load(sbox,
         "crate",
@@ -291,6 +293,13 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/test_r.png",
         "res/textures/materials/test_n.png",
         2, 2, false, PHYS_MAT_METAL);
+
+    material_t* coin = material_load(sbox,
+        "coin",
+        "res/textures/materials/coin.png",
+        "res/textures/materials/coin_r.png",
+        "res/textures/materials/coin_n.png",
+        1, 1, false, PHYS_MAT_METAL);
 
     entity_t* entity;
     entity_init_mesh(sbox, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
@@ -943,6 +952,33 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
+    for (int i = 0; i < 10; i++) {
+        float x = random(-32.0f, 32.0f);
+        float z = random(-32.0f, 32.0f);
+
+        vec3 size;
+        bbox_get_size(&coin_mesh->bbox, size);
+
+        vec3 start = {x, -0.5f + size[1], z};
+        vec3 dir = {0.0f, -1.0f, 0.0f};
+        float max_distance = 100.0f;
+        trace_result_t trace;
+
+        //r_add_line(sbox, &sbox->renderer, start, dir, COLOR_GREEN, 5.0f);
+
+        //if (phys_line_trace(sbox, start, dir, max_distance, &sbox->map.entlist, -1, &trace)) {
+        for (int j = -3; j <= 3; j++) {
+            for (int k = -3; k <= 3; k++) {
+                entity_init_mesh(sbox, "coin", x + j, start[1] + 0.1f, z + k, coin_mesh, &entity);
+                entity_mesh_set_material(sbox, entity, coin, 0);
+                entity->data.mesh.enable_collision = false;
+                entlist_add(sbox, &map->entlist, entity);
+            }
+        }
+            
+        //}
+    }
+
     const char* paths[6] = {
         "res/textures/skies/sky_right.png",
         "res/textures/skies/sky_left.png",
@@ -969,9 +1005,8 @@ static void send_to_renderer(sbox_t* sbox, map_t* map) {
         if (!entity) continue;
 
         drawcall_t drawcall = {0};
-        if (entity_get_drawcall(sbox, entity, &drawcall)) {
+        if (entity_get_drawcall(sbox, entity, &drawcall))
             r_add_drawcall(&sbox->renderer, drawcall);
-        }
     }
 }
 

@@ -13,6 +13,7 @@ extern cmd_t help;
 extern cmd_t cmdlist;
 extern cmd_t cvarlist;
 extern cmd_t reset;
+extern cmd_t clear;
 extern cmd_t host;
 extern cmd_t connect_;
 extern cmd_t disconnect;

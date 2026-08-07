@@ -19,6 +19,7 @@ cvar_t r_fov = {"r_fov", "75.0f", true, "Field-of-view."};
 cvar_t r_shadows = {"r_shadows", "1", true, "Enable shadows."};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
 cvar_t r_third_person = {"r_third_person", "0", true, "Enable third-person camera."};
+cvar_t r_viewmodel = {"r_viewmodel", "1", true, "Enables or disables rendering of the viewmodel."};
 cvar_t r_debug_menu = {"r_debug_menu", "1", true, "Debug menu."};
 cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, "Draw colliders."};
 cvar_t r_debug_draw_bullets = {"r_debug_draw_bullets", "1", true, "Draw bullet traces."};
@@ -31,6 +32,8 @@ cvar_t console = {"console", "0", true, "Show the developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
 cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
+cvar_t sv_destruction = {"sv_destruction", "1.0f", true,
+	"Allow the map to be destroyed by explosions."};
 cvar_t sv_random_seed = {"sv_random_seed", "12345", true, "Random seed value."};
 cvar_t cl_name = {"cl_name", "Player", true, "Display name."};
 cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
@@ -60,6 +63,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_shadows, NULL);
     cvar_register(sbox, &r_shadow_res, NULL);
     cvar_register(sbox, &r_third_person, NULL);
+    cvar_register(sbox, &r_viewmodel, NULL);
     cvar_register(sbox, &r_debug_menu, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
     cvar_register(sbox, &r_debug_buffer, NULL);
@@ -70,6 +74,7 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &noclip, NULL);
     cvar_register(sbox, &sv_timescale, NULL);
     cvar_register(sbox, &sv_respawn_time, NULL);
+    cvar_register(sbox, &sv_destruction, NULL);
     cvar_register(sbox, &sv_random_seed, NULL);
     cvar_register(sbox, &cl_name, NULL);
     cvar_register(sbox, &edit_mode, NULL);
@@ -107,6 +112,8 @@ void sbox_init(sbox_t* sbox) {
 	net_init(sbox);
 	sv_init(sbox, &sbox->server);
 	cl_init(sbox, &sbox->client);
+
+	sbox->ui_state = UI_STATE_MAIN_MENU;
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		sbox->players[i] = NULL;

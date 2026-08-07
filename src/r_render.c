@@ -165,10 +165,6 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-
-    camera_get_projection_matrix(&renderer->camera, r_width.value, r_height.value,
-        renderer->projection);
-    camera_get_view_matrix(&renderer->camera, renderer->view);
         
     r_set_mat4(sbox, renderer, "view", renderer->view);
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
@@ -408,21 +404,67 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
     r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
     r_set_vec3(sbox, renderer, "view_direction", renderer->camera.forward);
-
-    vec3 sun_direction = {0.0f, 0.0f, 0.0f};
-    for (size_t i = 0; i < sbox->map.entlist.len; i++) {
-        entity_t* entity = sbox->map.entlist.ents[i];
-        if (!entity || entity->type != ENTITY_SUN_LIGHT) continue;
-        glm_vec3_copy(entity->data.sun_light.direction, sun_direction);
-    }
-    r_set_vec3(sbox, renderer, "sun_direction", sun_direction);
     r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
 }
 
+static void render_earth(sbox_t* sbox, renderer_t* renderer) {
+    r_set_shader(renderer, renderer->forward_shader);
+    //r_set_framebuffer(renderer, renderer->screen_buffer);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, r_width.value, r_height.value);
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
+
+    r_set_mat4(sbox, renderer, "view", renderer->view);
+    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
+    r_set_vec2(sbox, renderer, "screen_size",
+        (vec2){r_width.value * r_scale.value, r_height.value * r_scale.value});
+    r_set_texture(sbox, renderer, "g_depth", renderer->gbuffer->textures[3], 5);
+
+    r_set_vec3(sbox, renderer, "sun_light.direction", (vec3){-1.0f, 1.0f, -1.0f});
+    r_set_vec3(sbox, renderer, "sun_light.color", (vec3){4.0f, 4.0f, 4.0f});
+    r_set_texture(sbox, renderer, "sun_light.shadow", NULL, 6);
+    r_set_mat4(sbox, renderer, "sun_light.matrix", GLM_MAT4_IDENTITY);
+
+    r_set_float(sbox, renderer, "time", sbox->time);
+
+    mat4 model;
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){0.0f, 0.0f, -3.0f});
+    r_set_mat4(sbox, renderer, "model", model);
+
+    const material_t* material = renderer->earth_material;
+    r_set_float(sbox, renderer, "wind_factor", material->wind_factor);
+    r_set_float(sbox, renderer, "hitbox_height", 0.0f);
+    r_set_int(sbox, renderer, "is_water", 0);
+    r_set_material(sbox, renderer, material, 0);
+
+    r_draw_mesh(renderer, renderer->earth_mesh);
+
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_BLEND);
+    r_set_framebuffer(renderer, NULL);
+}
+
 void r_render(sbox_t* sbox, renderer_t* renderer) {
+    camera_get_projection_matrix(&renderer->camera,
+        r_width.value, r_height.value, renderer->projection);
+    camera_get_view_matrix(&renderer->camera, renderer->view);
+
     if (!sbox->map.is_loaded) {
+        render_earth(sbox, renderer);
+        //render_screen(sbox, renderer);
         ui_render(sbox, &renderer->ui, renderer);
         r_clear_drawcalls(renderer);
         r_reset_stats(sbox, renderer);

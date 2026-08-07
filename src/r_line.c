@@ -28,14 +28,19 @@ void r_add_line(sbox_t* sbox,
         3, 4, 5
     };
 
+    size_t nvertices = sizeof(vertices) / sizeof(vertices[0]);
+    size_t nindices = sizeof(indices) / sizeof(indices[0]);
+
+    mesh_buffer_t** buffers = malloc(sizeof(mesh_buffer_t*) * 1);
+    buffers[0] = mesh_buffer_new(sbox, nvertices, nindices);
+    memcpy(buffers[0]->vertices, vertices, nvertices * sizeof(float));
+    memcpy(buffers[0]->indices, indices, nindices * sizeof(uint32_t));
+
     bbox_t bbox = {0};
     if (line->mesh)
         mesh_free(sbox, line->mesh);
     
-    line->mesh = mesh_new(sbox,
-        vertices, sizeof(vertices) / sizeof(vertices[0]),
-        indices, sizeof(indices) / sizeof(indices[0]),
-        0, bbox);
+    line->mesh = mesh_new(sbox, buffers, 1, 0, bbox);
     glm_vec4_copy(color, line->color);
     line->spawn_time = sbox->time;
     line->decay_time = decay_time;
@@ -79,7 +84,7 @@ void r_render_lines(sbox_t* sbox, renderer_t* renderer) {
         }
 
         r_set_vec4(sbox, renderer, "color", line->color);
-        glBindVertexArray(line->mesh->vao);
+        glBindVertexArray(line->mesh->buffers[0]->vao);
         glDrawArrays(GL_LINES, 0, 3);   
     }
 }

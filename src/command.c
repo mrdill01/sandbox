@@ -7,6 +7,7 @@ cmd_t help = {"help", "Shows a help message for the console."};
 cmd_t cmdlist = {"cmdlist", "Prints all commands to the console."};
 cmd_t cvarlist = {"cvarlist", "Prints all cvars to the console."};
 cmd_t reset = {"reset", "Resets a cvar to its default value."};
+cmd_t clear = {"clear", "Clears the console history."};
 cmd_t host = {"host", "Hosts a new game."};
 cmd_t connect_ = {"connect", "Connects the client to a server."};
 cmd_t disconnect = {"disconnect", "Disconnects from the server."};
@@ -17,6 +18,7 @@ void cmd_init(sbox_t* sbox) {
     cmd_register(sbox, &cmdlist);
     cmd_register(sbox, &cvarlist);
     cmd_register(sbox, &reset);
+    cmd_register(sbox, &clear);
     cmd_register(sbox, &host);
     cmd_register(sbox, &connect_);
     cmd_register(sbox, &disconnect);
@@ -60,7 +62,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (strcmp(cmd->name, "cmdlist") == 0) {
         cmd_t* cmd = sbox->cmds;
         while (cmd) {
-            info(sbox, "%.16s %s", cmd->name, cmd->desc);
+            info(sbox, "%32s %s", cmd->name, cmd->desc);
             cmd = cmd->next;
         }
         return;
@@ -69,7 +71,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (strcmp(cmd->name, "cvarlist") == 0) {
         cvar_t* cvar = sbox->cvars;
         while (cvar) {
-            info(sbox, "%.16s %s", cvar->name, cmd->desc);
+            info(sbox, "%32s %s %s", cvar->name, cvar->string, cvar->desc);
             cvar = cvar->next;
         }
         return;
@@ -83,10 +85,19 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         info(sbox, "reset cvar %s", cvar->name);
     }
 
+    if (strcmp(cmd->name, "clear") == 0) {
+        sbox->console.history_len = 0;
+        return;
+    }
+
     if (strcmp(cmd->name, "host") == 0) {
         sv_start(sbox, &sbox->server, NET_PORT);
-        cl_connect(sbox, &sbox->client, "127.0.0.1", NET_PORT);
+        return;
+    }
 
+    if (strcmp(cmd->name, "connect") == 0) {
+        cl_connect(sbox, &sbox->client, "127.0.0.1", NET_PORT);
+        
         sbox->ui_state = UI_STATE_LOADING;
         map_load(sbox, &sbox->map);
 

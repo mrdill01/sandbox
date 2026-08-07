@@ -3,6 +3,8 @@
 
 #include "physics.h"
 
+#include <stdbool.h>
+
 #include <AL/al.h>
 #include <AL/alc.h>
 
@@ -20,6 +22,8 @@ typedef struct {
     ALCdevice* device;
     ALCcontext* context;
     sound_t* sounds;
+
+    int sounds_playing;
 
     sound_t* jump_sound;
     sound_t* jump_land_base_sound;
@@ -44,5 +48,6 @@ int a_get_max_source_count(sbox_t* sbox, audio_t* audio);
 
 sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path);
 void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound);
+bool sound_is_playing(sbox_t* sbox, sound_t* sound);
 
 #endif

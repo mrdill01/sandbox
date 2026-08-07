@@ -40,5 +40,6 @@ bbox_t bbox_translate(bbox_t* bbox, vec3 position);
 bbox_t bbox_rotate(bbox_t* bbox, mat4 rotation);
 bbox_t bbox_scale(bbox_t* bbox, vec3 scale);
 bool bbox_point_intersects(const bbox_t* bbox, vec3 point);
+bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius);
 
 #endif

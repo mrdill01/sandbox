@@ -3,7 +3,7 @@
 
 void con_init(sbox_t* sbox, console_t* con) {
     con->input[0] = '\0';
-    for (int i = 0; i < MAX_HISTORY; i++)
+    for (int i = 0; i < CON_MAX_HISTORY; i++)
         con->history[i] = NULL;
     con->history_len = 0;
 }
@@ -59,7 +59,6 @@ void con_submit(sbox_t* sbox, console_t* con) {
     cmd_t* cmd = NULL;
     if ((cmd = cmd_find(sbox, name))) {
         cmd_run(sbox, name, args, argc);
-
         con->input[0] = '\0';
         return;
     }

@@ -22,6 +22,7 @@ int main(int argc, char* argv[]) {
 
     #ifdef SBOX_DEBUG
     cmd_run(&sbox, "host", NULL, 0);
+    cmd_run(&sbox, "connect", NULL, 0);
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
     SDL_GL_SwapWindow(sbox.window);
     #endif
@@ -149,7 +150,7 @@ void tick(sbox_t* sbox) {
 
     if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
         sbox->keys[SDL_SCANCODE_ESCAPE] = false;
-        if (console.value) cvar_set(sbox, "console", "0");
+        if (console.value) con_close(sbox, &sbox->console);
         else if (sbox->ui_state == UI_STATE_IN_GAME ||
             sbox->ui_state == UI_STATE_DEAD) sbox->ui_state = UI_STATE_PAUSE_MENU;
         else sbox->ui_state = UI_STATE_IN_GAME;
@@ -177,7 +178,7 @@ void tick(sbox_t* sbox) {
 
         if (sbox->keys[SDL_SCANCODE_DOWN]) {
             sbox->keys[SDL_SCANCODE_DOWN] = false;
-            if (sbox->console.scroll < sbox->console.history_len - 1)
+            if (sbox->console.scroll < sbox->console.history_len - 1 - 20)
                 sbox->console.scroll += 1;
         }
 

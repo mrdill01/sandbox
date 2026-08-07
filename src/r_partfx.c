@@ -190,7 +190,7 @@ void r_add_partfx_explosion(
         
         r_add_particle(sbox, &sbox->renderer,
             position, velocity, renderer->p_fire,
-            random(0.5f, 1.0f), random(0.45f, 0.75f), random(0.3f, 0.35f),
+            random(0.85f, 1.0f), random(0.45f, 0.55f), random(0.3f, 0.35f),
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 
@@ -209,7 +209,7 @@ void r_add_partfx_explosion(
     for (int i = 0; i < 25; i++) {
         vec3 velocity = {
             random(-0.25f, 0.25f),
-            random(-0.25f, 0.25f),
+            random(0.0f, 4.0f),
             random(-0.25f, 0.25f)};
 
         vec3 new_position = {

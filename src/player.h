@@ -88,6 +88,7 @@ typedef struct player_t {
     bool is_thirdperson;
     float height;
     inventory_t inventory;
+    float walk_timer;
     vec3 item_position;
     vec3 item_anim;
     vec3 item_anim_angles;

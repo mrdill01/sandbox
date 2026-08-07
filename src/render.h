@@ -4,6 +4,7 @@
 #include "math.h"
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define R_GL_MAJ 3
 #define R_GL_MIN 3
@@ -49,14 +50,19 @@ typedef struct shader_t {
     struct shader_t* next;
 } shader_t;
 
-typedef struct mesh_t {
+typedef struct {
     uint32_t vao;
     uint32_t vbo;
     uint32_t ebo;
-    float* vertices;
     size_t nvertices;
-    uint32_t* indices;
+    float* vertices;
     uint32_t nindices;
+    uint32_t* indices;
+} mesh_buffer_t;
+
+typedef struct mesh_t {
+    mesh_buffer_t** buffers;
+    size_t nbuffers;
     uint8_t nmaterials;
     bbox_t bbox;
     struct mesh_t* next;
@@ -172,6 +178,7 @@ typedef struct {
 
 typedef struct {
     int drawcalls;
+    int meshes;
     int tris;
     int textures;
     int materials;
@@ -206,8 +213,10 @@ typedef struct {
 
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
+    mesh_t* earth_mesh;
 
     material_t* default_material;
+    material_t* earth_material;
 
     framebuffer_t* gbuffer;
     framebuffer_t* screen_buffer;
@@ -248,12 +257,16 @@ shader_t* shader_new(sbox_t* sbox,
 shader_t* shader_load(sbox_t* sbox, const char* name, const char* vpath, const char* fpath);
 void shader_free(sbox_t* sbox, shader_t* shader);
 
+mesh_buffer_t* mesh_buffer_new(sbox_t* sbox, size_t num_vertices, size_t num_indices);
+void mesh_buffer_upload(sbox_t* sbox, mesh_buffer_t* buffer);
+
 mesh_t* mesh_new(sbox_t* sbox,
-    float* vertices, size_t nvertices,
-    uint32_t* indices, size_t nindices,
-    uint8_t nmaterials, bbox_t bbox);
+    mesh_buffer_t** buffers, size_t nbuffers, uint8_t nmaterials, bbox_t bbox);
 mesh_t* mesh_load(sbox_t* sbox, const char* path);
+mesh_t* mesh_copy(sbox_t* sbox, const mesh_t* original);
 void mesh_free(sbox_t* sbox, mesh_t* mesh);
+void mesh_deform(
+    sbox_t* sbox, mesh_t* mesh, vec3 position, vec3 point, vec3 normal, float distance);
 
 texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
     texture_format_t format, texture_filter_t filter);

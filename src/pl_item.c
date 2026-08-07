@@ -173,9 +173,9 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
         
-        anim[0] = sin(sbox->time * 2.5f * speed) * 0.01f;
-        anim[1] = sin(sbox->time * 10.0f * speed) * 0.025f;
-        anim[2] = sin(sbox->time * 5.0f * speed) * 0.025f;
+        anim[0] = sin(player->walk_timer * 2.5f * speed) * 0.01f;
+        anim[1] = sin(player->walk_timer * 10.0f * speed) * 0.025f;
+        anim[2] = sin(player->walk_timer * 5.0f * speed) * 0.025f;
     }
 
     float set_speed = 6.5f;
@@ -191,7 +191,7 @@ void player_tick_item(sbox_t* sbox, player_t* player) {
 }
 
 void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (player->is_thirdperson || edit_mode.value || !player->is_me) return;
+    if (player->is_thirdperson || edit_mode.value || !r_viewmodel.value || !player->is_me) return;
     item_t* item = inventory_get_item(sbox, &player->inventory);
     if (!item) return;
 
