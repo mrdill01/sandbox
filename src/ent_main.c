@@ -21,19 +21,19 @@ void entity_init_common(
 	*out = entity;
 }
 
-void entity_init_prop(sbox_t* sbox,
+void entity_init_mesh(sbox_t* sbox,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
 {
     entity_t* entity = NULL;
 	entity_init_common(sbox, name, ENTITY_MESH, (vec3){x, y, z}, &entity);
-    entity->data.prop.mesh = mesh;
+    entity->data.mesh.mesh = mesh;
     for (int i = 0; i < MAX_MATERIALS; i++) {
-        entity->data.prop.materials[i] = NULL;
+        entity->data.mesh.materials[i] = NULL;
 	}
-	entity->data.prop.is_visible = true;
-	entity->data.prop.is_viewmodel = false;
-	entity->data.prop.is_pickup = false;
-	entity->data.prop.enable_collision = true;
+	entity->data.mesh.is_visible = true;
+	entity->data.mesh.is_viewmodel = false;
+	entity->data.mesh.is_pickup = false;
+	entity->data.mesh.enable_collision = true;
 
     *out = entity;
 }
@@ -89,7 +89,7 @@ void entity_free(sbox_t* sbox, entity_t* entity) {
 
 mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
 	switch (entity->type) {
-	case ENTITY_MESH: return entity->data.prop.mesh;
+	case ENTITY_MESH: return entity->data.mesh.mesh;
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
 	default: return NULL;
 	}
@@ -102,10 +102,10 @@ void entity_get_materials(sbox_t* sbox,
 {
 	switch (entity->type) {
 	case ENTITY_MESH: {
-		memcpy(materials, entity->data.prop.materials,
+		memcpy(materials, entity->data.mesh.materials,
 			sizeof(material_t*) * MAX_MATERIALS);
 		if (nmaterials)
-			*nmaterials = entity->data.prop.mesh->nmaterials;
+			*nmaterials = entity->data.mesh.mesh->nmaterials;
 		break;
 	}
 	case ENTITY_PROJECTILE: {
@@ -124,14 +124,14 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 		return false;
 	
 	if (entity->type != ENTITY_MESH &&
-		entity->type != ENTITY_DROPPED_ITEM &&
-		entity->type != ENTITY_PROJECTILE)
+		entity->type != ENTITY_PROJECTILE &&
+		entity->type != ENTITY_DROPPED_ITEM)
 		return false;
 
-	if (entity->type == ENTITY_MESH && !entity->data.prop.is_visible)
+	if (entity->type == ENTITY_MESH && !entity->data.mesh.is_visible)
 		return false;
 	
-    if (entity->type == ENTITY_MESH && entity->data.prop.is_viewmodel)
+    if (entity->type == ENTITY_MESH && entity->data.mesh.is_viewmodel)
 		return false;
 
 	drawcall->entity = malloc(strlen(entity->name));
@@ -139,29 +139,18 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 
 	drawcall->mesh = entity_get_mesh(sbox, entity);
 
-	material_t* materials[4] = {0};
 	size_t nmaterials = 0;
-	entity_get_materials(sbox, entity, materials, &nmaterials);
-	memcpy(drawcall->materials, materials, sizeof(material_t*) * MAX_MATERIALS);
-
-	int n = 0;
-	for (int i = 0; i < MAX_MATERIALS; i++)
-		if (materials[i])
-			n++;
-
-	/*if (n != nmaterials) {
-		error(sbox, "entity %s doesn't have the proper number of materials (have %d, need %d)",
-			entity->name, n, nmaterials);
-		return false;
-	}*/
+	entity_get_materials(sbox, entity, drawcall->materials, &nmaterials);
 
 	drawcall->local_bbox = drawcall->mesh->bbox;
+	drawcall->world_bbox = entity->local_bbox;
+	drawcall->world_bbox = bbox_scale(&drawcall->world_bbox, entity->scale);
+	drawcall->world_bbox = bbox_translate(&drawcall->world_bbox, entity->position);
 
 	glm_mat4_identity(drawcall->model);
 	glm_translate(drawcall->model, entity->position);
 	glm_quat_rotate(drawcall->model, entity->rotation, drawcall->model);
 	glm_scale(drawcall->model, entity->scale);
-	drawcall->world_bbox = entity->world_bbox;
 
 	glm_vec3_copy(entity->position, drawcall->position);
 	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, drawcall->rotation);
@@ -180,21 +169,6 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	}
 
 	return true;
-}
-
-void entity_prop_set_material(sbox_t* sbox,
-    entity_t* entity,
-    material_t* material,
-    int slot)
-{
-	if (!entity) return;
-	
-	if (slot >= MAX_MATERIALS) {
-		error(sbox, "material limit per entity reached (%d)", MAX_MATERIALS);
-		return;
-	}
-
-    entity->data.prop.materials[slot] = material;
 }
 
 void entlist_init(sbox_t* sbox, entlist_t* entlist) {
@@ -235,8 +209,8 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 
 		switch (entity->type) {
 		case ENTITY_MESH: {
-			entity_mesh_t* prop = &entity->data.prop;
-			if (prop->is_pickup) {
+			entity_mesh_t* mesh = &entity->data.mesh;
+			if (mesh->is_pickup) {
     			glm_quat(entity->rotation, rad(sbox->time * ITEM_SPIN_RATE), 0.0f, 1.0f, 0.0f);
 			}
 			break;

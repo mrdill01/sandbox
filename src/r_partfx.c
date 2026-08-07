@@ -15,12 +15,19 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t t
             random(-10.0f, 10.0f)};
         
         texture_t* texture = renderer->p_fire;
-        if (trace.phys_mat == PHYS_MAT_PLAYER)
+        float alpha = 1.0f;
+        float size = random(0.025f, 0.05f);
+        float lifetime = random(0.1f, 0.15f);
+        if (trace.phys_mat == PHYS_MAT_PLAYER) {
             texture = renderer->p_blood;
+            alpha = 0.75f;
+            size = random(0.15f, 0.2f);
+            lifetime = random(0.15f, 0.2f);
+        }
 
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
             trace.point, velocity, texture,
-            1.0f, random(0.025f, 0.05f), random(0.1f, 0.15f), PARTICLE_FADE_OUT);
+            alpha, size, lifetime, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
     }
 
@@ -83,7 +90,8 @@ void r_add_partfx_shoot_beam(
         texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
         r_add_particle(sbox, &sbox->renderer,
             position, velocity, texture,
-            0.15f, random(0.05f, 0.065f), random(1.0f, 1.5f), PARTICLE_FADE_OUT);
+            0.15f, random(0.05f, 0.065f), random(1.0f, 1.5f),
+            PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 }
 
@@ -182,7 +190,8 @@ void r_add_partfx_explosion(
         
         r_add_particle(sbox, &sbox->renderer,
             position, velocity, renderer->p_fire,
-            random(0.5f, 1.0f), random(0.45f, 0.75f), random(0.3f, 0.4f), PARTICLE_FADE_OUT);
+            random(0.5f, 1.0f), random(0.45f, 0.75f), random(0.3f, 0.35f),
+            PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 
     for (int i = 0; i < 100; i++) {
@@ -208,7 +217,8 @@ void r_add_partfx_explosion(
             position[1] + random(-0.25f, 0.25f),
             position[2] + random(-0.25f, 0.25f)};
         r_add_particle(sbox, &sbox->renderer, new_position, velocity,
-            renderer->p_smoke, 0.5f, random(1.0f, 1.5f), random(3.0f, 4.0f), PARTICLE_FADE_OUT);
+            renderer->p_smoke, 0.5f, random(0.5f, 1.0f), random(2.0f, 3.0f),
+            PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 }
 
@@ -239,8 +249,9 @@ particle_t* r_add_particle(
     glm_vec3_copy(velocity, particle->velocity);
     particle->texture = texture;
     particle->alpha = alpha;
-    particle->start_alpha = alpha;
+    particle->init_alpha = alpha;
     particle->size = size;
+    particle->init_size = size;
     particle->mesh = renderer->quad_mesh;
     particle->spawn_time = sbox->time;
     particle->lifetime = lifetime;
@@ -268,7 +279,12 @@ void r_tick_particles(sbox_t* sbox, renderer_t* renderer) {
         }
 
         if (particle->flags & PARTICLE_FADE_OUT) {
-            particle->alpha = lerp(particle->start_alpha, 0.0f,
+            particle->alpha = lerp(particle->init_alpha, 0.0f,
+                (sbox->time - particle->spawn_time) / particle->lifetime);
+        }
+
+        if (particle->flags & PARTICLE_SCALE_X2) {
+            particle->size = lerp(particle->init_size, particle->init_size * 2.0f,
                 (sbox->time - particle->spawn_time) / particle->lifetime);
         }
 

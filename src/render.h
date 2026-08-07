@@ -8,6 +8,7 @@
 #define R_GL_MAJ 3
 #define R_GL_MIN 3
 #define MAX_MATERIALS 4
+#define MAX_TEXTURES 16
 #define MAX_LINES 4096
 #define MAX_PARTICLES 8192
 #define ITEM_PREVIEW_RES 256
@@ -136,6 +137,7 @@ typedef struct {
 } line_t;
 
 #define PARTICLE_FADE_OUT 1
+#define PARTICLE_SCALE_X2 2
 
 typedef struct {
     bool is_free;
@@ -143,8 +145,9 @@ typedef struct {
     vec3 velocity;
     texture_t* texture;
     float alpha;
-    float start_alpha;
+    float init_alpha;
     float size;
+    float init_size;
     float spawn_time;
     float lifetime;
     uint32_t flags;
@@ -200,8 +203,10 @@ typedef struct {
     shader_t* line_shader;
     shader_t* item_shader;
     shader_t* active_shader;
+
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
+
     material_t* default_material;
 
     framebuffer_t* gbuffer;

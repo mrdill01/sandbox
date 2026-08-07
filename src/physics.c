@@ -37,21 +37,22 @@ bool phys_line_trace(
     glm_vec3_zero(trace.normal);
     trace.water_level = 0.0f;
     glm_vec3_zero(trace.enter_water_point);
+    trace.start_in_water = false;
     trace.entity = NULL;
     trace.player_id = -1;
     trace.material = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
     bool hit = false;
 
-    for (trace.distance = 0; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
+    for (trace.distance = 0.0f; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
             if (!entity) continue;
             if (entity->type != ENTITY_MESH) continue;
-            if (!entity->data.prop.enable_collision) continue;
+            if (!entity->data.mesh.enable_collision) continue;
             
             if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
-                if (entity->data.prop.materials[0]->is_water) {
+                if (entity->data.mesh.materials[0]->is_water) {
                     if (trace.enter_water_point[0] == 0.0f &&
                         trace.enter_water_point[1] == 0.0f &&
                         trace.enter_water_point[2] == 0.0f)
@@ -60,14 +61,19 @@ bool phys_line_trace(
                     }
                     
                     trace.water_level = trace.distance / max_distance;
+                    
+                    if (trace.distance == 0.0f) {
+                        trace.start_in_water = true;
+                    }
+
                     continue;
                 }
 
                 hit = true;
                 compute_trace_normal(&trace, &entity->world_bbox);
                 trace.entity = entity;
-                trace.material = entity->data.prop.materials[0];
-                trace.phys_mat = entity->data.prop.materials[0]->phys_mat;
+                trace.material = entity->data.mesh.materials[0];
+                trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
 
                 if (out)
                     *out = trace;

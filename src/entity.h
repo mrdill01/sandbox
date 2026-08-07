@@ -11,8 +11,8 @@
 typedef enum {
     ENTITY_MESH,
     ENTITY_PROJECTILE,
-    ENTITY_VEHICLE,
     ENTITY_EXPLOSION,
+    ENTITY_VEHICLE,
     ENTITY_DROPPED_ITEM,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
@@ -39,14 +39,16 @@ typedef struct {
 } entity_projectile_t;
 
 typedef struct {
+    float radius;
+    float damage;
+    float min_force;
+    float max_force;
+} entity_explosion_t;
+
+typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
 } entity_vehicle_t;
-
-typedef struct {
-    float radius;
-    float damage;
-} entity_explosion_t;
 
 typedef struct {
     mesh_t* mesh;
@@ -75,7 +77,7 @@ typedef struct {
     float spawn_time;
 
     union {
-        entity_mesh_t prop;
+        entity_mesh_t mesh;
         entity_projectile_t projectile;
         entity_vehicle_t vehicle;
         entity_explosion_t explosion;
@@ -92,7 +94,7 @@ typedef struct entlist_t {
 
 void entity_init_common(
 	sbox_t* sbox, const char* name, entity_type_t type, vec3 position, entity_t** out);
-void entity_init_prop(sbox_t* sbox,
+void entity_init_mesh(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_projectile(sbox_t* sbox,
     const char* name,
@@ -106,7 +108,7 @@ void entity_init_projectile(sbox_t* sbox,
 void entity_init_vehicle(sbox_t* sbox,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_explosion(sbox_t* sbox,
-    const char* name, vec3 position, float radius, entity_t** out);
+    const char* name, vec3 position, float radius, float min_force, float max_force, entity_t** out);
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,
@@ -122,8 +124,7 @@ mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity);
 void entity_get_materials(sbox_t* sbox, entity_t* entity, material_t** materials, size_t* nmaterials);
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
 
-void entity_prop_set_material(sbox_t* sbox,
-    entity_t* entity, material_t* material, int slot);
+void entity_mesh_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
 
 void entlist_init(sbox_t* sbox, entlist_t* entlist);
 void entlist_free(sbox_t* sbox, entlist_t* entlist);

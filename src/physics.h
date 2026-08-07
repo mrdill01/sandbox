@@ -16,7 +16,7 @@ typedef enum phys_material_t {
     PHYS_MAT_GRASS,
     PHYS_MAT_WATER,
     PHYS_MAT_PLAYER,
-    PHYS_MAT_MAX,
+    NUM_PHYS_MAT,
 } phys_material_t;
 
 typedef struct trace_result_t {
@@ -25,6 +25,7 @@ typedef struct trace_result_t {
     float distance;
     float water_level;
     vec3 enter_water_point;
+    bool start_in_water;
     entity_t* entity;
     int player_id;
     material_t* material;

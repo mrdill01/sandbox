@@ -82,6 +82,7 @@ typedef struct player_t {
     phys_material_t ground_mat;
     float fall_distance;
     float water_level;
+    bool head_in_water;
     float last_step_time;
     bool head_blocked;
     bool is_thirdperson;

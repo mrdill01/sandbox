@@ -2,6 +2,7 @@
 #include "sbox.h"
 
 void cvar_register(sbox_t* sbox, cvar_t* cvar, on_change_t on_change) {
+	cvar->init = cvar->string;
     cvar->on_change = on_change;
     cvar->next = sbox->cvars;
     sbox->cvars = cvar;
@@ -23,6 +24,16 @@ void cvar_set(sbox_t* sbox, const char* name, const char* value) {
 
     if (cvar->on_change)
         cvar->on_change(sbox);
+}
+
+cvar_t* cvar_get(sbox_t* sbox, const char* name) {
+	cvar_t* cvar = cvar_find(sbox, name);
+    if (!cvar) {
+        error(sbox, "cvar not found: %s", name);
+		return NULL;
+	}
+
+	return cvar;
 }
 
 void cvar_set_value(sbox_t* sbox, const char* name, float value) {
@@ -61,7 +72,7 @@ void cfg_write(sbox_t* sbox, const char* path) {
 
 	cvar_t* cvar = sbox->cvars;
 	while (cvar) {
-		fprintf(fp, "%s %s %s\n", cvar->name, cvar->string, cvar->desc);
+		fprintf(fp, "%s %s %s (default: %s)\n", cvar->name, cvar->string, cvar->desc, cvar->init);
 		cvar = cvar->next;
 	}
 

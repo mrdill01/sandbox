@@ -41,6 +41,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
     mesh_t* bush_mesh = mesh_load(sbox, "res/meshes/nature/bush.obj");
     mesh_t* bush2_mesh = mesh_load(sbox, "res/meshes/nature/bush2.obj");
+    mesh_t* grass_mesh = mesh_load(sbox, "res/meshes/nature/grass.obj");
     mesh_t* pipe_mesh = mesh_load(sbox, "res/meshes/pipe.obj");
     mesh_t* pipe_bend_mesh = mesh_load(sbox, "res/meshes/pipe_bend.obj");
     
@@ -99,6 +100,13 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/concrete_r.png",
         "res/textures/materials/concrete_n.png",
         1, 1, false, PHYS_MAT_STONE);
+
+    material_t* concrete2 = material_load(sbox,
+        "concrete2",
+        "res/textures/materials/concrete2.png",
+        "res/textures/materials/concrete2_r.png",
+        "res/textures/materials/concrete2_n.png",
+        2, 2, false, PHYS_MAT_STONE);
 
     material_t* barrel = material_load(sbox,
         "barrel",
@@ -185,6 +193,14 @@ void map_load(sbox_t* sbox, map_t* map) {
         3, 3, false, PHYS_MAT_GRASS);
     cactus->wind_factor = 1.0f;
 
+    material_t* cactus2 = material_load(sbox,
+        "cactus2",
+        "res/textures/materials/cactus2.png",
+        "res/textures/materials/cactus2_r.png",
+        "res/textures/materials/cactus2_n.png",
+        1, 1, true, PHYS_MAT_GRASS);
+    cactus2->wind_factor = 1.0f;
+
     material_t* grass = material_load(sbox,
         "grass",
         "res/textures/materials/grass.png",
@@ -199,6 +215,38 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/leaves_n.png",
         1, 1, false, PHYS_MAT_GRASS);
     leaves->wind_factor = 1.0f;
+
+    material_t* tall_grass = material_load(sbox,
+        "tall_grass",
+        "res/textures/materials/tall_grass.png",
+        "res/textures/materials/tall_grass.png",
+        "res/textures/materials/tall_grass.png",
+        1, 1, true, PHYS_MAT_GRASS);
+    tall_grass->wind_factor = 1.0f;
+
+    material_t* tall_grass2 = material_load(sbox,
+        "tall_grass2",
+        "res/textures/materials/tall_grass2.png",
+        "res/textures/materials/tall_grass2.png",
+        "res/textures/materials/tall_grass2.png",
+        1, 1, true, PHYS_MAT_GRASS);
+    tall_grass2->wind_factor = 1.0f;
+
+    material_t* tall_grass3 = material_load(sbox,
+        "tall_grass3",
+        "res/textures/materials/tall_grass3.png",
+        "res/textures/materials/tall_grass3.png",
+        "res/textures/materials/tall_grass3.png",
+        1, 1, true, PHYS_MAT_GRASS);
+    tall_grass3->wind_factor = 1.0f;
+
+    material_t* tall_grass4 = material_load(sbox,
+        "tall_grass4",
+        "res/textures/materials/tall_grass4.png",
+        "res/textures/materials/tall_grass4.png",
+        "res/textures/materials/tall_grass4.png",
+        1, 1, true, PHYS_MAT_GRASS);
+    tall_grass4->wind_factor = 1.0f;
 
     material_t* rock = material_load(sbox,
         "rock",
@@ -245,501 +293,550 @@ void map_load(sbox_t* sbox, map_t* map) {
         2, 2, false, PHYS_MAT_METAL);
 
     entity_t* entity;
-    entity_init_prop(sbox, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(2)", 0.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal2, 0);
+    entity_init_mesh(sbox, "floor(2)", 0.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(3)", 16.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_init_mesh(sbox, "floor(3)", 16.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(4)", 16.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_init_mesh(sbox, "floor(4)", 16.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(5)", 24.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_init_mesh(sbox, "floor(5)", 24.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(6)", 24.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood2, 0);
+    entity_init_mesh(sbox, "floor(6)", 24.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(7)", 16.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, grass, 0);
+    entity_init_mesh(sbox, "floor(7)", 16.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(8)", 24.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, grass, 0);
+    entity_init_mesh(sbox, "floor(7)", 16.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(9)", 32.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "floor(8)", 24.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(10)", 32.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "floor(8)", 24.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(11)", 32.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "floor(8)", 16.0f, -0.5f, 24.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(12)", 40.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "floor(8)", 24.0f, -0.5f, 24.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, grass, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(13)", 40.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    for (int i = 0; i < 256; i++) {
+        float x = random(12.0f, 28.0f);
+        float y = -0.5f;
+        float z = random(12.0f, 28.0f);
+        entity_init_mesh(sbox, "grass", x, y, z, grass_mesh, &entity);
+
+        material_t* materials[] = {
+            tall_grass, tall_grass2, tall_grass3, tall_grass4
+        };
+
+        material_t* material = materials[
+            (size_t)random(0.0f, sizeof(materials) / sizeof(materials[0]))];
+        entity_mesh_set_material(sbox, entity, material, 0);
+
+        glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
+        entity->data.mesh.enable_collision = false;
+        glm_vec3_scale(entity->scale, random(0.5f, 1.5f), entity->scale);
+        entlist_add(sbox, &map->entlist, entity);
+    }
+
+    entity_init_mesh(sbox, "floor(8)", 40.0f, -0.5f, 24.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(14)", 40.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+     entity_init_mesh(sbox, "floor(8)", 32.0f, -0.5f, 24.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(15)", 8.0f, -0.5f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal2, 0);
+     entity_init_mesh(sbox, "floor(8)", 40.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(16)", 8.0f, -0.5f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "floor(9)", 32.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(17)", 8.0f, -0.5f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "floor(10)", 32.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(18)", 32.0f, -0.5f, 16.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, test, 0);
+    entity_init_mesh(sbox, "floor(11)", 32.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(12)", 40.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(13)", 40.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(14)", 40.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(15)", 8.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal2, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(16)", 8.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(17)", 8.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(18)", 32.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, test, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(19)", 36.0f, 3.5f, 16.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, test, 0);
+    entity_init_mesh(sbox, "floor(19)", 36.0f, 3.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, test, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 0.0f, 1.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(20)", 8.0f, -0.5f, 16.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_mesh(sbox, "floor(20)", 8.0f, -0.5f, 16.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, tile, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(21)", 0.0f, 2.0f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_mesh(sbox, "floor(21)", 0.0f, 2.0f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(22)", -8.0f, 2.0f, 8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_mesh(sbox, "floor(22)", -8.0f, 2.0f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(23)", -8.0f, 2.0f, 0.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_mesh(sbox, "floor(23)", -8.0f, 2.0f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "floor(24)", -8.0f, 2.0f, -8.0f, floor_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile, 0);
+    entity_init_mesh(sbox, "floor(24)", -8.0f, 2.0f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wall", 0.0f, -0.5f, 4.0f, wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, brick, 0);
+    entity_init_mesh(sbox, "wall", 0.0f, -0.5f, 4.0f, wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, brick, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wall(2)", 4.0f, -0.5f, 8.0f, wall_mesh, &entity);
+    entity_init_mesh(sbox, "wall(2)", 4.0f, -0.5f, 8.0f, wall_mesh, &entity);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
-    entity_prop_set_material(sbox, entity, brick, 0);
+    entity_mesh_set_material(sbox, entity, brick, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wall(3)", -4.0f, -0.5f, 0.0f, wall_mesh, &entity);
+    entity_init_mesh(sbox, "wall(3)", -4.0f, -0.5f, 0.0f, wall_mesh, &entity);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
-    entity_prop_set_material(sbox, entity, brick2, 0);
+    entity_mesh_set_material(sbox, entity, brick2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wall(4)", -4.0f, -0.5f, -8.0f, wall_mesh, &entity);
+    entity_init_mesh(sbox, "wall(4)", -4.0f, -0.5f, -8.0f, wall_mesh, &entity);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
-    entity_prop_set_material(sbox, entity, brick2, 0);
+    entity_mesh_set_material(sbox, entity, brick2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "crate", 0.0f, 0.0f, 0.0f, crate_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate, 0);
+    entity_init_mesh(sbox, "crate", 0.0f, 0.0f, 0.0f, crate_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "crate(2)", -1.0f, 0.0f, 0.1f, crate_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate, 0);
+    entity_init_mesh(sbox, "crate(2)", -1.0f, 0.0f, 0.1f, crate_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "crate(3)", -1.0f, 0.0f, -0.9f, crate_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate, 0);
+    entity_init_mesh(sbox, "crate(3)", -1.0f, 0.0f, -0.9f, crate_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "crate(4)", -0.8f, 1.0f, -0.5f, crate_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate, 0);
+    entity_init_mesh(sbox, "crate(4)", -0.8f, 1.0f, -0.5f, crate_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate", -3.0f, 0.5f, 3.0f, crate2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate2, 0);
+    entity_init_mesh(sbox, "big crate", -3.0f, 0.5f, 3.0f, crate2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate(2)", -3.6f, -0.5f, 0.0f, crate3_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood3, 0);
+    entity_init_mesh(sbox, "big crate(2)", -3.6f, -0.5f, 0.0f, crate3_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood3, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate(3)", -1.0f, -0.5f, 3.5f, crate4_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood4, 0);
+    entity_init_mesh(sbox, "big crate(3)", -1.0f, -0.5f, 3.5f, crate4_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood4, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate(4)", 29.0f, 0.5f, 0.5f, crate2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate2, 0);
+    entity_init_mesh(sbox, "big crate(4)", 29.0f, 0.5f, 0.5f, crate2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     for (int i = 0; i < 32; i++) {
         float x = random(7.0f, 30.0f);
         float y = random(-2.5f, 0.0f);
         float z = random(-13.0f, -24.0f);
-        entity_init_prop(sbox, "big crate", x, y, z, crate2_mesh, &entity);
-        entity_prop_set_material(sbox, entity, crate2, 0);
+        entity_init_mesh(sbox, "big crate", x, y, z, crate2_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, crate2, 0);
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    entity_init_prop(sbox, "metal panel", -1.1f, -0.5f, 3.0f, metal_panel_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal3, 0);
+    entity_init_mesh(sbox, "metal panel", -1.1f, -0.5f, 3.0f, metal_panel_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal3, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "table", 2.0f, -0.5f, 3.25f, table_mesh, &entity);
-    entity_prop_set_material(sbox, entity, tile2, 0);
-    entity_prop_set_material(sbox, entity, metal, 1);
+    entity_init_mesh(sbox, "table", 2.0f, -0.5f, 3.25f, table_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, tile2, 0);
+    entity_mesh_set_material(sbox, entity, metal, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "barrel", 1.5f, 0.0f, 0.0f, barrel_mesh, &entity);
-    entity_prop_set_material(sbox, entity, barrel, 0);
-    entity_prop_set_material(sbox, entity, barrel_top, 1);
+    entity_init_mesh(sbox, "barrel", 1.5f, 0.0f, 0.0f, barrel_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, barrel, 0);
+    entity_mesh_set_material(sbox, entity, barrel_top, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "cactus", 2.0f, -0.5f, -4.5f, cactus_mesh, &entity);
-    entity_prop_set_material(sbox, entity, cactus, 0);
+    entity_init_mesh(sbox, "cactus", 2.0f, -0.5f, -4.5f, cactus_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, cactus, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "rock", 3.5f, -0.5f, -6.5f, rock_mesh, &entity);
-    entity_prop_set_material(sbox, entity, rock, 0);
+    entity_init_mesh(sbox, "rock", 3.5f, -0.5f, -6.5f, rock_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, rock, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood panel", 3.5f, -0.5f, -9.0f, wood_panel_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood5, 0);
+    entity_init_mesh(sbox, "wood panel", 3.5f, -0.5f, -9.0f, wood_panel_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood panel(2)", 2.0f, -0.5f, -8.2f, wood_panel_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood5, 0);
+    entity_init_mesh(sbox, "wood panel(2)", 2.0f, -0.5f, -8.2f, wood_panel_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood panel(3)", 5.0f, -0.5f, -8.2f, wood_panel_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood5, 0);
+    entity_init_mesh(sbox, "wood panel(3)", 5.0f, -0.5f, -8.2f, wood_panel_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
     glm_quat(entity->rotation, rad(-45.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame", 16.0f + 9.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame", 16.0f + 9.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame window", 16.0f + 9.0f, -0.5f, -5.0f,
+    entity_init_mesh(sbox, "wood frame window", 16.0f + 9.0f, -0.5f, -5.0f,
         wood_frame_window_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
-    entity->data.prop.enable_collision = false;
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(3)", 16.0f + 9.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(3)", 16.0f + 9.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(4)", 16.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(4)", 16.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(5)", 16.0f, -0.5f, -5.0f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(5)", 16.0f, -0.5f, -5.0f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame doorway", 16.0f, -0.5f, -2.0f,
+    entity_init_mesh(sbox, "wood frame doorway", 16.0f, -0.5f, -2.0f,
         wood_frame_doorway_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.prop.enable_collision = false;
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame window", 16.0f, -0.5f, 1.0f,
+    entity_init_mesh(sbox, "wood frame window", 16.0f, -0.5f, 1.0f,
         wood_frame_window_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.prop.enable_collision = false;
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(7)", 17.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(7)", 17.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(8)", 20.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(8)", 20.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(9)", 23.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(9)", 23.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(10)", 17.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(10)", 17.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame doorway(2)", 20.5f, -0.5f, -9.5f,
+    entity_init_mesh(sbox, "wood frame doorway(2)", 20.5f, -0.5f, -9.5f,
         wood_frame_doorway_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.prop.enable_collision = false;
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "wood frame(11)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
-    entity_prop_set_material(sbox, entity, wood5, 1);
+    entity_init_mesh(sbox, "wood frame(11)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, wood5, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     for (int x = 0; x < 3; x++) {
         for (int z = 0; z < 4; z++) {
-            entity_init_prop(sbox,
+            entity_init_mesh(sbox,
                 "wood frame(ceiling)",
                 19.0f + x * 3.0f, 2.5f, -8.0f + z * 3.0f,
                 wood_frame_mesh, &entity);
-            entity_prop_set_material(sbox, entity, wood, 0);
-            entity_prop_set_material(sbox, entity, wood5, 1);
+            entity_mesh_set_material(sbox, entity, wood, 0);
+            entity_mesh_set_material(sbox, entity, wood5, 1);
             glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
             glm_quat(entity->rotation, rad(90.0f), 0.0f, 0.0f, 1.0f);
             entlist_add(sbox, &map->entlist, entity);
         }
     }
 
-    entity_init_prop(sbox, "stone wall", 12.0f, -0.5f, -11.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall", 12.0f, -0.5f, -11.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "stone wall(2)", 12.0f, -0.5f, -9.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall(2)", 12.0f, -0.5f, -9.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "stone wall(3)", 12.0f, -0.5f, -7.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall(3)", 12.0f, -0.5f, -7.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "stone wall(4)", 12.0f, -0.5f, -5.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall(4)", 12.0f, -0.5f, -5.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "stone wall(5)", 12.0f, -0.5f, -1.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall(5)", 12.0f, -0.5f, -1.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "stone wall(6)", 12.0f, -0.5f, 1.0f, stone_wall_mesh, &entity);
-    entity_prop_set_material(sbox, entity, stone, 0);
+    entity_init_mesh(sbox, "stone wall(6)", 12.0f, -0.5f, 1.0f, stone_wall_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     for (int i = 0; i < 12; i++) {
         if (i == 1 || i == 11) continue;
-        entity_init_prop(sbox,
+        entity_init_mesh(sbox,
             "stone wall",
             40.0f, -0.5f, -11.0f + i * 2.0f,
             stone_wall_mesh,
             &entity);
-        entity_prop_set_material(sbox, entity, stone, 0);
+        entity_mesh_set_material(sbox, entity, stone, 0);
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    entity_init_prop(sbox, "crate", 39.3f, 0.0f, -4.5f, crate_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate, 0);
+    entity_init_mesh(sbox, "crate", 39.3f, 0.0f, -4.5f, crate_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate", 39.0f, 0.5f, -3.0f, crate2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate2, 0);
+    entity_init_mesh(sbox, "big crate", 39.0f, 0.5f, -3.0f, crate2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate", 36.1f, 0.5f, 4.5f, crate2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate2, 0);
+    entity_init_mesh(sbox, "big crate", 36.1f, 0.5f, 4.5f, crate2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "big crate", 36.1f, 2.5f, 4.5f, crate2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, crate2, 0);
+    entity_init_mesh(sbox, "big crate", 36.1f, 2.5f, 4.5f, crate2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
     for (int i = 0; i < 5; i++) {
-        entity_init_prop(sbox,
+        entity_init_mesh(sbox,
             "chainlink fence",
             35.0f, -0.5f, -3.0f + i * 2.0f,
             chainlink_fence_mesh,
             &entity);
-        entity_prop_set_material(sbox, entity, chainlink, 0);
-        entity_prop_set_material(sbox, entity, wood, 1);
+        entity_mesh_set_material(sbox, entity, chainlink, 0);
+        entity_mesh_set_material(sbox, entity, wood, 1);
         glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
 
-        entity_init_prop(sbox,
+        entity_init_mesh(sbox,
             "chainlink fence",
             35.0f, 1.5f, -3.0f + i * 2.0f,
             chainlink_fence_mesh,
             &entity);
-        entity_prop_set_material(sbox, entity, chainlink, 0);
-        entity_prop_set_material(sbox, entity, wood, 1);
+        entity_mesh_set_material(sbox, entity, chainlink, 0);
+        entity_mesh_set_material(sbox, entity, wood, 1);
         glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
 
-        entity_init_prop(sbox,
+        entity_init_mesh(sbox,
             "chainlink fence",
             35.0f, 3.0f, -3.0f + i * 2.0f,
             chainlink_fence_mesh,
             &entity);
-        entity_prop_set_material(sbox, entity, chainlink, 0);
-        entity_prop_set_material(sbox, entity, wood, 1);
+        entity_mesh_set_material(sbox, entity, chainlink, 0);
+        entity_mesh_set_material(sbox, entity, wood, 1);
         glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
     }
 
     for (int i = 0; i < 3; i++) {
-        entity_init_prop(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 11.0f, pipe_mesh, &entity);
-        entity_prop_set_material(sbox, entity, metal, 0);
+        entity_init_mesh(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 11.0f, pipe_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, metal, 0);
         glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
 
-        entity_init_prop(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 9.0f, pipe_mesh, &entity);
-        entity_prop_set_material(sbox, entity, metal, 0);
+        entity_init_mesh(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 9.0f, pipe_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, metal, 0);
         glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
 
-        entity_init_prop(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 7.0f, pipe_mesh, &entity);
-        entity_prop_set_material(sbox, entity, metal, 0);
+        entity_init_mesh(sbox, "pipe", 36.0f, 1.5f + i * 4.0f, 7.0f, pipe_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, metal, 0);
         glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    entity_init_prop(sbox, "chainlink fence", 0.0f, -0.5f, 0.8f, chainlink_fence_mesh, &entity);
-    entity_prop_set_material(sbox, entity, chainlink, 0);
-    entity_prop_set_material(sbox, entity, wood, 1);
+    entity_init_mesh(sbox, "chainlink fence", 0.0f, -0.5f, 0.8f, chainlink_fence_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, chainlink, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "container", -2.5f, -0.5f, -8.0f, container_mesh, &entity);
-    entity_prop_set_material(sbox, entity, container, 0);
-    entity->data.prop.enable_collision = false;
+    entity_init_mesh(sbox, "container", -2.5f, -0.5f, -8.0f, container_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, container, 0);
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe bend", 32.0f, 0.5f, 10.0f, pipe_bend_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe bend", 32.0f, 0.5f, 10.0f, pipe_bend_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe", 32.0f, 0.5f, 6.0f, pipe_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe", 32.0f, 0.5f, 6.0f, pipe_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(2)", 32.0f, 0.5f, 2.0f, pipe_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe(2)", 32.0f, 0.5f, 2.0f, pipe_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe bend(2)", 32.0f, 0.5f, -2.0f, pipe_bend_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe bend(2)", 32.0f, 0.5f, -2.0f, pipe_bend_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 0.0f, 1.0f);
     glm_quat(entity->rotation, rad(180.0f), 1.0f, 0.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe bend(3)", 34.0f, 1.5f, 10.0f, pipe_bend_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe bend(3)", 34.0f, 1.5f, 10.0f, pipe_bend_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(4)", 34.0f, -1.5f, 11.0f, pipe_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe(4)", 34.0f, -1.5f, 11.0f, pipe_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(5)", 34.0f, 1.5f, 6.0f, pipe_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe(5)", 34.0f, 1.5f, 6.0f, pipe_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe(6)", 34.0f, 1.5f, 2.0f, pipe_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe(6)", 34.0f, 1.5f, 2.0f, pipe_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "pipe bend(4)", 34.0f, 1.5f, -2.0f, pipe_bend_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "pipe bend(4)", 34.0f, 1.5f, -2.0f, pipe_bend_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 0.0f, 1.0f);
     glm_quat(entity->rotation, rad(180.0f), 1.0f, 0.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "table(2)", 9.0f, -0.5f, -7.0f, table2_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_init_mesh(sbox, "table(2)", 9.0f, -0.5f, -7.0f, table2_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "bench(1)", 9.0f, -0.5f, -5.8f, bench_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_init_mesh(sbox, "bench(1)", 9.0f, -0.5f, -5.8f, bench_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "bench(2)", 9.0f, -0.5f, -8.2f, bench_mesh, &entity);
-    entity_prop_set_material(sbox, entity, wood, 0);
+    entity_init_mesh(sbox, "bench(2)", 9.0f, -0.5f, -8.2f, bench_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "car", 8.0f, -0.5f, 0.0f, car_mesh, &entity);
-    glm_quat(entity->rotation, rad(-45.0f), 0.0f, 1.0f, 0.0f);
-    entity_prop_set_material(sbox, entity, metal, 0);
-    entity_prop_set_material(sbox, entity, wood, 1);
-    entity_prop_set_material(sbox, entity, metal, 2);
+    entity_init_mesh(sbox, "car", 9.0f, -0.5f, 0.0f, car_mesh, &entity);
+    glm_quat(entity->rotation, rad(0.0f), 0.0f, 1.0f, 0.0f);
+    entity_mesh_set_material(sbox, entity, metal, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
+    entity_mesh_set_material(sbox, entity, metal, 2);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "helicopter", 8.0f, -0.5f, 16.0f, helicopter_mesh, &entity);
+    entity_init_mesh(sbox, "helicopter", 8.0f, -0.5f, 16.0f, helicopter_mesh, &entity);
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
-    entity_prop_set_material(sbox, entity, metal, 0);
-    entity_prop_set_material(sbox, entity, wood, 1);
+    entity_mesh_set_material(sbox, entity, metal, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
+    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "water", 0.0f, -1.0f, 0.0f, water_mesh, &entity);
-    entity_prop_set_material(sbox, entity, water, 0);
+    entity_init_mesh(sbox, "water", 0.0f, -1.0f, 0.0f, water_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, water, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "underwater", 0.0f, -2.0f, 0.0f, underwater_mesh, &entity);
-    entity_prop_set_material(sbox, entity, sand, 0);
+    entity_init_mesh(sbox, "underwater", 0.0f, -2.0f, 0.0f, underwater_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "ship", 0.0f, -0.5f, -32.0f, ship_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
+    entity_init_mesh(sbox, "ship", 0.0f, -0.5f, -32.0f, ship_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "dock", 4.0f, -1.0f, -12.0f, dock_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "dock", 4.0f, -1.0f, -12.0f, dock_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "dock(2)", 4.0f, -1.0f, -18.0f, dock_mesh, &entity);
-    entity_prop_set_material(sbox, entity, concrete, 0);
+    entity_init_mesh(sbox, "dock(2)", 4.0f, -1.0f, -18.0f, dock_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "vinyl #1", 2.0f, 0.4f, 3.25f, vinyl_mesh, &entity);
-    entity_prop_set_material(sbox, entity, water, 0);
-    entity->data.prop.is_pickup = true;
+    entity_init_mesh(sbox, "vinyl #1", 2.0f, 0.4f, 3.25f, vinyl_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, water, 0);
+    entity->data.mesh.is_pickup = true;
     entlist_add(sbox, &map->entlist, entity);
 
     vec3 sun_dir = {0.0f, -0.999f, 0.0f};
@@ -751,84 +848,84 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_init_point_light(sbox, "point light", 0.0f, 1.5f, -2.5f, color, &entity);
     entlist_add(sbox, &map->entlist, entity);*/
 
-    entity_init_prop(sbox, "streetlight", 0.0f, -0.5f, -2.5f, streetlight_mesh, &entity);
-    entity_prop_set_material(sbox, entity, metal, 0);
-    entity_prop_set_material(sbox, entity, light, 1);
+    entity_init_mesh(sbox, "streetlight", 0.0f, -0.5f, -2.5f, streetlight_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, metal, 0);
+    entity_mesh_set_material(sbox, entity, light, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge", 15.5f, -0.5f, 6.0f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge", 15.5f, -0.5f, 6.0f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(2)", 15.5f, -0.5f, 10.0f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(2)", 15.5f, -0.5f, 10.0f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(3)", 24.5f, -0.5f, 6.0f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(3)", 24.5f, -0.5f, 6.0f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(4)", 24.5f, -0.5f, 10.0f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(4)", 24.5f, -0.5f, 10.0f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(5)", 23.0f, -0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(5)", 23.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(6)", 21.0f, -0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(6)", 21.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(7)", 19.0f, -0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(7)", 19.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(8)", 17.0f, -0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(8)", 17.0f, -0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(5)", 23.0f, 0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(5)", 23.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(6)", 21.0f, 0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(6)", 21.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(7)", 19.0f, 0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(7)", 19.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(8)", 17.0f, 0.5f, 4.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(8)", 17.0f, 0.5f, 4.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(9)", 23.0f, -0.5f, 11.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(9)", 23.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(10)", 21.0f, -0.5f, 11.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(10)", 21.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(11)", 19.0f, -0.5f, 11.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(11)", 19.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_prop(sbox, "hedge(12)", 17.0f, -0.5f, 11.5f, hedge_mesh, &entity);
-    entity_prop_set_material(sbox, entity, leaves, 0);
+    entity_init_mesh(sbox, "hedge(12)", 17.0f, -0.5f, 11.5f, hedge_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, leaves, 0);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -838,11 +935,11 @@ void map_load(sbox_t* sbox, map_t* map) {
         vec3 pos = {random(min[0], max[0]), random(min[1], max[1]), random(min[2], max[2])};
         mesh_t* mesh = (random(0.0f, 1.0f) > 0.5f) ? bush2_mesh : bush_mesh;
 
-        entity_init_prop(sbox, "bush", pos[0], pos[1], pos[2], mesh, &entity);
-        entity_prop_set_material(sbox, entity, leaves, 0);
+        entity_init_mesh(sbox, "bush", pos[0], pos[1], pos[2], mesh, &entity);
+        entity_mesh_set_material(sbox, entity, leaves, 0);
         glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
         glm_vec3_scale(entity->scale, random(1.0f, 3.0f), entity->scale);
-        entity->data.prop.enable_collision = false;
+        entity->data.mesh.enable_collision = false;
         entlist_add(sbox, &map->entlist, entity);
     }
 

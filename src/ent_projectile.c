@@ -2,7 +2,7 @@
 #include "sbox.h"
 
 #define PROJECTILE_MAX_LIFETIME 3.0f
-#define PROJECTILE_PARTICLE_RATE 0.0001f
+#define PROJECTILE_PARTICLE_RATE 0.00001f
 
 void entity_init_projectile(sbox_t* sbox,
     const char* name,
@@ -46,14 +46,14 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
         sbox, entity->position, dir, max_distance, entlist, projectile->owner_id, &trace))
     {
         entity_t* explosion = NULL;
-        entity_init_explosion(sbox, "explosion", entity->position, 4.0f, &explosion);
+        entity_init_explosion(sbox, "explosion", entity->position, M_PI, 2.0f, 12.0f, &explosion);
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
+
     } else {
         vec3 move;
         glm_vec3_copy(projectile->velocity, move);
         glm_vec3_scale(move, sbox->dt, move);
-
         glm_vec3_add(entity->position, move, entity->position);
     }
 

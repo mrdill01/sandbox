@@ -18,6 +18,8 @@ int main(int argc, char* argv[]) {
     if (!init(&sbox))
         return EXIT_FAILURE;
 
+    SDL_StopTextInput();
+
     #ifdef SBOX_DEBUG
     cmd_run(&sbox, "host", NULL, 0);
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
@@ -136,6 +138,10 @@ void tick(sbox_t* sbox) {
             sbox->buttons[e.button.button] = false;
             break;
         }
+        case SDL_TEXTINPUT: {
+            strcat(sbox->console.input, e.text.text);
+            break;
+        }
         }
     }
 
@@ -143,13 +149,42 @@ void tick(sbox_t* sbox) {
 
     if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
         sbox->keys[SDL_SCANCODE_ESCAPE] = false;
-        if (sbox->ui_state == UI_STATE_IN_GAME) sbox->ui_state = UI_STATE_PAUSE_MENU;
+        if (console.value) cvar_set(sbox, "console", "0");
+        else if (sbox->ui_state == UI_STATE_IN_GAME ||
+            sbox->ui_state == UI_STATE_DEAD) sbox->ui_state = UI_STATE_PAUSE_MENU;
         else sbox->ui_state = UI_STATE_IN_GAME;
     }
 
     if (sbox->keys[SDL_SCANCODE_F1]) {
         sbox->keys[SDL_SCANCODE_F1] = false;
-        cvar_toggle(sbox, "console");
+        if (console.value)
+            con_close(sbox, &sbox->console);
+        else
+            con_open(sbox, &sbox->console);
+    }
+
+    if (console.value) {
+        if (sbox->keys[SDL_SCANCODE_RETURN]) {
+            sbox->keys[SDL_SCANCODE_RETURN] = false;
+            con_submit(sbox, &sbox->console);
+        }
+
+        if (sbox->keys[SDL_SCANCODE_UP]) {
+            sbox->keys[SDL_SCANCODE_UP] = false;
+            if (sbox->console.scroll > 0)
+                sbox->console.scroll -= 1;
+        }
+
+        if (sbox->keys[SDL_SCANCODE_DOWN]) {
+            sbox->keys[SDL_SCANCODE_DOWN] = false;
+            if (sbox->console.scroll < sbox->console.history_len - 1)
+                sbox->console.scroll += 1;
+        }
+
+        if (sbox->keys[SDL_SCANCODE_BACKSPACE]) {
+            sbox->keys[SDL_SCANCODE_BACKSPACE] = false;
+            sbox->console.input[strlen(sbox->console.input) - 1] = '\0';
+        }
     }
 
     if (sbox->keys[SDL_SCANCODE_F2]) {
@@ -183,11 +218,6 @@ void tick(sbox_t* sbox) {
         sbox->keys[SDL_SCANCODE_F11] = false;
         sbox->keys[SDL_SCANCODE_RETURN] = false;
         cvar_toggle(sbox, "r_fullscreen");
-    }
-
-    if (sbox->keys[SDL_SCANCODE_N]) {
-        sbox->keys[SDL_SCANCODE_N] = false;
-        cvar_toggle(sbox, "noclip");
     }
 }
 

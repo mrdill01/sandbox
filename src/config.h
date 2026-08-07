@@ -15,12 +15,14 @@ typedef struct cvar_t {
     bool save;
     const char* desc;
     float value;
+    const char* init;
     on_change_t on_change;
     struct cvar_t* next;
 } cvar_t;
 
 void cvar_register(sbox_t* sbox, cvar_t* cvar, on_change_t on_change);
 void cvar_set(sbox_t* sbox, const char* name, const char* value);
+cvar_t* cvar_get(sbox_t* sbox, const char* name);
 void cvar_set_value(sbox_t* sbox, const char* name, float value);
 void cvar_toggle(sbox_t* sbox, const char* name);
 cvar_t* cvar_find(sbox_t* sbox, const char* name);

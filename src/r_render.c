@@ -60,6 +60,7 @@ static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* invent
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = item->materials[i];
+            if (!material) continue;
             r_set_material(sbox, renderer, material, i);
         }
 
@@ -179,6 +180,7 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
 
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = drawcall->materials[i];
+            if (!material) continue;
             r_set_material(sbox, renderer, material, i);
         }
 
@@ -363,6 +365,8 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     r_set_texture(sbox, renderer, "sun_light.shadow", renderer->sun_shadow_buffer->textures[0], 6);
     r_set_mat4(sbox, renderer, "sun_light.matrix", sun_light->matrix);
 
+    r_set_float(sbox, renderer, "time", sbox->time);
+
     for (int i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
         r_set_mat4(sbox, renderer, "model", drawcall->model);
@@ -370,6 +374,8 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
         for (int i = 0; i < MAX_MATERIALS; i++) {
             const material_t* material = drawcall->materials[i];
             if (!material) continue;
+            r_set_float(sbox, renderer, "wind_factor", material->wind_factor);
+            r_set_float(sbox, renderer, "hitbox_height", drawcall->local_bbox.max[1]);
             r_set_int(sbox, renderer, "is_water", strcmp(material->name, "water") == 0);
             r_set_material(sbox, renderer, material, i);
         }
@@ -410,6 +416,7 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
         glm_vec3_copy(entity->data.sun_light.direction, sun_direction);
     }
     r_set_vec3(sbox, renderer, "sun_direction", sun_direction);
+    r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
 }

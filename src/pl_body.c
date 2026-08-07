@@ -146,7 +146,7 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         strcpy(drawcall.entity, "body part");
         
         drawcall.mesh = part->mesh;
-        drawcall.materials[0] = NULL;
+        drawcall.materials[0] = renderer->default_material;
         drawcall.materials[1] = NULL;
         drawcall.materials[2] = NULL;
         drawcall.materials[3] = NULL;

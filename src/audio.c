@@ -68,7 +68,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->jump_sound = sound_load(sbox, audio, "res/sounds/jump.wav");
     audio->jump_land_base_sound = sound_load(sbox, audio, "res/sounds/jump_land_base.wav");
 
-    for (int i = 0; i < PHYS_MAT_MAX; i++)
+    for (int i = 0; i < NUM_PHYS_MAT; i++)
         audio->jump_land_sounds[i] = NULL;
     
     audio->jump_land_sounds[PHYS_MAT_METAL] =
@@ -80,7 +80,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->jump_land_sounds[PHYS_MAT_GRASS] =
         sound_load(sbox, audio, "res/sounds/jump_land_grass.wav");
 
-    for (int i = 0; i < PHYS_MAT_MAX; i++)
+    for (int i = 0; i < NUM_PHYS_MAT; i++)
         audio->step_sounds[i] = NULL;
 
     audio->step_sounds[PHYS_MAT_METAL] = sound_load(sbox, audio, "res/sounds/step_metal.wav");
@@ -206,6 +206,16 @@ void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float p
     alSourcePlay(sound->source);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to play audio source: %d", err);
+}
+
+int a_get_max_source_count(sbox_t* sbox, audio_t* audio) {
+    int num = 0;
+    ALenum err;
+
+    alcGetIntegerv(audio->device, ALC_MONO_SOURCES, 1, &num);
+    if ((err = alGetError()) != AL_NO_ERROR)
+        error(sbox, "failed to get ALC_MONO_SOURCES: %d", err);
+    return num;
 }
 
 sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {

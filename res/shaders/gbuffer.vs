@@ -31,18 +31,22 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
+vec3 add_wind(vec3 vertex_position) {
+    const float speed = 1.0f;
+    const float amount = 0.125f;
+    float height_scaling = clamp(vertex_position.y / hitbox_height, 0.0f, 1.0f);
+    
+    vertex_position.x += sin(time * speed) * cos(time * vertex_position.z * speed * 0.5f) *
+        amount * height_scaling * materials[0].wind_factor;
+    vertex_position.z += sin(time * speed * 0.25f) * cos(time * vertex_position.x * speed * 0.125f) *
+        amount * height_scaling * materials[0].wind_factor;
+
+    return vertex_position;
+}
+
 void main() {
     vec3 vertex_position = a_position;
-
-    if (materials[0].wind_factor > 0.0f) {
-        float height_scaling = a_position.y / hitbox_height;
-        float speed = 1.5f;
-        float amount = 0.125f;
-        vertex_position.x += sin(time * speed) * cos(time * a_position.z * speed * 0.5f) *
-            amount * height_scaling * materials[0].wind_factor;
-        vertex_position.z += sin(time * speed * 0.5f) * cos(time * a_position.x * speed * 0.25f) *
-            amount * height_scaling * materials[0].wind_factor;
-    }
+    vertex_position = add_wind(vertex_position);    
 
     gl_Position = projection * view * model * vec4(vertex_position, 1.0);
     vs_frag_position = vec3(model * vec4(vertex_position, 1.0));

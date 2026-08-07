@@ -102,6 +102,9 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     int num_indices = attrib.num_faces;
     uint32_t* indices = malloc(num_indices * sizeof(uint32_t));
 
+    if (num_materials == 0)
+        num_materials = 1;
+
     bbox_t bbox = {0};
 
     int len = 0;
@@ -140,17 +143,13 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
             vertices[len++] = attrib.texcoords[base + 1];
         }
 
-        if (num_materials == 0 || num_materials == 1)
+        if (num_materials == 1)
             vertices[len++] = 0.0f;
         else
-            vertices[len++] = attrib.material_ids[i];
-        vertices[len - 1] = 0.0f;
+            vertices[len++] = 0.0f;
 
         indices[i] = i;
     }
-
-    if (num_materials == 0)
-        num_materials = 1;
 
     tinyobj_attrib_free(&attrib);
     tinyobj_shapes_free(shapes, num_shapes);

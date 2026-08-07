@@ -27,7 +27,7 @@ cvar_t r_debug_buffer = {"r_debug_buffer", "0", true,
 cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
 cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
 cvar_t m_sens = {"m_sens", "5.0f", true, "Mouse sensitivity."};
-cvar_t console = {"console", "0", true, "Show developer console."};
+cvar_t console = {"console", "0", true, "Show the developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
 cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
@@ -172,9 +172,9 @@ void info(sbox_t* sbox, const char* msg, ...) {
 	va_end(args);
 
 	char text[MAX_MSG_LEN + 32];
-	sprintf(text, "%s\n", buffer);
+	sprintf(text, "%s", buffer);
 
-	printf(text);
+	puts(text);
 	con_add_history(sbox, &sbox->console, text);
 }
 
@@ -187,9 +187,9 @@ void error(sbox_t* sbox, const char* msg, ...) {
 	va_end(args);
 
 	char text[MAX_MSG_LEN + 32];
-	sprintf(text, "error: %s\n", buffer);
+	sprintf(text, "error: %s", buffer);
 
-	printf(text);
+	puts(text);
 	con_add_history(sbox, &sbox->console, text);
 
 	#ifdef SBOX_DEBUG

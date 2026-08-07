@@ -1,23 +1,23 @@
-edit_snap_size 0.2f Edit mode snap size.
-edit_mode 0.0f Enable edit mode.
-cl_name Player Display name.
-sv_random_seed 12345 Random seed value.
-sv_respawn_time 3.0f How long for players to respawn.
-sv_timescale 1.0f Set to values less than 1.0 for slow-motion.
-noclip 0 Enables flight / disables collision.
-console 0 Show developer console.
-m_sens 5.0f Mouse sensitivity.
-a_volume 0.2f Audio volume.
-a_device (null) Audio output device (default (null)).
-r_debug_buffer 0 0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth.
-r_debug_draw_colliders 0 Draw colliders.
-r_debug_menu 1 Debug menu.
-r_third_person 0 Enable third-person camera.
-r_shadow_res 1024.0 Shadow resolution.
-r_shadows 1 Enable shadows.
-r_fov 75.0f Field-of-view.
-r_vsync 0 Vertical sync.
-r_fullscreen 0 Fullscreen.
-r_scale 0.35f Resolution scaling.
-r_height 540.0f Renderer height.
-r_width 960.0f Renderer width.
+edit_snap_size 0.2f Edit mode snap size. (default: 0.2f)
+edit_mode 0.0f Enable edit mode. (default: 0.0f)
+cl_name Player Display name. (default: Player)
+sv_random_seed 12345 Random seed value. (default: 12345)
+sv_respawn_time 3.0f How long for players to respawn. (default: 3.0f)
+sv_timescale 1.0f Set to values less than 1.0 for slow-motion. (default: 1.0f)
+noclip 0 Enables flight / disables collision. (default: 0)
+console 0 Show the developer console. (default: 0)
+m_sens 5.0f Mouse sensitivity. (default: 5.0f)
+a_volume 0.2f Audio volume. (default: 0.2f)
+a_device (null) Audio output device (default (null)). (default: (null))
+r_debug_buffer 0 0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth. (default: 0)
+r_debug_draw_colliders 0 Draw colliders. (default: 0)
+r_debug_menu 1 Debug menu. (default: 1)
+r_third_person 0 Enable third-person camera. (default: 0)
+r_shadow_res 1024.0 Shadow resolution. (default: 1024.0)
+r_shadows 1 Enable shadows. (default: 1)
+r_fov 75.0f Field-of-view. (default: 75.0f)
+r_vsync 0 Vertical sync. (default: 0)
+r_fullscreen 0 Fullscreen. (default: 0)
+r_scale 0.35f Resolution scaling. (default: 0.35f)
+r_height 540.0f Renderer height. (default: 540.0f)
+r_width 960.0f Renderer width. (default: 960.0f)

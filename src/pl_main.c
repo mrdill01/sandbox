@@ -12,7 +12,7 @@
 #define MAX_SPEED_SPRINT 4.0f
 #define MAX_SPEED_FLIGHT 5.0f
 #define ACCEL 10.0f
-#define AIR_ACCEL 2.0f
+#define AIR_ACCEL 1.0f
 #define STOPSPEED 2.5f
 #define AIR_STOPSPEED 2.0f
 #define FRICTION 5.0f
@@ -43,6 +43,7 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->ground_mat = PHYS_MAT_NONE;
     player->fall_distance = 0.0f;
     player->water_level = 0.0f;
+    player->head_in_water = false;
     player->last_step_time = 0.0f;
     player->head_blocked = false;
     player->is_thirdperson = false;
@@ -324,14 +325,14 @@ static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, 1.0f, 0.0f};
-    float max_distance = HEIGHT / 2.0f;
+    float max_distance = 0.01f;
     trace_result_t trace;
     
     player->head_blocked = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->head_blocked = true;
-        player->velocity[1] *= -1;
+        player->velocity[1] = 0.0f;
     }
 }
 
@@ -434,16 +435,11 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     vec3 start;
     glm_vec3_copy(camera->position, start);
     
-    if (player->is_thirdperson) {
-        vec3 forward;
-        glm_vec3_copy(sbox->renderer.camera.forward, forward);
-        glm_vec3_scale(forward, PLAYER_THIRDPERSON_CAMERA_LENGTH, forward);
-        glm_vec3_add(start, forward, start);
-    }
-    
     vec3 dir;
     glm_vec3_copy(camera->forward, dir);
-    float max_distance = 8.0f;
+    float max_distance = 50.0f;
+
+    player->head_in_water = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &player->look_trace)) {
         if (player->buttons & PLAYER_BUTTON_FIRE) {
@@ -453,16 +449,20 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
 
             if (edit_mode.value) {
                  if (player->editor.selection) {
-                    player->editor.selection->data.prop.enable_collision = true;
+                    player->editor.selection->data.mesh.enable_collision = true;
                     player->editor.selection = NULL;
                 } else {
                     player->editor.selection = player->look_trace.entity;
-                    player->editor.selection->data.prop.enable_collision = false;
+                    player->editor.selection->data.mesh.enable_collision = false;
                 }
 
                 player->editor.trace = player->look_trace;
             }
         }
+    }
+
+    if (player->look_trace.start_in_water) {
+        player->head_in_water = true;
     }
 }
 

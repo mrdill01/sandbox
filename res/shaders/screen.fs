@@ -19,6 +19,7 @@ uniform sampler2D sun_shadow;
 uniform vec3 view_position;
 uniform vec3 view_direction;
 uniform vec3 sun_direction;
+uniform int head_in_water;
 
 float linearize_depth(float depth) {
     float ndc = depth * 2.0f - 1.0f;
@@ -37,6 +38,9 @@ vec3 vignette(vec3 color, vec2 uv, float radius, float smoothness) {
 
 void main() {
     vec3 color = texture(screen, vs_uv).rgb;
+    if (head_in_water == 1) {
+        color *= vec3(0.0f, 0.25f, 1.0f);
+    }
     color = vignette(color, vs_uv, 0.5f, 0.25f);
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / GAMMA)); 

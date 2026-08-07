@@ -226,7 +226,9 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
-    sprintf(text, "water level: %g", sbox->player->water_level);
+    sprintf(text, "on ground: %d, water level: %g",
+        sbox->player->is_grounded,
+        sbox->player->water_level);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
@@ -266,6 +268,12 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 
     position[1] += spacing;
     sprintf(text, "particles: %d", r_get_particle_count(sbox, &sbox->renderer));
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
+    position[1] += spacing;
+
+    position[1] += spacing;
+    sprintf(text, "audio sources: %d/%d", 0, a_get_max_source_count(sbox, &sbox->audio));
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 }
 
@@ -326,7 +334,7 @@ static void draw_inventory(sbox_t* sbox, ui_t* ui) {
     if (!inventory->is_open || edit_mode.value) return;
 
     vec2 size = {48.0f, 48.0f};
-    vec2 start = {0.0f, r_height.value - (size[1] * 4.0f)};
+    vec2 start = {size[0], r_height.value - (size[1] * 4.0f)};
 
     for (int x = 0; x < INVENTORY_WIDTH; x++) {
         for (int y = 0; y < INVENTORY_HEIGHT; y++) {
@@ -441,7 +449,7 @@ static void draw_death_screen(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
-    int width = 500.0f;
+    int width = 800.0f;
     int height = 400.0f; 
     int title_height = 40.0f;
 
@@ -450,7 +458,7 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
         ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f},
         (vec2){width, title_height},
-        (vec4){0.0f, 0.0f, 1.0f, 0.8f});
+        (vec4){0.0f, 0.0f, 0.2f, 0.8f});
 
     ui_draw_text(sbox, ui,
         "CONSOLE", (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, 48.0f, COLOR_WHITE);
@@ -460,10 +468,29 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
         ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, title_height},
         (vec2){width, height},
-        (vec4){0.0f, 0.0f, 1.0f, 0.4f});
+        (vec4){0.0f, 0.0f, 0.2f, 0.6f});
 
-    ui_draw_text(sbox, ui,
-        con->history, (vec2){r_width.value / 2.0f - width / 2.0f, title_height}, 32.0f, COLOR_WHITE);
+    float font_size = 25.0f;
+    float spacing = font_size * 0.65f;
+
+    for (int i = 0; i < 20; i++) {
+        ui_draw_text_shadow(sbox, ui,
+            con->history[i + con->history_len + con->scroll - 20],
+            (vec2){r_width.value / 2.0f - width / 2.0f, title_height + spacing * i},
+            font_size, COLOR_WHITE);
+    }
+
+    ui_draw_texture(sbox,
+        ui,
+        ui->pixel,
+        (vec2){r_width.value / 2.0f - width / 2.0f, title_height + height},
+        (vec2){width, title_height},
+        (vec4){0.0f, 0.0f, 0.2f, 0.8f});
+
+    ui_draw_text_shadow(sbox, ui,
+        con->input,
+        (vec2){r_width.value / 2.0f - width / 2.0f, title_height + height},
+        font_size, COLOR_WHITE);
 }
 
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {

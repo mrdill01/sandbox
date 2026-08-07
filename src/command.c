@@ -3,12 +3,22 @@
 #include "console.h"
 #include "net.h"
 
+cmd_t help = {"help", "Shows a help message for the console."};
+cmd_t cmdlist = {"cmdlist", "Prints all commands to the console."};
+cmd_t cvarlist = {"cvarlist", "Prints all cvars to the console."};
+cmd_t reset = {"reset", "Resets a cvar to its default value."};
 cmd_t host = {"host", "Hosts a new game."};
+cmd_t connect_ = {"connect", "Connects the client to a server."};
 cmd_t disconnect = {"disconnect", "Disconnects from the server."};
 cmd_t quit = {"quit", "Quits the game."};
 
 void cmd_init(sbox_t* sbox) {
+    cmd_register(sbox, &help);
+    cmd_register(sbox, &cmdlist);
+    cmd_register(sbox, &cvarlist);
+    cmd_register(sbox, &reset);
     cmd_register(sbox, &host);
+    cmd_register(sbox, &connect_);
     cmd_register(sbox, &disconnect);
     cmd_register(sbox, &quit);
 }
@@ -19,7 +29,7 @@ void cmd_register(sbox_t* sbox, cmd_t* cmd) {
     sbox->cmds = cmd;
 }
 
-static cmd_t* cmd_find(sbox_t* sbox, const char* name) {
+cmd_t* cmd_find(sbox_t* sbox, const char* name) {
     cmd_t* cmd = sbox->cmds;
     while (cmd) {
         if (strcmp(cmd->name, name) == 0)
@@ -35,6 +45,42 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (!cmd) {
         error(sbox, "command not found: %s", name);
         return;
+    }
+
+    if (strcmp(cmd->name, "help") == 0) {
+        info(sbox,
+            "The console is used to run commands or set the values of cvars (config variables).");
+        info(sbox,
+            "Type 'cvarlist' for a list of cvars and 'cmdlist' for a list of commands.");
+        info(sbox,
+            "Press escape or F1 to close the console. Press enter to submit input.");
+        return;
+    }
+
+    if (strcmp(cmd->name, "cmdlist") == 0) {
+        cmd_t* cmd = sbox->cmds;
+        while (cmd) {
+            info(sbox, "%.16s %s", cmd->name, cmd->desc);
+            cmd = cmd->next;
+        }
+        return;
+    }
+
+    if (strcmp(cmd->name, "cvarlist") == 0) {
+        cvar_t* cvar = sbox->cvars;
+        while (cvar) {
+            info(sbox, "%.16s %s", cvar->name, cmd->desc);
+            cvar = cvar->next;
+        }
+        return;
+    }
+
+    if (strcmp(cmd->name, "reset") == 0) {
+        cvar_t* cvar = cvar_find(sbox, args[0]);
+        if (!cvar)
+            return;
+        cvar_set(sbox, args[0], cvar->init);
+        info(sbox, "reset cvar %s", cvar->name);
     }
 
     if (strcmp(cmd->name, "host") == 0) {

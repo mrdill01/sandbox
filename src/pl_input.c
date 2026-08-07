@@ -9,7 +9,7 @@ static void reset_input(sbox_t* sbox, player_t* player) {
 
 void player_input(sbox_t* sbox, player_t* player) {
     reset_input(sbox, player);
-    if (!player->is_me) return;
+    if (!player->is_me || SDL_IsTextInputActive()) return;
     
     if (player_is_dead(player)) {
         if (sbox->keys[SDL_SCANCODE_SPACE]) {
@@ -112,6 +112,11 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_I]) {
         sbox->keys[SDL_SCANCODE_I] = false;
         inventory_toggle(sbox, &player->inventory);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_N]) {
+        sbox->keys[SDL_SCANCODE_N] = false;
+        cvar_toggle(sbox, "noclip");
     }
 
     if (sbox->keys[SDL_SCANCODE_J]) {

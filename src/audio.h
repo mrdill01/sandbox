@@ -23,9 +23,9 @@ typedef struct {
 
     sound_t* jump_sound;
     sound_t* jump_land_base_sound;
-    sound_t* jump_land_sounds[PHYS_MAT_MAX];
-    sound_t* step_sounds[PHYS_MAT_MAX];
-    sound_t* bullet_hit_sounds[PHYS_MAT_MAX];
+    sound_t* jump_land_sounds[NUM_PHYS_MAT];
+    sound_t* step_sounds[NUM_PHYS_MAT];
+    sound_t* bullet_hit_sounds[NUM_PHYS_MAT];
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
     sound_t* explosion_sound;
@@ -40,6 +40,7 @@ void a_init(sbox_t* sbox, audio_t* audio);
 void a_free(sbox_t* sbox, audio_t* audio);
 void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera);
 void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch);
+int a_get_max_source_count(sbox_t* sbox, audio_t* audio);
 
 sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path);
 void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound);
