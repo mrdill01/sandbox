@@ -108,7 +108,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     mesh_buffer_t** buffers = malloc(sizeof(mesh_buffer_t*) * nbuffers);
 
     int stride = 9;
-    buffers[0] = mesh_buffer_new(sbox, attrib.num_face_num_verts * stride * 3, attrib.num_faces);
+    buffers[0] = mesh_buffer_new(sbox, attrib.num_faces * stride, attrib.num_faces);
     
     if (num_materials == 0)
         num_materials = 1;
@@ -156,7 +156,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         if (num_materials == 1)
             buffer->vertices[len++] = 0.0f;
         else
-            buffer->vertices[len++] = 0.0f;
+            buffer->vertices[len++] = attrib.material_ids[i / 3];
 
         buffer->indices[i] = i;
     }
@@ -225,16 +225,9 @@ void mesh_deform(
         float* y = &buffer->vertices[target_start + 1];
         float* z = &buffer->vertices[target_start + 2];
 
-        vec3 vertex_ws = {position[0] + *x, position[1] + *y, position[2] + *z};
-        r_add_line(sbox, &sbox->renderer, vertex_ws,
-            (vec3){vertex_ws[0] + direction[0],
-                vertex_ws[1] + direction[1],
-                vertex_ws[2] + direction[2]},
-            COLOR_RED, 5.0f);
-
-        *x += direction[0] * distance;
-        *y += direction[1] * distance;
-        *z += direction[2] * distance;
+        *x -= direction[0] * distance;
+        *y -= direction[1] * distance;
+        *z -= direction[2] * distance;
 
         for (int v = 0; v < buffer->nvertices; v += 9) {
             mesh->bbox.min[0] = min(mesh->bbox.min[0], *x);

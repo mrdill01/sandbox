@@ -439,7 +439,7 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
 
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 0.0f, -3.0f});
+    glm_translate(model, (vec3){0.0f, 0.0f, -5.0f});
     r_set_mat4(sbox, renderer, "model", model);
 
     const material_t* material = renderer->earth_material;
@@ -458,6 +458,11 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {
+    if (!sbox->map.is_loaded) {
+        glm_vec3_zero(renderer->camera.position);
+        glm_vec3_copy((vec3){0.0f, 90.0f, 0.0f}, sbox->renderer.camera.angles);
+    }
+
     camera_get_projection_matrix(&renderer->camera,
         r_width.value, r_height.value, renderer->projection);
     camera_get_view_matrix(&renderer->camera, renderer->view);

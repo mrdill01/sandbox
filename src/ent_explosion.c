@@ -27,13 +27,13 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
         float dist = glm_vec3_distance(player->position, entity->position);
         if (dist < explosion->radius) {
             float factor = 1.0f - clamp(dist / explosion->radius, 0.0f, 1.0f);
-            float force = lerp(2.0f, 12.0f, factor);
+            float force = lerp(2.0f, 8.0f, factor);
 
             vec3 force_vec;
             glm_vec3_sub(player->position, entity->position, force_vec);
             glm_vec3_scale(force_vec, force, force_vec);
 
-            //glm_vec3_add(player->velocity, force_vec, player->velocity);
+            glm_vec3_add(player->velocity, force_vec, player->velocity);
 
             if (!player->is_me)
                 player_add_damage(sbox, player, explosion->damage * factor);

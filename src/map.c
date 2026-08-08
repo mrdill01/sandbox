@@ -280,6 +280,13 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/sand_n.png",
         1, 1, false, PHYS_MAT_SAND);
 
+    material_t* glass = material_load(sbox,
+        "glass",
+        "res/textures/materials/glass.png",
+        "res/textures/materials/glass_r.png",
+        "res/textures/materials/glass_n.png",
+        1, 1, false, PHYS_MAT_METAL);
+
     material_t* light = material_load(sbox,
         "light",
         "res/textures/materials/light.png",
@@ -545,90 +552,90 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame", 16.0f + 9.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame window", 16.0f + 9.0f, -0.5f, -5.0f,
         wood_frame_window_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(3)", 16.0f + 9.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(4)", 16.0f, -0.5f, -8.0f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(5)", 16.0f, -0.5f, -5.0f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame doorway", 16.0f, -0.5f, -2.0f,
         wood_frame_doorway_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame window", 16.0f, -0.5f, 1.0f,
         wood_frame_window_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(7)", 17.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(8)", 20.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(9)", 23.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(10)", 17.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame doorway(2)", 20.5f, -0.5f, -9.5f,
         wood_frame_doorway_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(11)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, wood5, 1);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -638,8 +645,8 @@ void map_load(sbox_t* sbox, map_t* map) {
                 "wood frame(ceiling)",
                 19.0f + x * 3.0f, 2.5f, -8.0f + z * 3.0f,
                 wood_frame_mesh, &entity);
-            entity_mesh_set_material(sbox, entity, wood, 0);
-            entity_mesh_set_material(sbox, entity, wood5, 1);
+            entity_mesh_set_material(sbox, entity, wood5, 0);
+            entity_mesh_set_material(sbox, entity, wood, 1);
             glm_quat(entity->rotation, rad(90.0f), 1.0f, 0.0f, 0.0f);
             glm_quat(entity->rotation, rad(90.0f), 0.0f, 0.0f, 1.0f);
             entlist_add(sbox, &map->entlist, entity);
@@ -811,15 +818,15 @@ void map_load(sbox_t* sbox, map_t* map) {
 
     entity_init_mesh(sbox, "car", 9.0f, -0.5f, 0.0f, car_mesh, &entity);
     glm_quat(entity->rotation, rad(0.0f), 0.0f, 1.0f, 0.0f);
-    entity_mesh_set_material(sbox, entity, metal, 0);
-    entity_mesh_set_material(sbox, entity, wood, 1);
-    entity_mesh_set_material(sbox, entity, metal, 2);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, metal, 1);
+    entity_mesh_set_material(sbox, entity, glass, 2);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "helicopter", 8.0f, -0.5f, 16.0f, helicopter_mesh, &entity);
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
     entity_mesh_set_material(sbox, entity, metal, 0);
-    entity_mesh_set_material(sbox, entity, wood, 1);
+    entity_mesh_set_material(sbox, entity, glass, 1);
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 

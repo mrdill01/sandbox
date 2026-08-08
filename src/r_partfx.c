@@ -209,7 +209,7 @@ void r_add_partfx_explosion(
     for (int i = 0; i < 25; i++) {
         vec3 velocity = {
             random(-0.25f, 0.25f),
-            random(0.0f, 4.0f),
+            random(0.0f, 2.0f),
             random(-0.25f, 0.25f)};
 
         vec3 new_position = {

@@ -32,11 +32,11 @@ cvar_t console = {"console", "0", true, "Show the developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
 cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
-cvar_t sv_destruction = {"sv_destruction", "1.0f", true,
+cvar_t sv_destruction = {"sv_destruction", "0", true,
 	"Allow the map to be destroyed by explosions."};
 cvar_t sv_random_seed = {"sv_random_seed", "12345", true, "Random seed value."};
 cvar_t cl_name = {"cl_name", "Player", true, "Display name."};
-cvar_t edit_mode = {"edit_mode", "0.0f", true, "Enable edit mode."};
+cvar_t edit_mode = {"edit_mode", "0", true, "Enable edit mode."};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
 
 void sbox_init(sbox_t* sbox) {

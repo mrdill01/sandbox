@@ -371,7 +371,7 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
     font_size = 32.0f;
     width = ui_measure_text(text, font_size);
     ui_draw_text_shadow(sbox, ui, text,
-        (vec2){r_width.value - width, 0.0f},
+        (vec2){r_width.value - width - 5.0f, 0.0f},
         font_size, COLOR_YELLOW);
 
     draw_hotbar(sbox, ui);

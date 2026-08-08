@@ -62,7 +62,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (strcmp(cmd->name, "cmdlist") == 0) {
         cmd_t* cmd = sbox->cmds;
         while (cmd) {
-            info(sbox, "%32s %s", cmd->name, cmd->desc);
+            info(sbox, "%20s %s", cmd->name, cmd->desc);
             cmd = cmd->next;
         }
         return;
@@ -71,7 +71,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (strcmp(cmd->name, "cvarlist") == 0) {
         cvar_t* cvar = sbox->cvars;
         while (cvar) {
-            info(sbox, "%32s %s %s", cvar->name, cvar->string, cvar->desc);
+            info(sbox, "%20s %s %s", cvar->name, cvar->string, cvar->desc);
             cvar = cvar->next;
         }
         return;
