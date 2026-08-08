@@ -24,9 +24,9 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
         player_t* player = sbox->players[i];
         if (!player) continue;
 
-        float dist = glm_vec3_distance(player->position, entity->position);
-        if (dist < explosion->radius) {
-            float factor = 1.0f - clamp(dist / explosion->radius, 0.0f, 1.0f);
+        float distance = glm_vec3_distance(player->position, entity->position);
+        if (distance < explosion->radius) {
+            float factor = 1.0f - clamp(distance / explosion->radius, 0.0f, 1.0f);
             float force = lerp(2.0f, 8.0f, factor);
 
             vec3 force_vec;
@@ -50,8 +50,9 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
                 glm_vec3_sub(entity->position, other->position, direction);
                 glm_vec3_normalize(direction);
 
+                float amount = 1.0f;
                 mesh_deform(sbox,
-                    other->data.mesh.mesh, other->position, entity->position, direction, 0.1f);
+                    other->data.mesh.mesh, other->position, entity->position, direction, amount);
             }
         }
     }

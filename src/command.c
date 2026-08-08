@@ -9,7 +9,7 @@ cmd_t cvarlist = {"cvarlist", "Prints all cvars to the console."};
 cmd_t reset = {"reset", "Resets a cvar to its default value."};
 cmd_t clear = {"clear", "Clears the console history."};
 cmd_t host = {"host", "Hosts a new game."};
-cmd_t connect_ = {"connect", "Connects the client to a server."};
+cmd_t connect_ = {"connect", "<ip> <port>", "Connects the client to a server."};
 cmd_t disconnect = {"disconnect", "Disconnects from the server."};
 cmd_t quit = {"quit", "Quits the game."};
 
@@ -62,7 +62,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     if (strcmp(cmd->name, "cmdlist") == 0) {
         cmd_t* cmd = sbox->cmds;
         while (cmd) {
-            info(sbox, "%20s %s", cmd->name, cmd->desc);
+            info(sbox, "%20s %16s %s", cmd->name, cmd->usage, cmd->desc);
             cmd = cmd->next;
         }
         return;
@@ -113,8 +113,10 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         
         map_free(sbox, &sbox->map);
         sbox->player = NULL;
-        for (int i = 0; i < MAX_PLAYERS; i++)
+        for (int i = 0; i < MAX_PLAYERS; i++) {
+            player_free(sbox, sbox->players[i]);
 		    sbox->players[i] = NULL;
+        }
         
         sbox->ui_state = UI_STATE_MAIN_MENU;
         return;

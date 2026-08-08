@@ -4,10 +4,12 @@
 void map_init(sbox_t* sbox, map_t* map) {
     map->is_loaded = false;
     map->skybox = NULL;
+    map->coins = 0;
 }
 
 void map_load(sbox_t* sbox, map_t* map) {
     info(sbox, "loading map...");
+    srand(sv_random_seed.value);
     
 	entlist_init(sbox, &map->entlist);
 
@@ -279,6 +281,13 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/sand_r.png",
         "res/textures/materials/sand_n.png",
         1, 1, false, PHYS_MAT_SAND);
+
+    material_t* tire = material_load(sbox,
+        "tire",
+        "res/textures/materials/tire.png",
+        "res/textures/materials/tire_r.png",
+        "res/textures/materials/tire_n.png",
+        1, 1, false, PHYS_MAT_METAL);
 
     material_t* glass = material_load(sbox,
         "glass",
@@ -819,7 +828,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_init_mesh(sbox, "car", 9.0f, -0.5f, 0.0f, car_mesh, &entity);
     glm_quat(entity->rotation, rad(0.0f), 0.0f, 1.0f, 0.0f);
     entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, metal, 1);
+    entity_mesh_set_material(sbox, entity, tire, 1);
     entity_mesh_set_material(sbox, entity, glass, 2);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -976,10 +985,14 @@ void map_load(sbox_t* sbox, map_t* map) {
         //if (phys_line_trace(sbox, start, dir, max_distance, &sbox->map.entlist, -1, &trace)) {
         for (int j = -3; j <= 3; j++) {
             for (int k = -3; k <= 3; k++) {
-                entity_init_mesh(sbox, "coin", x + j, start[1] + 0.1f, z + k, coin_mesh, &entity);
-                entity_mesh_set_material(sbox, entity, coin, 0);
-                entity->data.mesh.enable_collision = false;
+                entity_init_pickup(sbox, "coin",
+                    (vec3){x + j, start[1] + 0.1f, z + k},
+                    coin_mesh, sbox->audio.pickup_coin_sound, &entity);
+                entity_pickup_set_material(sbox, entity, coin, 0);
+                entity->data.pickup.is_coin = true;
                 entlist_add(sbox, &map->entlist, entity);
+                map->coins++;
+                sbox->player->inventory.coins++;
             }
         }
             

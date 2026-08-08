@@ -100,6 +100,8 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/particles/p_water.png", TEX_FILTER_NEAREST);
     renderer->p_blood = texture_load(sbox,
         "res/textures/particles/p_blood.png", TEX_FILTER_NEAREST);
+    renderer->p_coin = texture_load(sbox,
+        "res/textures/particles/p_coin.png", TEX_FILTER_NEAREST);
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
         particle_t* particle = &renderer->particles[i];
@@ -172,14 +174,14 @@ static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
     return strcmp(a->materials[0]->name, b->materials[0]->name);
-	if (a->dist_to_camera > b->dist_to_camera) return 1;
+	if (a->distance_to_camera > b->distance_to_camera) return 1;
 	return -1;
 }
 
 static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
-	if (a->dist_to_camera < b->dist_to_camera) return 1;
+	if (a->distance_to_camera < b->distance_to_camera) return 1;
 	return -1;
 }
 
@@ -205,9 +207,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 		vec3 center;
 		bbox_get_center(&drawcall->world_bbox, center);
 
-		vec3 tmp;
-		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
+		drawcall->distance_to_camera = glm_vec3_distance(
+            center, sbox->renderer.camera.position);
 	}
 
 	qsort(renderer->drawcalls, renderer->ndrawcalls,
@@ -219,9 +220,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 		vec3 center;
 		bbox_get_center(&drawcall->world_bbox, center);
 
-		vec3 tmp;
-		glm_vec3_sub(center, sbox->renderer.camera.position, tmp);
-		drawcall->dist_to_camera = glm_vec3_norm2(tmp);
+		drawcall->distance_to_camera = glm_vec3_distance(
+            center, sbox->renderer.camera.position);
 	}
 
 	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,

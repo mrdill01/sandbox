@@ -5,6 +5,7 @@ typedef struct sbox_t sbox_t;
 
 typedef struct cmd_t {
     const char* name;
+    const char* usage;
     const char* desc;
     struct cmd_t* next;
 } cmd_t;

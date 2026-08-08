@@ -14,6 +14,7 @@ void entity_init_common(
 	glm_vec3_copy(position, entity->position);
     glm_quat_identity(entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
+	glm_vec3_zero(entity->velocity);
 	entity->local_bbox = (bbox_t){0};
 	entity->world_bbox = (bbox_t){0};
 	entity->spawn_time = sbox->time;
@@ -74,6 +75,7 @@ mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
 	switch (entity->type) {
 	case ENTITY_MESH: return entity->data.mesh.mesh;
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
+	case ENTITY_PICKUP: return entity->data.pickup.mesh;
 	default: return NULL;
 	}
 }
@@ -98,6 +100,13 @@ void entity_get_materials(sbox_t* sbox,
 			*nmaterials = entity->data.projectile.mesh->nmaterials;
 		break;
 	}
+	case ENTITY_PICKUP: {
+		memcpy(materials, entity->data.pickup.materials,
+			sizeof(material_t*) * MAX_MATERIALS);
+		if (nmaterials)
+			*nmaterials = entity->data.pickup.mesh->nmaterials;
+		break;
+	}
 	default: break;
 	}
 }
@@ -108,7 +117,7 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	
 	if (entity->type != ENTITY_MESH &&
 		entity->type != ENTITY_PROJECTILE &&
-		entity->type != ENTITY_DROPPED_ITEM)
+		entity->type != ENTITY_PICKUP)
 		return false;
 
 	if (entity->type == ENTITY_MESH && !entity->data.mesh.is_visible)
@@ -139,7 +148,7 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, drawcall->rotation);
 	glm_vec3_copy(entity->scale, drawcall->scale);
 
-	drawcall->dist_to_camera = 0.0f;
+	drawcall->distance_to_camera = 0.0f;
 
 	drawcall->is_translucent = false;
 	for (int i = 0; i < MAX_MATERIALS; i++) {
@@ -190,11 +199,16 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		if (!entity) continue;
 		compute_bounding_box(sbox, entity);
 
+		vec3 move;
+		glm_vec3_copy(entity->velocity, move);
+		glm_vec3_scale(move, sbox->dt, move);
+		glm_vec3_add(entity->position, move, entity->position);
+
 		switch (entity->type) {
 		case ENTITY_MESH: {
 			entity_mesh_t* mesh = &entity->data.mesh;
 			if (mesh->is_pickup) {
-    			glm_quat(entity->rotation, rad(sbox->time * ITEM_SPIN_RATE), 0.0f, 1.0f, 0.0f);
+    			glm_quat(entity->rotation, rad(sbox->time * PICKUP_SPIN_RATE), 0.0f, 1.0f, 0.0f);
 			}
 			break;
 		}
@@ -204,6 +218,10 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		}
 		case ENTITY_EXPLOSION: {
 			entity_tick_explosion(sbox, entity, &entity->data.explosion);
+			break;
+		}
+		case ENTITY_PICKUP: {
+			entity_tick_pickup(sbox, entity, &entity->data.pickup);
 			break;
 		}
 		default: break;

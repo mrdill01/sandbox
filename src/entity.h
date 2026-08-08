@@ -6,14 +6,17 @@
 
 #include <stddef.h>
 
-#define ITEM_SPIN_RATE 24.0f
+#define PICKUP_SPIN_RATE 24.0f
+#define PICKUP_SUCK_IN_DISTANCE 10.0f
+#define PICKUP_COLLECT_DISTANCE 2.0f
+#define PICKUP_SUCK_IN_SPEED 1.5f
 
 typedef enum {
     ENTITY_MESH,
     ENTITY_PROJECTILE,
     ENTITY_EXPLOSION,
+    ENTITY_PICKUP,
     ENTITY_VEHICLE,
-    ENTITY_DROPPED_ITEM,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
 } entity_type_t;
@@ -49,12 +52,14 @@ typedef struct {
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
-} entity_vehicle_t;
+    void* pickup_sound;
+    bool is_coin;
+} entity_pickup_t;
 
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
-} entity_dropped_item_t;
+} entity_vehicle_t;
 
 typedef struct {
     vec3 direction;
@@ -73,6 +78,7 @@ typedef struct {
     vec3 position;
     quat rotation;
     vec3 scale;
+    vec3 velocity;
     bbox_t local_bbox;
     bbox_t world_bbox;
     float spawn_time;
@@ -80,9 +86,9 @@ typedef struct {
     union {
         entity_mesh_t mesh;
         entity_projectile_t projectile;
-        entity_vehicle_t vehicle;
         entity_explosion_t explosion;
-        entity_dropped_item_t dropped_item;
+        entity_pickup_t pickup;
+        entity_vehicle_t vehicle;
         entity_sun_light_t sun_light;
         entity_point_light_t point_light;
     } data;
@@ -106,11 +112,13 @@ void entity_init_projectile(sbox_t* sbox,
     float speed,
     float damage,
     entity_t** out);
-void entity_init_vehicle(sbox_t* sbox,
-    const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_explosion(sbox_t* sbox,
     const char* name, vec3 position, float radius, vec3 direction,
     float min_force, float max_force, entity_t** out);
+void entity_init_pickup(sbox_t* sbox,
+    const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out);
+void entity_init_vehicle(sbox_t* sbox,
+    const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,
@@ -121,12 +129,14 @@ void entity_free(sbox_t* sbox, entity_t* entity);
 
 void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t* projectile);
 void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* explosion);
+void entity_tick_pickup(sbox_t* sbox, entity_t* entity, entity_pickup_t* pickup);
 
 mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity);
 void entity_get_materials(sbox_t* sbox, entity_t* entity, material_t** materials, size_t* nmaterials);
 bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
 
 void entity_mesh_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
+void entity_pickup_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
 
 void entlist_init(sbox_t* sbox, entlist_t* entlist);
 void entlist_free(sbox_t* sbox, entlist_t* entlist);

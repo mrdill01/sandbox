@@ -159,7 +159,7 @@ typedef struct {
     uint32_t flags;
     bool apply_gravity;
     mesh_t* mesh;
-    float dist_to_camera;
+    float distance_to_camera;
 } particle_t;
 
 typedef struct {
@@ -172,7 +172,7 @@ typedef struct {
     vec3 scale;
     bbox_t local_bbox;
     bbox_t world_bbox;
-    float dist_to_camera;
+    float distance_to_camera;
     bool is_translucent;
 } drawcall_t;
 
@@ -236,6 +236,7 @@ typedef struct {
     texture_t* p_bullet_hole;
     texture_t* p_water;
     texture_t* p_blood;
+    texture_t* p_coin;
 
     particle_t particles[MAX_PARTICLES];
 
@@ -344,6 +345,7 @@ void r_add_partfx_step_water(
     sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
 void r_add_partfx_explosion(
     sbox_t* sbox, renderer_t* renderer, vec3 position, float radius);
+void r_add_partfx_pickup_coin(sbox_t* sbox, renderer_t* renderer, vec3 position);
 
 particle_t* r_add_particle(
     sbox_t* sbox,

@@ -23,8 +23,6 @@ void sv_start(sbox_t* sbox, server_t* server, int port) {
         return;
     }
 
-    srand(sv_random_seed.value);
-
     server->is_running = true;
     info(sbox, "server started on port %d!", address.port);
 }

@@ -367,12 +367,22 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
         (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
         font_size, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
 
-    sprintf(text, "%d COINS", 32);
-    font_size = 32.0f;
-    width = ui_measure_text(text, font_size);
-    ui_draw_text_shadow(sbox, ui, text,
-        (vec2){r_width.value - width - 5.0f, 0.0f},
-        font_size, COLOR_YELLOW);
+    if (sbox->player->inventory.coins >= sbox->map.coins) {
+        sprintf(text, "ALL COINS COLLECTED!");
+        font_size = 32.0f;
+        width = ui_measure_text(text, font_size);
+        ui_draw_text_shadow(sbox, ui, text,
+            (vec2){r_width.value - width - 5.0f, 0.0f},
+            font_size, COLOR_YELLOW);
+        
+    } else {
+        sprintf(text, "COINS: %d/%d", sbox->player->inventory.coins, sbox->map.coins);
+        font_size = 32.0f;
+        width = ui_measure_text(text, font_size);
+        ui_draw_text_shadow(sbox, ui, text,
+            (vec2){r_width.value - width - 5.0f, 0.0f},
+            font_size, COLOR_YELLOW);
+    }
 
     draw_hotbar(sbox, ui);
     draw_inventory(sbox, ui);

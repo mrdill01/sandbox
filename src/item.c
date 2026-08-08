@@ -36,6 +36,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     inventory->item_slot = 0;
     inventory->is_open = false;
     inventory->last_switch = 0.0f;
+    inventory->coins = 0;
 
     mesh_t* shooter_mesh = mesh_load(sbox, "res/meshes/items/shooter.obj");
     material_t* test = material_load(sbox,

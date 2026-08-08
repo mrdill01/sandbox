@@ -19,7 +19,7 @@ void entity_init_mesh(sbox_t* sbox,
 }
 
 void entity_mesh_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot) {
-	if (!entity) return;
+	if (!entity || entity->type != ENTITY_MESH) return;
 	
 	if (slot >= MAX_MATERIALS) {
 		error(sbox, "material limit per entity reached (%d)", MAX_MATERIALS);

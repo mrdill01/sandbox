@@ -24,7 +24,7 @@
 
 #define SBOX_VERSION "sbox alpha 1.0"
 #define SBOX_DEBUG
-#define SBOX_NO_AUDIO
+//#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG
 #define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);

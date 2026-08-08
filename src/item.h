@@ -50,6 +50,7 @@ typedef struct {
     size_t item_slot;
     bool is_open;
     float last_switch;
+    int coins;
 } inventory_t;
 
 item_t* item_new(sbox_t* sbox,

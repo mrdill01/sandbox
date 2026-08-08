@@ -189,8 +189,10 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     float y_speed = player->velocity[1];
     player->velocity[1] = 0.0f;
     float speed = 0.0f;
-    if (glm_vec3_dot(player->velocity, player->velocity) != 0.0f)
-        speed = glm_vec3_norm(player->velocity);
+    if (glm_vec3_dot(player->velocity, player->velocity) != 0.0f) {
+        speed = glm_vec3_dot(player->velocity, player->velocity);
+        glm_vec3_normalize(player->velocity);
+    }
 
     float dot = glm_vec3_dot(player->velocity, player->target_dir);
     float k = 32;
@@ -199,7 +201,7 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     if (dot != 0.0f) {
         for (int i = 0; i < 3; i++)
             player->velocity[i] *= speed + player->target_dir[i] * k;
-        glm_vec3_norm(player->velocity);
+        glm_vec3_normalize(player->velocity);
     }
 
     player->velocity[0] *= speed;

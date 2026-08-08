@@ -174,7 +174,7 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, drawcall.scale);
         glm_quat_copy(rotation, *drawcall.rotation);
 
-        drawcall.dist_to_camera = 0.0f;
+        drawcall.distance_to_camera = 0.0f;
         drawcall.is_translucent = false;
         r_add_drawcall(renderer, drawcall);
     }
