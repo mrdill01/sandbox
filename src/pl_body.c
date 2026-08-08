@@ -178,4 +178,9 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         drawcall.is_translucent = false;
         r_add_drawcall(renderer, drawcall);
     }
+
+    if (r_debug_draw_players.value) {
+        bbox_t world = bbox_translate(&player->bbox, player->position);
+        r_add_line_box(sbox, &sbox->renderer, &world, COLOR_PURPLE, 0.0f);
+    }
 }

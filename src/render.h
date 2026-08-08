@@ -25,6 +25,7 @@
 #define COLOR_GREEN (vec4){0.0f, 1.0f, 0.0f, 1.0f}
 #define COLOR_BLUE (vec4){0.0f, 0.0f, 1.0f, 1.0f}
 #define COLOR_LIGHT_BLUE (vec4){0.0f, 0.5f, 1.0f, 1.0f}
+#define COLOR_PURPLE (vec4){0.5f, 0.0f, 0.5f, 1.0f}
 
 typedef struct sbox_t sbox_t;
 typedef enum phys_material_t phys_material_t;

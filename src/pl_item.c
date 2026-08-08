@@ -24,18 +24,18 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     }
     
     camera_t* camera = &sbox->renderer.camera;
-    vec3 dir;
-    glm_vec3_copy(camera->forward, dir);
+    vec3 direction;
+    glm_vec3_copy(camera->forward, direction);
 
     float spread = lerp(
         weapon->min_spread,
         weapon->max_spread,
         1.0f - player_get_accuracy(sbox, player));
     
-    dir[0] += random(-spread, spread);
-    dir[1] += random(-spread, spread);
-    dir[2] += random(-spread, spread);
-    glm_normalize(dir);
+    direction[0] += random(-spread, spread);
+    direction[1] += random(-spread, spread);
+    direction[2] += random(-spread, spread);
+    glm_normalize(direction);
 
     if (player->buttons & PLAYER_BUTTON_FIRE) {
         if (sbox->time - weapon->last_fire < weapon->fire_rate)
@@ -50,15 +50,15 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ?
             weapon->recoil * 0.1f : weapon->recoil;
         
-        sbox->renderer.camera.shake[0] += weapon->recoil * 18.0f;
-        sbox->renderer.camera.shake[1] += weapon->recoil * 24.0f *
-            (random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f;
-        sbox->renderer.camera.shake[2] += weapon->recoil * 20.0f *
-            (random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f;
+        sbox->renderer.camera.shake[0] += weapon->recoil * 14.0f;
+        sbox->renderer.camera.shake[1] += weapon->recoil * 14.0f *
+            ((random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f);
+        sbox->renderer.camera.shake[2] += weapon->recoil * 14.0f *
+            ((random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f);
 
         if (weapon->is_projectile) {
             vec3 velocity;
-            glm_vec3_copy(dir, velocity);
+            glm_vec3_copy(direction, velocity);
             glm_vec3_scale(velocity, weapon->projectile_speed, velocity);
 
             entity_t* projectile = NULL;
@@ -73,7 +73,8 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             float max_distance = 50.0f;
             trace_result_t trace;
 
-            bool hit = phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace);
+            bool hit = phys_line_trace(sbox, start, direction, max_distance,
+                entlist, player->id, &trace);
             if (hit) {
                 sound_t* bullet_hit_sound = sbox->audio.bullet_hit_sounds[trace.phys_mat];
                 a_play(sbox, &sbox->audio, bullet_hit_sound, trace.point, random(0.8f, 1.2f));
@@ -88,6 +89,21 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
                 }
             }
 
+            if (r_debug_draw_bullets.value) {
+                vec3 end;
+                glm_vec3_copy(start, end);
+
+                float distance = max_distance;
+                if (hit)
+                    distance = trace.distance;
+                
+                end[0] += direction[0] * distance;
+                end[1] += direction[1] * distance;
+                end[2] += direction[2] * distance;
+
+                r_add_line(sbox, &sbox->renderer, start, end, COLOR_LIGHT_BLUE, 2.5f);
+            }
+
             vec3 beam_start;
             glm_vec3_copy(start, beam_start);
             
@@ -97,7 +113,7 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
 
             glm_vec3_add(beam_start, forward, beam_start);
 
-            r_add_partfx_shoot_beam(sbox, &sbox->renderer, beam_start, dir,
+            r_add_partfx_shoot_beam(sbox, &sbox->renderer, beam_start, direction,
                 (hit) ? trace.distance : max_distance);
         }
     }

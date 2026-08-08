@@ -1,4 +1,5 @@
 #include "math.h"
+#include "render.h"
 
 float sign(float num) {
     if (num < 0.0f) return -1.0f;
@@ -143,4 +144,87 @@ bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius) {
         (distance_z * distance_z);
 
     return squared_distance <= radius * radius;
+}
+
+typedef struct {
+    vec3 v0;
+    vec3 v1;
+    vec3 v2;
+    float distance;
+} ray_mesh_intersection_t;
+
+bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 start, vec3 dir,
+    mesh_t* mesh, float* t, float max_t)
+{
+    mat4 rotation_mat;
+	glm_quat_rotate(GLM_MAT4_IDENTITY, rotation, rotation_mat);
+
+    for (int i = 0; i < mesh->nbuffers; i++) {
+        mesh_buffer_t* buffer = mesh->buffers[i];
+        if (!buffer) continue;
+
+        for (int i = 0; i < buffer->nvertices; i += 9 * 3) {
+            vec3 v0 = {
+                buffer->vertices[i],
+                buffer->vertices[i + 1],
+                buffer->vertices[i + 2]};
+            vec3 v1 = {
+                buffer->vertices[i + 9 + 0],
+                buffer->vertices[i + 9 + 1],
+                buffer->vertices[i + 9 + 2]};
+            vec3 v2 = {
+                buffer->vertices[i + 18 + 0],
+                buffer->vertices[i + 18 + 1],
+                buffer->vertices[i + 18 + 2]};
+
+            glm_mat4_mulv3(rotation_mat, start, 1.0f, start);
+            glm_mat4_mulv3(rotation_mat, v0, 1.0f, v0);
+            glm_mat4_mulv3(rotation_mat, v1, 1.0f, v1);
+            glm_mat4_mulv3(rotation_mat, v2, 1.0f, v2);
+
+            glm_vec3_add(ws, v0, v0);
+            glm_vec3_add(ws, v1, v1);
+            glm_vec3_add(ws, v2, v2);
+
+            float u = 0.0f;
+            float v = 0.0f;
+            if (ray_intersects_triangle(start, dir, v0, v1, v2, t, &u, &v, max_t))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+bool ray_intersects_triangle(vec3 start, vec3 dir,
+    vec3 v0, vec3 v1, vec3 v2,
+    float* t, float* u, float* v,
+    float max_t)
+{
+    const float EPSILON = 0.0001f;
+    vec3 edge1 = {v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
+    vec3 edge2 = {v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
+    
+    vec3 h = {
+        dir[1] * edge2[2] - dir[2] * edge2[1],
+        dir[2] * edge2[0] - dir[0] * edge2[2],
+        dir[0] * edge2[1] - dir[1] * edge2[0]};
+    
+    float a = edge1[0] * h[0] + edge1[1] * h[1] + edge1[2] * h[2];
+    if (a > -EPSILON && a < EPSILON) return false;
+    
+    float f = 1.0f / a;
+    vec3 s = {start[0] - v0[0], start[1] - v0[1], start[2] - v0[2]};
+    *u = f * (s[0] * h[0] + s[1] * h[1] + s[2] * h[2]);
+    if (*u < 0.0f || *u > 1.0f) return false;
+    
+    vec3 q = {
+        s[1] * edge1[2] - s[2] * edge1[1],
+        s[2] * edge1[0] - s[0] * edge1[2],
+        s[0] * edge1[1] - s[1] * edge1[0]};
+    *v = f * (dir[0] * q[0] + dir[1] * q[1] + dir[2] * q[2]);
+    if (*v < 0.0f || *u + *v > 1.0f) return false;
+    
+    *t = f * (edge2[0] * q[0] + edge2[1] * q[1] + edge2[2] * q[2]);
+    return *t > EPSILON && *t <= max_t;
 }

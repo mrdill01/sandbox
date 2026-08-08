@@ -121,8 +121,8 @@ void player_input(sbox_t* sbox, player_t* player) {
 
     if (sbox->keys[SDL_SCANCODE_J]) {
         sbox->keys[SDL_SCANCODE_J] = false;
-        player_t* bot = gm_spawn_player(sbox, true);
-        player_teleport(sbox, bot, player->look_trace.point);
+        const char* args[] = {"spawn"};
+        cmd_run(sbox, "bot", args, 1);
     }
 
     if (sbox->keys[SDL_SCANCODE_G]) {

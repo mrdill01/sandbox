@@ -42,43 +42,58 @@ bool phys_line_trace(
     trace.player_id = -1;
     trace.material = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
-    bool hit = false;
 
     for (trace.distance = 0.0f; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
             if (!entity) continue;
-            if (entity->type != ENTITY_MESH) continue;
+            if (entity->type != ENTITY_MESH || !entity->data.mesh.mesh) continue;
             if (!entity->data.mesh.enable_collision) continue;
             
             if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
-                if (entity->data.mesh.materials[0]->is_water) {
-                    if (trace.enter_water_point[0] == 0.0f &&
-                        trace.enter_water_point[1] == 0.0f &&
-                        trace.enter_water_point[2] == 0.0f)
-                    {
-                        glm_vec3_copy(trace.point, trace.enter_water_point);
-                    }
-                    
-                    trace.water_level = trace.distance / max_distance;
-                    
-                    if (trace.distance == 0.0f) {
-                        trace.start_in_water = true;
+                float t;
+                if (ray_intersects_mesh(
+                    entity->position, entity->rotation, start, dir,
+                    entity->data.mesh.mesh, &t, max_distance))
+                {
+                    if (entity->data.mesh.materials[0]->is_water) {
+                        if (trace.enter_water_point[0] == 0.0f &&
+                            trace.enter_water_point[1] == 0.0f &&
+                            trace.enter_water_point[2] == 0.0f)
+                        {
+                            glm_vec3_copy(trace.point, trace.enter_water_point);
+                        }
+                        
+                        trace.water_level = trace.distance / max_distance;
+                        
+                        if (trace.distance == 0.0f) {
+                            trace.start_in_water = true;
+                        }
+
+                        continue;
                     }
 
-                    continue;
+                    vec3 scaled_dir;
+                    glm_vec3_copy(dir, scaled_dir);
+                    glm_vec3_scale(scaled_dir, t, scaled_dir);
+
+                    vec3 end;
+                    glm_vec3_add(start, scaled_dir, end);
+
+                    //glm_vec3_copy(end, trace.point);
+
+                    r_add_line(sbox, &sbox->renderer, start, trace.point, COLOR_RED, 0.1f);
+
+                    compute_trace_normal(&trace, &entity->world_bbox);
+                    trace.entity = entity;
+                    trace.material = entity->data.mesh.materials[0];
+                    trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
+
+                    if (out)
+                        *out = trace;
+
+                    return true;
                 }
-
-                hit = true;
-                compute_trace_normal(&trace, &entity->world_bbox);
-                trace.entity = entity;
-                trace.material = entity->data.mesh.materials[0];
-                trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
-
-                if (out)
-                    *out = trace;
-
-                return hit;
             }
         }
 
@@ -91,7 +106,6 @@ bool phys_line_trace(
             bbox_t bbox = player->bbox;
             bbox = bbox_translate(&bbox, player->position);
             if (bbox_point_intersects(&bbox, trace.point)) {
-                hit = true;
                 compute_trace_normal(&trace, &bbox);
                 trace.player_id = j;
                 trace.material = NULL;
@@ -112,5 +126,5 @@ bool phys_line_trace(
     if (out)
         *out = trace;
     
-    return hit;
+    return false;
 }

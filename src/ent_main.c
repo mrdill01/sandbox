@@ -123,9 +123,6 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	if (entity->type == ENTITY_MESH && !entity->data.mesh.is_visible)
 		return false;
 	
-    if (entity->type == ENTITY_MESH && entity->data.mesh.is_viewmodel)
-		return false;
-
 	drawcall->entity = malloc(strlen(entity->name));
 	strcpy(drawcall->entity, entity->name);
 

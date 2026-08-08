@@ -13,6 +13,7 @@ typedef struct cvar_t {
     const char* name;
     const char* string;
     bool save;
+    bool is_cheat;
     const char* desc;
     float value;
     const char* init;

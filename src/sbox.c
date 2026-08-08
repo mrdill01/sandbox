@@ -10,34 +10,37 @@
 
 #define MAX_MSG_LEN 2048
 
-cvar_t r_width = {"r_width", "960.0f", true, "Renderer width."};
-cvar_t r_height = {"r_height", "540.0f", true, "Renderer height."};
-cvar_t r_scale = {"r_scale", "0.35f", true, "Resolution scaling."};
-cvar_t r_fullscreen = {"r_fullscreen", "0", true, "Fullscreen."};
-cvar_t r_vsync = {"r_vsync", "0", true, "Vertical sync."};
-cvar_t r_fov = {"r_fov", "90.0f", true, "Field-of-view."};
-cvar_t r_shadows = {"r_shadows", "1", true, "Enable shadows."};
-cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
-cvar_t r_third_person = {"r_third_person", "0", true, "Enable third-person camera."};
-cvar_t r_viewmodel = {"r_viewmodel", "1", true, "Enables or disables rendering of the viewmodel."};
-cvar_t r_debug_menu = {"r_debug_menu", "1", true, "Debug menu."};
-cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, "Draw colliders."};
-cvar_t r_debug_draw_bullets = {"r_debug_draw_bullets", "1", true, "Draw bullet traces."};
-cvar_t r_debug_buffer = {"r_debug_buffer", "0", true,
-	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
-cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
-cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
-cvar_t m_sens = {"m_sens", "8.0f", true, "Mouse sensitivity."};
-cvar_t console = {"console", "0", true, "Show the developer console."};
-cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
-cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};
-cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, "How long for players to respawn."};
-cvar_t sv_destruction = {"sv_destruction", "0", true,
+cvar_t sv_cheats = {"sv_cheats", "1", true, true, "Enables cheat commands/cvars."};
+cvar_t sv_round_time = {"sv_round_time", "600", true, false, "Determines how long a round lasts for."};
+cvar_t sv_timescale = {"sv_timescale", "1.0f", true, true, "Set to values less than 1.0 for slow-motion."};
+cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, false, "How long for players to respawn."};
+cvar_t sv_destruction = {"sv_destruction", "0", false, true,
 	"Allow the map to be destroyed by explosions."};
-cvar_t sv_random_seed = {"sv_random_seed", "12345", true, "Random seed value."};
-cvar_t cl_name = {"cl_name", "Player", true, "Display name."};
-cvar_t edit_mode = {"edit_mode", "0", true, "Enable edit mode."};
-cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, "Edit mode snap size."};
+cvar_t sv_random_seed = {"sv_random_seed", "12345", true, false, "Random seed value."};
+cvar_t r_width = {"r_width", "960.0f", true, false, "Renderer width."};
+cvar_t r_height = {"r_height", "540.0f", true, false, "Renderer height."};
+cvar_t r_scale = {"r_scale", "0.35f", true, false, "Resolution scaling."};
+cvar_t r_fullscreen = {"r_fullscreen", "0", true, false, "Fullscreen."};
+cvar_t r_vsync = {"r_vsync", "0", true, false, "Vertical sync."};
+cvar_t r_fov = {"r_fov", "90.0f", true, false, "Field-of-view."};
+cvar_t r_shadows = {"r_shadows", "1", true, false, "Enable shadows."};
+cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, false, "Shadow resolution."};
+cvar_t r_third_person = {"r_third_person", "0", true, false, "Enable third-person camera."};
+cvar_t r_viewmodel = {"r_viewmodel", "1", true, false, "Enables or disables rendering of the viewmodel."};
+cvar_t r_debug_menu = {"r_debug_menu", "1", true, false, "Debug menu."};
+cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, true, "Draw colliders."};
+cvar_t r_debug_draw_bullets = {"r_debug_draw_bullets", "0", true, true, "Draw bullet traces."};
+cvar_t r_debug_draw_players = {"r_debug_draw_players", "1", true, true, "Draw player bounding boxes."};
+cvar_t r_debug_buffer = {"r_debug_buffer", "0", true, false,
+	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
+cvar_t a_device = {"a_device", "(null)", true, false, "Audio output device (default (null))."};
+cvar_t a_volume = {"a_volume", "0.2f", true, false, "Audio volume."};
+cvar_t m_sens = {"m_sens", "8.0f", true, false, "Mouse sensitivity."};
+cvar_t console = {"console", "0", true, false, "Show the developer console."};
+cvar_t noclip = {"noclip", "0", true, true, "Enables flight / disables collision."};
+cvar_t cl_name = {"cl_name", "Player", true, false, "Display name."};
+cvar_t edit_mode = {"edit_mode", "0", true, true, "Enable edit mode."};
+cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, false, "Edit mode snap size."};
 
 void sbox_init(sbox_t* sbox) {
 	con_init(sbox, &sbox->console);
@@ -54,6 +57,12 @@ void sbox_init(sbox_t* sbox) {
     info(sbox, "current date and time: %s", time_string);
 	
     sbox->cvars = NULL;
+	cvar_register(sbox, &sv_cheats, NULL);
+    cvar_register(sbox, &sv_timescale, NULL);
+    cvar_register(sbox, &sv_respawn_time, NULL);
+    cvar_register(sbox, &sv_destruction, NULL);
+    cvar_register(sbox, &sv_random_seed, NULL);
+    cvar_register(sbox, &cl_name, NULL);
     cvar_register(sbox, &r_width, NULL);
     cvar_register(sbox, &r_height, NULL);
     cvar_register(sbox, &r_scale, NULL);
@@ -66,17 +75,14 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_viewmodel, NULL);
     cvar_register(sbox, &r_debug_menu, NULL);
     cvar_register(sbox, &r_debug_draw_colliders, NULL);
+    cvar_register(sbox, &r_debug_draw_bullets, NULL);
+    cvar_register(sbox, &r_debug_draw_players, NULL);
     cvar_register(sbox, &r_debug_buffer, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
     cvar_register(sbox, &m_sens, NULL);
     cvar_register(sbox, &console, NULL);
     cvar_register(sbox, &noclip, NULL);
-    cvar_register(sbox, &sv_timescale, NULL);
-    cvar_register(sbox, &sv_respawn_time, NULL);
-    cvar_register(sbox, &sv_destruction, NULL);
-    cvar_register(sbox, &sv_random_seed, NULL);
-    cvar_register(sbox, &cl_name, NULL);
     cvar_register(sbox, &edit_mode, NULL);
     cvar_register(sbox, &edit_snap_size, NULL);
 
@@ -114,16 +120,17 @@ void sbox_init(sbox_t* sbox) {
 	cl_init(sbox, &sbox->client);
 
 	sbox->ui_state = UI_STATE_MAIN_MENU;
+	gm_start(sbox, &sbox->gm, GAME_MODE_CTF);
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
 		sbox->players[i] = NULL;
 }
 
 void sbox_free(sbox_t* sbox) {
-    map_free(sbox, &sbox->map);
-	con_free(sbox, &sbox->console);
 	cl_disconnect(sbox, &sbox->client);
 	sv_stop(sbox, &sbox->server);
+    map_free(sbox, &sbox->map);
+	con_free(sbox, &sbox->console);
 	net_free(sbox);
 }
 
@@ -135,13 +142,14 @@ void sbox_tick(sbox_t* sbox) {
 
 	sv_tick(sbox, &sbox->server);
 	cl_tick(sbox, &sbox->client);
+	gm_tick(sbox, &sbox->gm);
 
 	a_tick(sbox, &sbox->audio, sbox->player, &sbox->renderer.camera);
 	
 	for (int i = 0; i < MAX_PLAYERS; i++) {
 		player_t* player = sbox->players[i];
 		if (!player) continue;
-		player_input(sbox, sbox->player);
+		player_input(sbox, player);
 		player_tick(sbox, sbox->players[i], &sbox->renderer.camera, &sbox->map.entlist);
 	}
 

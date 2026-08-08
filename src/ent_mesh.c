@@ -11,7 +11,6 @@ void entity_init_mesh(sbox_t* sbox,
         entity->data.mesh.materials[i] = NULL;
 	}
 	entity->data.mesh.is_visible = true;
-	entity->data.mesh.is_viewmodel = false;
 	entity->data.mesh.is_pickup = false;
 	entity->data.mesh.enable_collision = true;
 

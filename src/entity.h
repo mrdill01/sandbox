@@ -9,7 +9,7 @@
 #define PICKUP_SPIN_RATE 24.0f
 #define PICKUP_SUCK_IN_DISTANCE 10.0f
 #define PICKUP_COLLECT_DISTANCE 2.0f
-#define PICKUP_SUCK_IN_SPEED 1.5f
+#define PICKUP_SUCK_IN_SPEED 1.0f
 
 typedef enum {
     ENTITY_MESH,
@@ -25,7 +25,6 @@ typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
     bool is_visible;
-    bool is_viewmodel;
     bool is_pickup;
     bool enable_collision;
 } entity_mesh_t;

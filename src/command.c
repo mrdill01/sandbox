@@ -3,15 +3,17 @@
 #include "console.h"
 #include "net.h"
 
-cmd_t help = {"help", "Shows a help message for the console."};
-cmd_t cmdlist = {"cmdlist", "Prints all commands to the console."};
-cmd_t cvarlist = {"cvarlist", "Prints all cvars to the console."};
-cmd_t reset = {"reset", "Resets a cvar to its default value."};
-cmd_t clear = {"clear", "Clears the console history."};
-cmd_t host = {"host", "Hosts a new game."};
-cmd_t connect_ = {"connect", "<ip> <port>", "Connects the client to a server."};
-cmd_t disconnect = {"disconnect", "Disconnects from the server."};
-cmd_t quit = {"quit", "Quits the game."};
+cmd_t help = {"help", "", "Shows a help message for the console.", false};
+cmd_t cmdlist = {"cmdlist", "", "Prints all commands to the console.", false};
+cmd_t cvarlist = {"cvarlist", "", "Prints all cvars to the console.", false};
+cmd_t reset = {"reset", "", "Resets a cvar to its default value.", false};
+cmd_t clear = {"clear", "", "Clears the console history.", false};
+cmd_t teleport = {"teleport", "<x> <y> <z>", "Teleports to a position.", true};
+cmd_t bot = {"bot", "<spawn|kickall>", "Adds or removes bots from the game", true};
+cmd_t host = {"host", "", "Hosts a new game.", false};
+cmd_t connect_ = {"connect", "<ip> <port>", "Connects the client to a server.", false};
+cmd_t disconnect = {"disconnect", "", "Disconnects from the server.", false};
+cmd_t quit = {"quit", "", "Quits the game.", false};
 
 void cmd_init(sbox_t* sbox) {
     cmd_register(sbox, &help);
@@ -19,6 +21,8 @@ void cmd_init(sbox_t* sbox) {
     cmd_register(sbox, &cvarlist);
     cmd_register(sbox, &reset);
     cmd_register(sbox, &clear);
+    cmd_register(sbox, &teleport);
+    cmd_register(sbox, &bot);
     cmd_register(sbox, &host);
     cmd_register(sbox, &connect_);
     cmd_register(sbox, &disconnect);
@@ -46,6 +50,11 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     cmd_t* cmd = cmd_find(sbox, name);
     if (!cmd) {
         error(sbox, "command not found: %s", name);
+        return;
+    }
+
+    if (cmd->is_cheat && !sv_cheats.value) {
+        error(sbox, "the %s command requires sv_cheats to be set to 1", cmd->name);
         return;
     }
 
@@ -90,13 +99,54 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         return;
     }
 
+    if (strcmp(cmd->name, "teleport") == 0) {
+        if (argc != 3) {
+            cmd_show_usage(sbox, cmd->name);
+            return;
+        }
+
+        float x = atof(args[0]);
+        float y = atof(args[1]);
+        float z = atof(args[2]);
+
+        player_teleport(sbox, sbox->player, (vec3){x, y, z});
+        return;
+    }
+
+    if (strcmp(cmd->name, "bot") == 0) {
+        if (argc != 1) {
+            cmd_show_usage(sbox, cmd->name);
+            return;
+        }
+
+        if (strcmp(args[0], "spawn") == 0) {
+            player_t* bot = gm_spawn_player(sbox, true);
+            player_teleport(sbox, bot, sbox->player->look_trace.point);
+        
+        } else if (strcmp(args[0], "kickall") == 0) {
+            for (int i = 0; i < MAX_PLAYERS; i++) {
+                player_t* player = sbox->players[i];
+                if (!player) continue;
+                if (player->is_bot) {
+                    player_free(sbox, player);
+                    sbox->players[i] = NULL;
+                }
+            }
+        }
+    }
+
     if (strcmp(cmd->name, "host") == 0) {
         sv_start(sbox, &sbox->server, NET_PORT);
         return;
     }
 
     if (strcmp(cmd->name, "connect") == 0) {
-        cl_connect(sbox, &sbox->client, "127.0.0.1", NET_PORT);
+        if (argc != 2) {
+            cmd_show_usage(sbox, cmd->name);
+            return;
+        }
+
+        cl_connect(sbox, &sbox->client, args[0], atoi(args[1]));
         
         sbox->ui_state = UI_STATE_LOADING;
         map_load(sbox, &sbox->map);
@@ -126,4 +176,14 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         sbox->running = false;
         return;
     }
+}
+
+void cmd_show_usage(sbox_t* sbox, const char* name) {
+    cmd_t* cmd = cmd_find(sbox, name);
+    if (!cmd) {
+        error(sbox, "command not found: %s", name);
+        return;
+    }
+
+    info(sbox, "usage: %s %s", cmd->name, cmd->usage);
 }

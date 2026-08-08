@@ -33,6 +33,7 @@
 #endif
 
 #define MAX_PLAYERS 32
+#define MAX_NAME_LEN 32
 
 typedef enum {
     UI_STATE_MAIN_MENU,
@@ -78,12 +79,20 @@ typedef struct sbox_t {
     audio_t audio;
 
     ui_state_t ui_state;
+    game_mode_t gm;
 
     map_t map;
     player_t* players[MAX_PLAYERS];
     player_t* player;
 } sbox_t;
 
+extern cvar_t sv_cheats;
+extern cvar_t sv_round_time;
+extern cvar_t sv_timescale;
+extern cvar_t sv_respawn_time;
+extern cvar_t sv_destruction;
+extern cvar_t sv_random_seed;
+extern cvar_t cl_name;
 extern cvar_t r_width;
 extern cvar_t r_height;
 extern cvar_t r_scale;
@@ -97,17 +106,13 @@ extern cvar_t r_viewmodel;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
 extern cvar_t r_debug_draw_bullets;
+extern cvar_t r_debug_draw_players;
 extern cvar_t r_debug_buffer;
 extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
 extern cvar_t console;
 extern cvar_t noclip;
-extern cvar_t sv_timescale;
-extern cvar_t sv_respawn_time;
-extern cvar_t sv_destruction;
-extern cvar_t sv_random_seed;
-extern cvar_t cl_name;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 

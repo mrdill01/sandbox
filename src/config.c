@@ -16,6 +16,11 @@ void cvar_set(sbox_t* sbox, const char* name, const char* value) {
         error(sbox, "cvar not found: %s", name);
 		return;
 	}
+
+	if (cvar->is_cheat && !sv_cheats.value && strcmp(cvar->name, "sv_cheats") != 0) {
+		error(sbox, "changing the value of %s requires enabling sv_cheats", cvar->name);
+		return;
+	}
     
     cvar->string = value;
     cvar->value = atof(value);

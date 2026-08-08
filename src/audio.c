@@ -107,7 +107,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->bullet_hit_sounds[PHYS_MAT_PLAYER] =
         sound_load(sbox, audio, "res/sounds/bullet_hit_player.wav");
 
-    for (int i = 0; i < NUM_SPEECH_SOUNDS; i++) {
+    for (int i = 1; i <= NUM_SPEECH_SOUNDS; i++) {
         char path[64];
         sprintf(path, "res/sounds/speech/%d.wav", i);
         audio->speech_sounds[i] = sound_load(sbox, audio, path);

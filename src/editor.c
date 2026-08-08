@@ -11,15 +11,15 @@ void edit_tick(sbox_t* sbox, editor_t* editor, player_t* player) {
 
     if (editor->selection) {
         vec3 half_size;
-        bbox_get_half_size(&player->editor.selection->local_bbox, half_size);
+        bbox_get_half_size(&editor->selection->local_bbox, half_size);
 
         vec3 center;
-        bbox_get_center(&player->editor.selection->world_bbox, center);
+        bbox_get_center(&editor->selection->world_bbox, center);
 
-        glm_vec3_copy(editor->trace.point, player->editor.selection->position);
+        glm_vec3_copy(editor->trace.point, editor->selection->position);
 
         r_add_line_box(sbox, &sbox->renderer,
-            &player->editor.selection->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
+            &editor->selection->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
     }
 }
 

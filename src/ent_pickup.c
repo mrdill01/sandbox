@@ -46,9 +46,11 @@ void entity_tick_pickup(sbox_t* sbox, entity_t* entity, entity_pickup_t* pickup)
         vec3 direction;
         glm_vec3_sub(sbox->player->position, entity->position, direction);
 
+        float factor = lerp(0.1f, 1.0f, distance / PICKUP_SUCK_IN_DISTANCE);
+
         vec3 velocity;
         glm_vec3_copy(direction, velocity);
-        glm_vec3_scale(velocity, sbox->dt * PICKUP_SUCK_IN_SPEED, velocity);
+        glm_vec3_scale(velocity, sbox->dt * PICKUP_SUCK_IN_SPEED * factor, velocity);
 
         glm_vec3_add(entity->velocity, velocity, entity->velocity);
 

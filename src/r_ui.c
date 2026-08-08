@@ -167,7 +167,9 @@ static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
 
     if (ui_draw_button(sbox, ui, "START GAME", position, button_size)) {
         cmd_run(sbox, "host", NULL, 0);
-        cmd_run(sbox, "connect", NULL, 0);
+
+        const char* args[] = {"127.0.0.1", "25565"};
+        cmd_run(sbox, "connect", args, 2);
     }
 
     position[1] += button_size[1];
@@ -383,6 +385,20 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
             (vec2){r_width.value - width - 5.0f, 0.0f},
             font_size, COLOR_YELLOW);
     }
+
+    char timer[32];
+    int seconds = (int)(sbox->gm.timer) / 60;
+    int minutes = (int)(sbox->gm.timer) % 60;
+    sprintf(timer, "%02d:%02d", seconds, minutes);
+
+    font_size = 32.0f;
+    width = ui_measure_text(timer, font_size);
+    ui_draw_text_shadow(sbox, ui, timer,
+        (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, font_size, COLOR_WHITE);
+
+    width = ui_measure_text(sbox->gm.state_name, font_size);
+    ui_draw_text_shadow(sbox, ui, sbox->gm.state_name,
+        (vec2){r_width.value / 2.0f - width / 2.0f, font_size * 0.65f}, font_size, COLOR_WHITE);
 
     draw_hotbar(sbox, ui);
     draw_inventory(sbox, ui);

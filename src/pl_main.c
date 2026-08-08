@@ -29,6 +29,8 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->id = id;
     player->is_me = false;
     player->is_bot = is_bot;
+    player->name = malloc(MAX_NAME_LEN);
+    strcpy(player->name, cl_name.string);
     player->bbox = bbox_new((vec3){-RADIUS, -HEIGHT / 2.0f, -RADIUS},
         (vec3){RADIUS, HEIGHT / 2.0f, RADIUS});
     player->move_mode = MOVE_WALK;
@@ -63,6 +65,7 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
 
 void player_free(sbox_t* sbox, player_t* player) {
     inventory_free(sbox, &player->inventory);
+    free(player->name);
     free(player);
 }
 
@@ -244,13 +247,15 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     player->fall_distance = 0.0f;
     player->is_jumping = false;
     player->height -= 0.5f;
-    player->item_anim[1] = -0.035f;
+    player->item_anim[1] = -0.04f;
 
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
         float fall_damage = powf(-player->velocity[1], 1.4f);
         fall_damage = 0.0f; /* TODO: temporary */
         player_add_damage(sbox, player, fall_damage);
     }
+
+    player->velocity[1] = 0.0f;
 }
 
 static void leave_ground(sbox_t* sbox, player_t* player) {

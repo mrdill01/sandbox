@@ -223,7 +223,7 @@ void r_add_partfx_explosion(
 }
 
 void r_add_partfx_pickup_coin(sbox_t* sbox, renderer_t* renderer, vec3 position) {
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < 40; i++) {
         vec3 velocity = {
             random(-3.0f, 3.0f),
             random(-3.0f, 3.0f),

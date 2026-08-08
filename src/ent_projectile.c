@@ -51,6 +51,17 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
 
+        if (r_debug_draw_bullets.value) {
+            vec3 end;
+            glm_vec3_copy(entity->position, end);
+
+            end[0] += direction[0] * trace.distance;
+            end[1] += direction[1] * trace.distance;
+            end[2] += direction[2] * trace.distance;
+
+            r_add_line(sbox, &sbox->renderer, entity->position, end, COLOR_LIGHT_BLUE, 2.5f);
+        }
+
     } else {
         vec3 move;
         glm_vec3_copy(projectile->velocity, move);

@@ -16,6 +16,7 @@
 #define Z_AXIS (vec3){0.0f, 0.0f, 1.0f}
 
 typedef versor quat;
+typedef struct mesh_t mesh_t;
 
 typedef struct {
     vec3 min;
@@ -41,5 +42,11 @@ bbox_t bbox_rotate(bbox_t* bbox, mat4 rotation);
 bbox_t bbox_scale(bbox_t* bbox, vec3 scale);
 bool bbox_point_intersects(const bbox_t* bbox, vec3 point);
 bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius);
+
+bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 start, vec3 dir,
+    mesh_t* mesh, float* t, float max_t);
+bool ray_intersects_triangle(vec3 start, vec3 dir,
+    vec3 v0, vec3 v1, vec3 v2,
+    float* t, float* u, float* v, float max_t);
 
 #endif
