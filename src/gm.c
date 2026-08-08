@@ -18,7 +18,6 @@ player_t* gm_spawn_player(sbox_t* sbox, bool is_bot) {
     }
 
     info(sbox, "spawning player #%d", id);
-
     return sbox->players[id];
 }
 

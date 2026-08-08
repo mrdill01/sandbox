@@ -23,7 +23,7 @@
 #include <SDL2/SDL.h>
 
 #define SBOX_VERSION "sbox alpha 1.0"
-#define SBOX_DEBUG
+//#define SBOX_DEBUG
 //#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG

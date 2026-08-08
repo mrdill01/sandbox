@@ -34,6 +34,7 @@ typedef struct camera_t {
     vec3 position;
     quat rotation;
     vec3 angles;
+    vec3 shake;
     vec3 right;
     vec3 up;
     vec3 forward;

@@ -1,5 +1,5 @@
-#ifndef EDIT_H
-#define EDIT_H
+#ifndef EDITOR_H
+#define EDITOR_H
 
 #include "math.h"
 #include "entity.h"
@@ -17,5 +17,8 @@ typedef struct {
 
 void edit_init(sbox_t* sbox, editor_t* editor);
 void edit_tick(sbox_t* sbox, editor_t* editor, player_t* player);
+
+void edit_select(sbox_t* sbox, editor_t* editor, entity_t* entity);
+void edit_deselect(sbox_t* sbox, editor_t* editor);
 
 #endif

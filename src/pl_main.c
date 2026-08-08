@@ -5,7 +5,7 @@
 #define HEIGHT 1.5f
 #define HEIGHT_CROUCH 0.75f
 #define RADIUS 0.4f
-#define JUMPFORCE 3.0f
+#define JUMPFORCE 3.4f
 #define MAX_STEDOWN 0.5f
 #define MAX_SPEED_WALK 3.2f
 #define MAX_SPEED_CROUCH 2.2f
@@ -57,6 +57,7 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->death_time = 0.0f;
     player_init_body(sbox, player);
     edit_init(sbox, &player->editor);
+    player->bot.last_speech = sbox->time;
     return player;
 }
 
@@ -242,7 +243,7 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     player->last_step_time = sbox->time;
     player->fall_distance = 0.0f;
     player->is_jumping = false;
-    player->height -= 0.3f;
+    player->height -= 0.5f;
     player->item_anim[1] = -0.035f;
 
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
@@ -394,12 +395,30 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     else
         camera->fov = interp_to(camera->fov, r_fov.value, 12.0f, sbox->dt);
 
-    player->height = interp_to(player->height,
-        get_height(sbox, player) / 2.0f, INTERP_HEIGHT_SPEED, sbox->dt);
+    float target_height = get_height(sbox, player) / 2.0f;
+    if (player->target_speed > 0.0f && player->is_grounded) {
+        float speed = 1.0f;
+        if (player->move_mode == MOVE_SPRINT)
+            speed *= 2.0f;
+        target_height += sin(player->walk_timer * speed * 5.0f) * 0.15f;
+    }
+
+    player->height = interp_to(player->height, target_height, INTERP_HEIGHT_SPEED, sbox->dt);
 
     camera->position[0] = player->position[0];
-    camera->position[1] = player->position[1] + player->height- 0.1f;
+    camera->position[1] = player->position[1] + player->height - 0.1f;
     camera->position[2] = player->position[2];
+
+    if (player->move_input[0]) {
+        float roll = -player->move_input[0] * 3.0f;
+        camera->angles[2] = interp_to(camera->angles[2], roll, 10.0f, sbox->dt);
+    } else {
+        camera->angles[2] = interp_to(camera->angles[2], 0.0f, 5.0f, sbox->dt);
+    }
+
+    camera->shake[0] = interp_to(camera->shake[0], 0.0f, 4.0f, sbox->dt);
+    camera->shake[1] = interp_to(camera->shake[1], 0.0f, 4.0f, sbox->dt);
+    camera->shake[2] = interp_to(camera->shake[2], 0.0f, 4.0f, sbox->dt);
 
     if (player->is_thirdperson) {
         vec3 y_offset;
@@ -444,21 +463,16 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     player->head_in_water = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &player->look_trace)) {
+        player->editor.trace = player->look_trace;
+
         if (player->buttons & PLAYER_BUTTON_FIRE) {
-            if (player->look_trace.entity && player->look_trace.entity->type == ENTITY_VEHICLE) {
-
-            }
-
             if (edit_mode.value) {
+                player->buttons &= ~PLAYER_BUTTON_FIRE;
                  if (player->editor.selection) {
-                    player->editor.selection->data.mesh.enable_collision = true;
-                    player->editor.selection = NULL;
+                    edit_deselect(sbox, &player->editor);
                 } else {
-                    player->editor.selection = player->look_trace.entity;
-                    player->editor.selection->data.mesh.enable_collision = false;
+                    edit_select(sbox, &player->editor, player->look_trace.entity);
                 }
-
-                player->editor.trace = player->look_trace;
             }
         }
     }
@@ -523,7 +537,9 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     player->target_speed = 0.0f;
     if (glm_vec3_dot(player->target_dir, player->target_dir) != 0.0f) {
-        player->target_speed = glm_vec3_norm(player->target_dir) * get_max_speed(sbox, player);
+        glm_vec3_normalize(player->target_dir);
+        float dot = glm_vec3_dot(player->target_dir, player->target_dir);
+        player->target_speed = dot * get_max_speed(sbox, player);
         player->walk_timer += sbox->dt;
     } else {
         player->walk_timer = 0.0f;

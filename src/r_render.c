@@ -388,30 +388,9 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
-static void render_screen(sbox_t* sbox, renderer_t* renderer) {
-    r_set_shader(renderer, renderer->screen_shader);
-    glViewport(0, 0, r_width.value, r_height.value);
-
-    r_set_texture(sbox, renderer, "screen", renderer->screen_buffer->textures[0], 0);
-    r_set_texture(sbox, renderer, "g_position", renderer->gbuffer->textures[0], 1);
-    r_set_texture(sbox, renderer, "g_albedo_roughness", renderer->gbuffer->textures[1], 2);
-    r_set_texture(sbox, renderer, "g_normal", renderer->gbuffer->textures[2], 3);
-    r_set_texture(sbox, renderer, "g_depth", renderer->gbuffer->textures[3], 4);
-    r_set_texture(sbox, renderer, "sun_shadow", renderer->sun_shadow_buffer->textures[0], 5);
-    r_set_int(sbox, renderer, "debug_buffer", (int)r_debug_buffer.value);
-
-    r_set_mat4(sbox, renderer, "view", renderer->view);
-    r_set_mat4(sbox, renderer, "projection", renderer->projection);
-    r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
-    r_set_vec3(sbox, renderer, "view_direction", renderer->camera.forward);
-    r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
-
-    r_draw_mesh(renderer, renderer->quad_mesh);
-}
-
 static void render_earth(sbox_t* sbox, renderer_t* renderer) {
     r_set_shader(renderer, renderer->forward_shader);
-    //r_set_framebuffer(renderer, renderer->screen_buffer);
+    r_set_framebuffer(renderer, renderer->screen_buffer);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -439,7 +418,7 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
 
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 0.0f, -5.0f});
+    glm_translate(model, (vec3){0.0f, 0.0f, 3.0f});
     r_set_mat4(sbox, renderer, "model", model);
 
     const material_t* material = renderer->earth_material;
@@ -457,6 +436,27 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
     r_set_framebuffer(renderer, NULL);
 }
 
+static void render_screen(sbox_t* sbox, renderer_t* renderer) {
+    r_set_shader(renderer, renderer->screen_shader);
+    glViewport(0, 0, r_width.value, r_height.value);
+
+    r_set_texture(sbox, renderer, "screen", renderer->screen_buffer->textures[0], 0);
+    r_set_texture(sbox, renderer, "g_position", renderer->gbuffer->textures[0], 1);
+    r_set_texture(sbox, renderer, "g_albedo_roughness", renderer->gbuffer->textures[1], 2);
+    r_set_texture(sbox, renderer, "g_normal", renderer->gbuffer->textures[2], 3);
+    r_set_texture(sbox, renderer, "g_depth", renderer->gbuffer->textures[3], 4);
+    r_set_texture(sbox, renderer, "sun_shadow", renderer->sun_shadow_buffer->textures[0], 5);
+    r_set_int(sbox, renderer, "debug_buffer", (int)r_debug_buffer.value);
+
+    r_set_mat4(sbox, renderer, "view", renderer->view);
+    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
+    r_set_vec3(sbox, renderer, "view_direction", renderer->camera.forward);
+    r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
+
+    r_draw_mesh(renderer, renderer->quad_mesh);
+}
+
 void r_render(sbox_t* sbox, renderer_t* renderer) {
     if (!sbox->map.is_loaded) {
         glm_vec3_zero(renderer->camera.position);
@@ -469,8 +469,10 @@ void r_render(sbox_t* sbox, renderer_t* renderer) {
 
     if (!sbox->map.is_loaded) {
         render_earth(sbox, renderer);
-        //render_screen(sbox, renderer);
+        render_screen(sbox, renderer);
+
         ui_render(sbox, &renderer->ui, renderer);
+
         r_clear_drawcalls(renderer);
         r_reset_stats(sbox, renderer);
         SDL_GL_SwapWindow(sbox->window);

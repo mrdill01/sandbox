@@ -273,11 +273,11 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 
     position[1] += spacing;
 
-    /*position[1] += spacing;
+    position[1] += spacing;
     sprintf(text, "audio sources: %d/%d",
         sbox->audio.sounds_playing,
         a_get_max_source_count(sbox, &sbox->audio));
-    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);*/
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 }
 
 static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
@@ -395,6 +395,14 @@ static void draw_edit_mode(sbox_t* sbox, ui_t* ui) {
     float width = ui_measure_text("EDIT MODE", font_size);
     ui_draw_text(sbox, ui, "EDIT MODE",
         (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, font_size, COLOR_WHITE);
+
+    if (sbox->player->editor.selection && sbox->player->editor.selection->name) {
+        char text[64];
+        sprintf(text, "Selected: %s", sbox->player->editor.selection->name);
+        float width = ui_measure_text(text, font_size);
+        ui_draw_text(sbox, ui, text,
+            (vec2){r_width.value / 2.0f - width / 2.0f, font_size}, font_size, COLOR_WHITE);
+    }
 }
 
 static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {

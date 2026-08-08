@@ -15,7 +15,7 @@ cvar_t r_height = {"r_height", "540.0f", true, "Renderer height."};
 cvar_t r_scale = {"r_scale", "0.35f", true, "Resolution scaling."};
 cvar_t r_fullscreen = {"r_fullscreen", "0", true, "Fullscreen."};
 cvar_t r_vsync = {"r_vsync", "0", true, "Vertical sync."};
-cvar_t r_fov = {"r_fov", "75.0f", true, "Field-of-view."};
+cvar_t r_fov = {"r_fov", "90.0f", true, "Field-of-view."};
 cvar_t r_shadows = {"r_shadows", "1", true, "Enable shadows."};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, "Shadow resolution."};
 cvar_t r_third_person = {"r_third_person", "0", true, "Enable third-person camera."};
@@ -27,7 +27,7 @@ cvar_t r_debug_buffer = {"r_debug_buffer", "0", true,
 	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
 cvar_t a_device = {"a_device", "(null)", true, "Audio output device (default (null))."};
 cvar_t a_volume = {"a_volume", "0.2f", true, "Audio volume."};
-cvar_t m_sens = {"m_sens", "5.0f", true, "Mouse sensitivity."};
+cvar_t m_sens = {"m_sens", "8.0f", true, "Mouse sensitivity."};
 cvar_t console = {"console", "0", true, "Show the developer console."};
 cvar_t noclip = {"noclip", "0", true, "Enables flight / disables collision."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, "Set to values less than 1.0 for slow-motion."};

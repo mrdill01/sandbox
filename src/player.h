@@ -3,7 +3,7 @@
 
 #include "math.h"
 #include "physics.h"
-#include "edit.h"
+#include "editor.h"
 #include "item.h"
 
 typedef struct sbox_t sbox_t;
@@ -64,6 +64,10 @@ typedef struct {
     float idle_timer;
 } body_t;
 
+typedef struct {
+    float last_speech;
+} bot_t;
+
 typedef struct player_t {
     int id;
     bool is_me;
@@ -96,6 +100,7 @@ typedef struct player_t {
     float death_time;
     body_t body;
     editor_t editor;
+    bot_t bot;
 } player_t;
 
 player_t* player_new(sbox_t* sbox, int id, bool is_bot);

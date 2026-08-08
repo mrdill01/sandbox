@@ -23,6 +23,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* wood_frame_mesh = mesh_load(sbox, "res/meshes/wood_frame.obj");
     mesh_t* wood_frame_doorway_mesh = mesh_load(sbox, "res/meshes/wood_frame_doorway.obj");
     mesh_t* wood_frame_window_mesh = mesh_load(sbox, "res/meshes/wood_frame_window.obj");
+    mesh_t* stairs_mesh = mesh_load(sbox, "res/meshes/stairs.obj");
     mesh_t* metal_panel_mesh = mesh_load(sbox, "res/meshes/metal_panel.obj");
     mesh_t* barrel_mesh = mesh_load(sbox, "res/meshes/barrel.obj");
     mesh_t* chainlink_fence_mesh = mesh_load(sbox, "res/meshes/chainlink_fence.obj");
@@ -44,6 +45,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* hedge_mesh = mesh_load(sbox, "res/meshes/nature/hedge.obj");
     mesh_t* bush_mesh = mesh_load(sbox, "res/meshes/nature/bush.obj");
     mesh_t* bush2_mesh = mesh_load(sbox, "res/meshes/nature/bush2.obj");
+    mesh_t* tree_mesh = mesh_load(sbox, "res/meshes/nature/tree.obj");
     mesh_t* grass_mesh = mesh_load(sbox, "res/meshes/nature/grass.obj");
     mesh_t* pipe_mesh = mesh_load(sbox, "res/meshes/pipe.obj");
     mesh_t* pipe_bend_mesh = mesh_load(sbox, "res/meshes/pipe_bend.obj");
@@ -75,7 +77,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         "res/textures/materials/chainlink.png",
         "res/textures/materials/chainlink_r.png",
         "res/textures/materials/chainlink_n.png",
-        8, 8, true, PHYS_MAT_METAL);
+        10, 10, true, PHYS_MAT_METAL);
 
     material_t* metal = material_load(sbox,
         "metal",
@@ -386,6 +388,20 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
+    for (int i = 0; i < 10; i++) {
+        float x = random(12.0f, 28.0f);
+        float y = -0.5f;
+        float z = random(12.0f, 28.0f);
+        entity_init_mesh(sbox, "tree", x, y, z, tree_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, leaves, 0);
+        entity_mesh_set_material(sbox, entity, wood, 1);
+
+        glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
+        glm_vec3_scale(entity->scale, random(0.75f, 1.5f), entity->scale);
+        entity->data.mesh.enable_collision = false;
+        entlist_add(sbox, &map->entlist, entity);
+    }
+
     entity_init_mesh(sbox, "floor(8)", 40.0f, -0.5f, 24.0f, floor_mesh, &entity);
     entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
@@ -511,7 +527,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_mesh_set_material(sbox, entity, wood4, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_mesh(sbox, "big crate(4)", 29.0f, 0.5f, 0.5f, crate2_mesh, &entity);
+    entity_init_mesh(sbox, "big crate(4)", 29.0f, 0.5f, 7.5f, crate2_mesh, &entity);
     entity_mesh_set_material(sbox, entity, crate2, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -572,12 +588,12 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_mesh(sbox, "wood frame(2)", 16.0f + 9.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
+    entity_init_mesh(sbox, "wood frame(2)", 16.0f + 12.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_mesh(sbox, "wood frame(3)", 16.0f + 9.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
+    entity_init_mesh(sbox, "wood frame(3)", 16.0f + 12.0f, -0.5f, 1.0f, wood_frame_mesh, &entity);
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
     entlist_add(sbox, &map->entlist, entity);
@@ -628,6 +644,24 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
+    entity_init_mesh(sbox, "wood frame(9)", 23.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
+    glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "wood frame(9)", 26.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
+    glm_quat(entity->rotation, rad(-90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "wood frame(9)", 26.5f, -0.5f, -3.5f, wood_frame_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood5, 0);
+    entity_mesh_set_material(sbox, entity, wood, 1);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
+
     entity_init_mesh(sbox, "wood frame(10)", 17.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
@@ -648,8 +682,11 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 4; x++) {
         for (int z = 0; z < 4; z++) {
+            if ((x == 2 && z == 3) || (x == 2 && z == 3) || (x == 1 && z == 3))
+                continue;
+            
             entity_init_mesh(sbox,
                 "wood frame(ceiling)",
                 19.0f + x * 3.0f, 2.5f, -8.0f + z * 3.0f,
@@ -661,6 +698,11 @@ void map_load(sbox_t* sbox, map_t* map) {
             entlist_add(sbox, &map->entlist, entity);
         }
     }
+
+    entity_init_mesh(sbox, "stairs", 18.5f, -0.5f, 1.0f, stairs_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
+    entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "stone wall", 12.0f, -0.5f, -11.0f, stone_wall_mesh, &entity);
     entity_mesh_set_material(sbox, entity, stone, 0);
@@ -968,7 +1010,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 20; i++) {
         float x = random(-32.0f, 32.0f);
         float z = random(-32.0f, 32.0f);
 

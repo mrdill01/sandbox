@@ -8,6 +8,8 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 
+#define NUM_SPEECH_SOUNDS 19
+
 typedef struct sbox_t sbox_t;
 typedef struct player_t player_t;
 typedef struct camera_t camera_t;
@@ -30,6 +32,7 @@ typedef struct {
     sound_t* jump_land_sounds[NUM_PHYS_MAT];
     sound_t* step_sounds[NUM_PHYS_MAT];
     sound_t* bullet_hit_sounds[NUM_PHYS_MAT];
+    sound_t* speech_sounds[NUM_SPEECH_SOUNDS];
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
     sound_t* explosion_sound;

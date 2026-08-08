@@ -1,4 +1,4 @@
-#include "edit.h"
+#include "editor.h"
 #include "sbox.h"
 #include "player.h"
 
@@ -21,4 +21,14 @@ void edit_tick(sbox_t* sbox, editor_t* editor, player_t* player) {
         r_add_line_box(sbox, &sbox->renderer,
             &player->editor.selection->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
     }
+}
+
+void edit_select(sbox_t* sbox, editor_t* editor, entity_t* entity) {
+    editor->selection = entity;
+    editor->selection->data.mesh.enable_collision = false;
+}
+
+void edit_deselect(sbox_t* sbox, editor_t* editor) {
+    editor->selection->data.mesh.enable_collision = true;
+    editor->selection = NULL;
 }

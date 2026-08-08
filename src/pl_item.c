@@ -46,8 +46,15 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         
         weapon->last_fire = sbox->time;
         a_play(sbox, &sbox->audio, weapon->fire_sound, player->position, 1.0f);
+
         player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ?
             weapon->recoil * 0.1f : weapon->recoil;
+        
+        sbox->renderer.camera.shake[0] += weapon->recoil * 18.0f;
+        sbox->renderer.camera.shake[1] += weapon->recoil * 24.0f *
+            (random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f;
+        sbox->renderer.camera.shake[2] += weapon->recoil * 20.0f *
+            (random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f;
 
         if (weapon->is_projectile) {
             vec3 velocity;
@@ -135,12 +142,12 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         float anim_speed = 7.0f;
         player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 35.0f, anim_speed,
             sbox->dt);
-        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 25.0f, anim_speed,
+        player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 10.0f, anim_speed,
             sbox->dt);
         player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, anim_speed,
             sbox->dt);
 
-        player->item_anim[1] = -0.065f;
+        player->item_anim[1] = -0.2f;
         
     } else {
         float reset_speed = 7.0f;
@@ -173,8 +180,8 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
         
-        anim[0] = sin(player->walk_timer * 2.5f * speed) * 0.01f;
-        anim[1] = sin(player->walk_timer * 10.0f * speed) * 0.025f;
+        anim[0] = 0.0f;
+        anim[1] = 0.0f;
         anim[2] = sin(player->walk_timer * 5.0f * speed) * 0.025f;
     }
 

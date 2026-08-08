@@ -107,6 +107,12 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->bullet_hit_sounds[PHYS_MAT_PLAYER] =
         sound_load(sbox, audio, "res/sounds/bullet_hit_player.wav");
 
+    for (int i = 0; i < NUM_SPEECH_SOUNDS; i++) {
+        char path[64];
+        sprintf(path, "res/sounds/speech/%d.wav", i);
+        audio->speech_sounds[i] = sound_load(sbox, audio, path);
+    }
+
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
     audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");
     audio->explosion_sound = sound_load(sbox, audio, "res/sounds/weapons/explosion.wav");
@@ -169,6 +175,7 @@ void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera) {
     if ((err = alGetError()) != AL_NO_ERROR)
         error(sbox, "failed to set AL_LINEAR_DISTANCE_CLAMPED: %d", err);
 
+    audio->sounds_playing = 0;
     sound_t* sound = audio->sounds;
     while (sound) {
         if (sound_is_playing(sbox, sound))
@@ -266,7 +273,7 @@ sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {
         return NULL;
     }
 
-    memcpy(cvt.buf, data, len);
+    memcpy(cvt.buf, data, cvt.len * cvt.len_mult);
 
     if (SDL_ConvertAudio(&cvt) < 0) {
         error(sbox, "failed to convert audio: %s", SDL_GetError());
