@@ -62,9 +62,17 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             glm_vec3_scale(velocity, weapon->projectile_speed, velocity);
 
             entity_t* projectile = NULL;
-            entity_init_projectile(sbox, "rocket", start, player->id,
-                weapon->projectile_mesh, velocity,
-                weapon->projectile_speed, weapon->damage, &projectile);
+            entity_init_projectile(sbox,
+                "rocket",
+                start,
+                player->id,
+                weapon->projectile_mesh,
+                velocity,
+                weapon->projectile_speed,
+                weapon->projectile_gravity,
+                weapon->damage, 
+                weapon->projectile_particles,
+                &projectile);
             projectile->data.projectile.materials[0] = weapon->projectile_material;
             glm_quat_copy(camera->rotation, projectile->rotation);
             entlist_add(sbox, &sbox->map.entlist, projectile);

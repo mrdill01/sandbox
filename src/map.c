@@ -584,7 +584,6 @@ void map_load(sbox_t* sbox, map_t* map) {
         wood_frame_window_mesh, &entity);
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(2)", 16.0f + 12.0f, -0.5f, -2.0f, wood_frame_mesh, &entity);
@@ -614,7 +613,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame window", 16.0f, -0.5f, 1.0f,
@@ -622,7 +620,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(180.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(7)", 17.5f, -0.5f, 2.5f, wood_frame_mesh, &entity);
@@ -672,7 +669,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_mesh_set_material(sbox, entity, wood5, 0);
     entity_mesh_set_material(sbox, entity, wood, 1);
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "wood frame(11)", 23.5f, -0.5f, -9.5f, wood_frame_mesh, &entity);
@@ -810,7 +806,6 @@ void map_load(sbox_t* sbox, map_t* map) {
 
     entity_init_mesh(sbox, "container", -2.5f, -0.5f, -8.0f, container_mesh, &entity);
     entity_mesh_set_material(sbox, entity, container, 0);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "pipe bend", 32.0f, 0.5f, 10.0f, pipe_bend_mesh, &entity);
@@ -877,7 +872,6 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
     entity_mesh_set_material(sbox, entity, metal, 0);
     entity_mesh_set_material(sbox, entity, glass, 1);
-    entity->data.mesh.enable_collision = false;
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "water", 0.0f, -1.0f, 0.0f, water_mesh, &entity);
@@ -1033,7 +1027,6 @@ void map_load(sbox_t* sbox, map_t* map) {
                 entity->data.pickup.is_coin = true;
                 entlist_add(sbox, &map->entlist, entity);
                 map->coins++;
-                sbox->player->inventory.coins++;
             }
         }
             
@@ -1056,6 +1049,7 @@ void map_load(sbox_t* sbox, map_t* map) {
 }
 
 void map_free(sbox_t* sbox, map_t* map) {
+    if (!map->is_loaded) return;
     entlist_free(sbox, &map->entlist);
     map->is_loaded = false;
 }

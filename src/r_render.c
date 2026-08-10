@@ -4,6 +4,8 @@
 #include "../include/gl.h"
 
 static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* inventory) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_shader(renderer, renderer->item_shader);
 
     glEnable(GL_DEPTH_TEST);
@@ -72,9 +74,13 @@ static void render_items(sbox_t* sbox, renderer_t* renderer, inventory_t* invent
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_BLEND);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_shader(renderer, renderer->sun_shadow_shader);
     r_set_framebuffer(renderer, renderer->sun_shadow_buffer);
     glViewport(0, 0, r_shadow_res.value, r_shadow_res.value);
@@ -82,6 +88,7 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
 
     if (!r_shadows.value) {
         r_set_framebuffer(renderer, NULL);
+        prof_end(sbox, &sbox->prof);
         return;
     }
     
@@ -153,9 +160,12 @@ static void render_shadows(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_CULL_FACE);
 
     r_set_framebuffer(renderer, NULL);
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_shader(renderer, renderer->gbuffer_shader);
     r_set_framebuffer(renderer, renderer->gbuffer);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -192,9 +202,13 @@ static void render_gbuffer(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_framebuffer(renderer, renderer->gbuffer);
     r_set_shader(renderer, renderer->skybox_shader);
 
@@ -218,9 +232,13 @@ static void render_skybox(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->ambient_light_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -232,9 +250,13 @@ static void render_ambient_light(sbox_t* sbox, renderer_t* renderer) {
 
     r_draw_mesh(renderer, renderer->quad_mesh);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_sun_light(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->sun_light_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -270,9 +292,13 @@ static void render_sun_light(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ZERO);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->point_light_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -319,9 +345,13 @@ static void render_point_lights(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ZERO);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer->gbuffer->id);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderer->screen_buffer->id);
     glBlitFramebuffer(
@@ -329,9 +359,13 @@ static void copy_depth(sbox_t* sbox, renderer_t* renderer) {
         0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value,
         GL_DEPTH_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_forward(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_framebuffer(renderer, renderer->screen_buffer);
     r_set_shader(renderer, renderer->forward_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
@@ -386,19 +420,21 @@ static void render_forward(sbox_t* sbox, renderer_t* renderer) {
     glDisable(GL_BLEND);
 
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 static void render_earth(sbox_t* sbox, renderer_t* renderer) {
-    r_set_shader(renderer, renderer->forward_shader);
+    r_set_shader(renderer, renderer->earth_shader);
     r_set_framebuffer(renderer, renderer->screen_buffer);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glViewport(0, 0, r_width.value, r_height.value);
+    glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
@@ -414,17 +450,13 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
     r_set_texture(sbox, renderer, "sun_light.shadow", NULL, 6);
     r_set_mat4(sbox, renderer, "sun_light.matrix", GLM_MAT4_IDENTITY);
 
-    r_set_float(sbox, renderer, "time", sbox->time);
-
     mat4 model;
     glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 0.0f, 3.0f});
+    glm_translate(model, (vec3){-1.0f, 0.0f, 1.0f});
+    glm_rotate(model, rad(sbox->time * 25.0f), (vec3){0.0f, 1.0f, 0.0f});
     r_set_mat4(sbox, renderer, "model", model);
 
     const material_t* material = renderer->earth_material;
-    r_set_float(sbox, renderer, "wind_factor", material->wind_factor);
-    r_set_float(sbox, renderer, "hitbox_height", 0.0f);
-    r_set_int(sbox, renderer, "is_water", 0);
     r_set_material(sbox, renderer, material, 0);
 
     r_draw_mesh(renderer, renderer->earth_mesh);
@@ -437,6 +469,8 @@ static void render_earth(sbox_t* sbox, renderer_t* renderer) {
 }
 
 static void render_screen(sbox_t* sbox, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_shader(renderer, renderer->screen_shader);
     glViewport(0, 0, r_width.value, r_height.value);
 
@@ -455,6 +489,7 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
+    prof_end(sbox, &sbox->prof);
 }
 
 void r_render(sbox_t* sbox, renderer_t* renderer) {

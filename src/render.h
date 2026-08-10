@@ -211,11 +211,14 @@ typedef struct {
     shader_t* screen_shader;
     shader_t* line_shader;
     shader_t* item_shader;
+    shader_t* earth_shader;
     shader_t* active_shader;
 
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
     mesh_t* earth_mesh;
+
+    texture_t* bound_textures[MAX_TEXTURES];
 
     material_t* default_material;
     material_t* earth_material;

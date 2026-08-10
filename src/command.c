@@ -164,6 +164,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         map_free(sbox, &sbox->map);
         sbox->player = NULL;
         for (int i = 0; i < MAX_PLAYERS; i++) {
+            if (!sbox->players[i]) continue;
             player_free(sbox, sbox->players[i]);
 		    sbox->players[i] = NULL;
         }

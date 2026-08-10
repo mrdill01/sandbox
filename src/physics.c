@@ -82,8 +82,6 @@ bool phys_line_trace(
 
                     //glm_vec3_copy(end, trace.point);
 
-                    r_add_line(sbox, &sbox->renderer, start, trace.point, COLOR_RED, 0.1f);
-
                     compute_trace_normal(&trace, &entity->world_bbox);
                     trace.entity = entity;
                     trace.material = entity->data.mesh.materials[0];

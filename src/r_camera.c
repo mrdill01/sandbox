@@ -49,6 +49,10 @@ void camera_add_pitch(camera_t* camera, float pitch) {
 
 void camera_add_yaw(camera_t* camera, float yaw) {
     camera->angles[1] += yaw;
+    if (camera->angles[1] > 360.0f)
+        camera->angles[1] = 0.0f;
+    if (camera->angles[1] < 0.0f)
+        camera->angles[1] = 360.0f;
 }
 
 void camera_add_roll(camera_t* camera, float roll) {

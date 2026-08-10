@@ -59,21 +59,23 @@ void ui_draw_text(
     int chars_per_row = ui->font->width / FONT_TILE_SIZE;
 
     int lines = 0;
-    for (int i = 0; i < strlen(message); i++) {
-        int char_index = message[i] - ' ';
-        if (message[i] == '\n')
+    for (int j = 0; j < strlen(message); j++) {
+        int char_index = message[j] - ' ';
+        if (message[j] == '\n')
             lines++;
         
         int x = char_index % chars_per_row;
         int y = char_index / chars_per_row;
 
         vec2 new_position;
-        new_position[0] = position[0] + i * size * FONT_SPACING;
+        new_position[0] = position[0] + j * size * FONT_SPACING;
         new_position[1] = position[1] + lines * size;
         
         ui_draw_texture_ex(sbox, ui, ui->font,
-            new_position, (vec2){size, size},
-            (vec2){x * x_size, y * y_size}, (vec2){x_size, y_size},
+            new_position,
+            (vec2){size, size},
+            (vec2){x * x_size, y * y_size},
+            (vec2){x_size, y_size},
             color);
     }
 }
@@ -219,6 +221,13 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
         sbox->player->position[2]);
     ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
 
+    position[1] += spacing;
+    sprintf(text, "rot x %.3g, y %.3g, z %.3g",
+        sbox->renderer.camera.angles[0],
+        sbox->renderer.camera.angles[1],
+        sbox->renderer.camera.angles[2]);
+    ui_draw_text_shadow(sbox, ui, text, position, font_size, COLOR_WHITE);
+
     vec3 velocity = {sbox->player->velocity[0], 0.0f, sbox->player->velocity[2]};
     position[1] += spacing;
     sprintf(text, "speed: %.2g", glm_vec3_dot(velocity, velocity));
@@ -353,6 +362,8 @@ static void draw_inventory(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
+    if (!r_hud.value) return;
+    
     if (!(player->buttons & PLAYER_BUTTON_AIM) && player->move_mode != MOVE_SPRINT) {
         vec2 size = {20.0f, 20.0f};
         vec2 position = {
@@ -537,7 +548,28 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
         font_size, COLOR_WHITE);
 }
 
+static void draw_profiler(sbox_t* sbox, ui_t* ui, profiler_t* prof) {
+    for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
+        profiler_entry_t* entry = &prof->entries[i];
+        if (!entry->name) continue;
+
+        float font_size = 30.0f;
+        float spacing = font_size * 0.65f;
+        char text[64];
+
+        sprintf(text, "%s: %f, %d%%", entry->name, entry->time, (int)(entry->percentage * 100.0f));
+
+        float width = ui_measure_text(text, font_size);
+        ui_draw_text_shadow(sbox, ui,
+            text,
+            (vec2){r_width.value - width, (i + 2) * spacing},
+            font_size, COLOR_WHITE);
+    }
+}
+
 void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
+    prof_start(sbox, &sbox->prof);
+
     r_set_shader(renderer, ui->shader);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
@@ -573,6 +605,11 @@ void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer) {
 
     if (console.value)
         draw_console(sbox, ui, &sbox->console);
+
+    prof_end(sbox, &sbox->prof);
+
+    if (profiler.value)
+        draw_profiler(sbox, ui, &sbox->prof);
     
     glDisable(GL_BLEND);
 }

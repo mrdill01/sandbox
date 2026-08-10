@@ -103,10 +103,11 @@ void cl_write_bytes(sbox_t* sbox, client_t* client, uint8_t* bytes, size_t len) 
 }
 
 bool cl_is_connected(sbox_t* sbox, client_t* client) {
-    if (!client->peer) return false;
+    if (!client || !client->peer) return false;
     return client->peer->state == ENET_PEER_STATE_CONNECTED;
 }
 
 int cl_get_ping(sbox_t* sbox, client_t* client) {
+    if (!client || !client->peer) return -1;
     return client->peer->roundTripTime;
 }

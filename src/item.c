@@ -95,6 +95,27 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->projectile_mesh = mesh_load(sbox, "res/meshes/items/rocket.obj");
     weapon->projectile_material = sbox->renderer.default_material;
     weapon->projectile_speed = 16.0f;
+    weapon->projectile_gravity = false;
+    weapon->projectile_particles = true;
+
+    mesh_t* landmine_mesh = mesh_load(sbox, "res/meshes/items/landmine.obj");
+    item_t* landmine = item_new(sbox, ITEM_WEAPON, "Landmine",
+        landmine_mesh, materials);
+    inventory_give_item(sbox, inventory, landmine);
+    weapon = &landmine->data.weapon;
+    weapon->fire_sound = NULL;
+    weapon->fire_rate = 1.5f;
+    weapon->last_fire = 0.0f;
+    weapon->min_spread = 0.0f;
+    weapon->max_spread = 0.0f;
+    weapon->recoil = 0.0f;
+    weapon->damage = 125.0f;
+    weapon->is_projectile = true;
+    weapon->projectile_mesh = mesh_load(sbox, "res/meshes/items/landmine.obj");
+    weapon->projectile_material = sbox->renderer.default_material;
+    weapon->projectile_speed = 0.0f;
+    weapon->projectile_gravity = true;
+    weapon->projectile_particles = false;
 
     info(sbox, "inventory loaded.");
 }

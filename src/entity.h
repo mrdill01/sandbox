@@ -36,7 +36,9 @@ typedef struct {
     vec3 start;
     vec3 velocity;
     float speed;
+    bool gravity;
     float damage;
+    bool particles;
     float last_particle;
 } entity_projectile_t;
 
@@ -109,7 +111,9 @@ void entity_init_projectile(sbox_t* sbox,
     mesh_t* mesh,
     vec3 velocity,
     float speed,
+    bool gravity,
     float damage,
+    bool particles,
     entity_t** out);
 void entity_init_explosion(sbox_t* sbox,
     const char* name, vec3 position, float radius, vec3 direction,

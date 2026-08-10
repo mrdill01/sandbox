@@ -31,6 +31,8 @@ typedef struct {
     mesh_t* projectile_mesh;
     material_t* projectile_material;
     float projectile_speed;
+    bool projectile_gravity;
+    bool projectile_particles;
 } weapon_t;
 
 typedef struct {

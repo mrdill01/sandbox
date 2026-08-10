@@ -33,13 +33,13 @@ static void setup_rig(sbox_t* sbox, player_t* player, body_t* body) {
     body->parts[BODY_LEFT_UPPER_LEG] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_LEFT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.3f, 0.0f},
+        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
             &body->parts[BODY_LEFT_UPPER_LEG]);
     
     body->parts[BODY_RIGHT_UPPER_LEG] = create_body_part(
         sbox, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_RIGHT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.3f, 0.0f},
+        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
             &body->parts[BODY_RIGHT_UPPER_LEG]);
 }
 

@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "console.h"
+#include "profiler.h"
 #include "server.h"
 #include "client.h"
 #include "render.h"
@@ -23,7 +24,7 @@
 #include <SDL2/SDL.h>
 
 #define SBOX_VERSION "sbox alpha 1.0"
-//#define SBOX_DEBUG
+#define SBOX_DEBUG
 //#define SBOX_NO_AUDIO
 
 #ifdef SBOX_DEBUG
@@ -56,6 +57,8 @@ typedef struct sbox_t {
     uint64_t last;
     double dt;
     double time;
+
+    profiler_t prof;
 
     bool keys[NUM_KEYS];
     bool buttons[NUM_BUTTONS];
@@ -103,6 +106,7 @@ extern cvar_t r_shadows;
 extern cvar_t r_shadow_res;
 extern cvar_t r_third_person;
 extern cvar_t r_viewmodel;
+extern cvar_t r_hud;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_draw_colliders;
 extern cvar_t r_debug_draw_bullets;
@@ -112,6 +116,7 @@ extern cvar_t a_device;
 extern cvar_t a_volume;
 extern cvar_t m_sens;
 extern cvar_t console;
+extern cvar_t profiler;
 extern cvar_t noclip;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;

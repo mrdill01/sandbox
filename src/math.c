@@ -86,7 +86,7 @@ bbox_t bbox_translate(bbox_t* bbox, vec3 position) {
     return result;
 }
 
-bbox_t bbox_rotate(bbox_t* bbox, mat4 rotation) {
+bbox_t bbox_rotate(bbox_t* bbox, quat rotation) {
     vec3 corners[] = {
         {bbox->min[0], bbox->min[1], bbox->min[2]},
         {bbox->max[0], bbox->min[1], bbox->min[2]},
@@ -102,7 +102,7 @@ bbox_t bbox_rotate(bbox_t* bbox, mat4 rotation) {
 
     for (int i = 0; i < 8; i++) {
         vec3 rotated;
-        glm_mat4_mulv3(rotation, corners[i], 1.0f, rotated);
+        glm_quat_rotatev(rotation, corners[i], rotated);
         result.min[0] = min(result.min[0], rotated[0]);
         result.min[1] = min(result.min[1], rotated[1]);
         result.min[2] = min(result.min[2], rotated[2]);
@@ -156,31 +156,28 @@ typedef struct {
 bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 start, vec3 dir,
     mesh_t* mesh, float* t, float max_t)
 {
-    mat4 rotation_mat;
-	glm_quat_rotate(GLM_MAT4_IDENTITY, rotation, rotation_mat);
-
     for (int i = 0; i < mesh->nbuffers; i++) {
         mesh_buffer_t* buffer = mesh->buffers[i];
         if (!buffer) continue;
 
-        for (int i = 0; i < buffer->nvertices; i += 9 * 3) {
+        const int stride = 9;
+        for (int i = 0; i < buffer->nvertices; i += stride * 3) {
             vec3 v0 = {
                 buffer->vertices[i],
                 buffer->vertices[i + 1],
                 buffer->vertices[i + 2]};
             vec3 v1 = {
-                buffer->vertices[i + 9 + 0],
-                buffer->vertices[i + 9 + 1],
-                buffer->vertices[i + 9 + 2]};
+                buffer->vertices[i + stride + 0],
+                buffer->vertices[i + stride + 1],
+                buffer->vertices[i + stride + 2]};
             vec3 v2 = {
-                buffer->vertices[i + 18 + 0],
-                buffer->vertices[i + 18 + 1],
-                buffer->vertices[i + 18 + 2]};
+                buffer->vertices[i + (stride * 2) + 0],
+                buffer->vertices[i + (stride * 2) + 1],
+                buffer->vertices[i + (stride * 2) + 2]};
 
-            glm_mat4_mulv3(rotation_mat, start, 1.0f, start);
-            glm_mat4_mulv3(rotation_mat, v0, 1.0f, v0);
-            glm_mat4_mulv3(rotation_mat, v1, 1.0f, v1);
-            glm_mat4_mulv3(rotation_mat, v2, 1.0f, v2);
+            glm_quat_rotatev(rotation, v0, v0);
+            glm_quat_rotatev(rotation, v1, v1);
+            glm_quat_rotatev(rotation, v2, v2);
 
             glm_vec3_add(ws, v0, v0);
             glm_vec3_add(ws, v1, v1);
@@ -202,29 +199,30 @@ bool ray_intersects_triangle(vec3 start, vec3 dir,
     float max_t)
 {
     const float EPSILON = 0.0001f;
-    vec3 edge1 = {v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]};
-    vec3 edge2 = {v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]};
     
-    vec3 h = {
-        dir[1] * edge2[2] - dir[2] * edge2[1],
-        dir[2] * edge2[0] - dir[0] * edge2[2],
-        dir[0] * edge2[1] - dir[1] * edge2[0]};
+    vec3 edge1;
+    glm_vec3_sub(v1, v0, edge1);
+
+    vec3 edge2;
+    glm_vec3_sub(v2, v0, edge2);
     
-    float a = edge1[0] * h[0] + edge1[1] * h[1] + edge1[2] * h[2];
+    vec3 h;
+    glm_vec3_cross(dir, edge2, h);
+    
+    float a = glm_vec3_dot(edge1, h);
     if (a > -EPSILON && a < EPSILON) return false;
     
     float f = 1.0f / a;
-    vec3 s = {start[0] - v0[0], start[1] - v0[1], start[2] - v0[2]};
-    *u = f * (s[0] * h[0] + s[1] * h[1] + s[2] * h[2]);
+    vec3 s;
+    glm_vec3_sub(start, v0, s);
+    *u = f * glm_vec3_dot(s, h);
     if (*u < 0.0f || *u > 1.0f) return false;
     
-    vec3 q = {
-        s[1] * edge1[2] - s[2] * edge1[1],
-        s[2] * edge1[0] - s[0] * edge1[2],
-        s[0] * edge1[1] - s[1] * edge1[0]};
-    *v = f * (dir[0] * q[0] + dir[1] * q[1] + dir[2] * q[2]);
+    vec3 q;
+    glm_vec3_cross(s, edge1, q);
+    *v = f * glm_vec3_dot(dir, q);
     if (*v < 0.0f || *u + *v > 1.0f) return false;
     
-    *t = f * (edge2[0] * q[0] + edge2[1] * q[1] + edge2[2] * q[2]);
+    *t = f * glm_vec3_dot(edge2, q);
     return *t > EPSILON && *t <= max_t;
 }

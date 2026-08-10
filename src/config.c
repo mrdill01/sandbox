@@ -77,7 +77,7 @@ void cfg_write(sbox_t* sbox, const char* path) {
 
 	cvar_t* cvar = sbox->cvars;
 	while (cvar) {
-		fprintf(fp, "%s %s %s (default: %s)\n", cvar->name, cvar->string, cvar->desc, cvar->init);
+		fprintf(fp, "%s %s\n", cvar->name, cvar->string);
 		cvar = cvar->next;
 	}
 

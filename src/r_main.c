@@ -38,11 +38,16 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "line", "res/shaders/line.vs", "res/shaders/line.fs");
     renderer->item_shader = shader_load(sbox,
         "item", "res/shaders/item.vs", "res/shaders/item.fs");
+    renderer->earth_shader = shader_load(sbox,
+        "earth", "res/shaders/earth.vs", "res/shaders/earth.fs");
     renderer->active_shader = NULL;
     
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
     renderer->sphere_mesh = mesh_load(sbox, "res/meshes/sphere.obj");
     renderer->earth_mesh = mesh_load(sbox, "res/meshes/earth.obj");
+
+    for (int i = 0; i < MAX_TEXTURES; i++)
+        renderer->bound_textures[i] = NULL;
     
     renderer->default_material = material_load(sbox,
         "default",
@@ -321,9 +326,19 @@ void r_set_texture(
     sbox_t* sbox, renderer_t* renderer, const char* name, texture_t* texture, int slot)
 {
     if (!texture) return;
-    renderer->stats.textures++;
+
+    if (slot > MAX_TEXTURES) {
+        error(sbox, "max texture limit reached (%d)", MAX_TEXTURES);
+        return;
+    }
 
     r_set_int(sbox, renderer, name, slot);
+
+    if (renderer->bound_textures[slot] && renderer->bound_textures[slot]->id == texture->id)
+        return;
+    
+    renderer->bound_textures[slot] = texture;
+    renderer->stats.textures++;
     glActiveTexture(GL_TEXTURE0 + slot);
 
     int type = GL_TEXTURE_2D;

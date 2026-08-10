@@ -11,7 +11,9 @@ void entity_init_projectile(sbox_t* sbox,
     mesh_t* mesh,
     vec3 velocity,
     float speed,
+    bool gravity,
     float damage,
+    bool particles,
     entity_t** out)
 {
 	entity_t* entity = NULL;
@@ -24,7 +26,9 @@ void entity_init_projectile(sbox_t* sbox,
     glm_vec3_copy(position, entity->data.projectile.start);
     glm_vec3_copy(velocity, entity->data.projectile.velocity);
     entity->data.projectile.speed = speed;
+    entity->data.projectile.gravity = gravity;
     entity->data.projectile.damage = damage;
+    entity->data.projectile.particles = particles;
     entity->data.projectile.last_particle = sbox->time;
 
     *out = entity;
@@ -51,25 +55,25 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
 
-        if (r_debug_draw_bullets.value) {
-            vec3 end;
-            glm_vec3_copy(entity->position, end);
-
-            end[0] += direction[0] * trace.distance;
-            end[1] += direction[1] * trace.distance;
-            end[2] += direction[2] * trace.distance;
-
-            r_add_line(sbox, &sbox->renderer, entity->position, end, COLOR_LIGHT_BLUE, 2.5f);
-        }
-
     } else {
+        vec3 prev_position;
+        glm_vec3_copy(entity->position, prev_position);
+
         vec3 move;
         glm_vec3_copy(projectile->velocity, move);
         glm_vec3_scale(move, sbox->dt, move);
         glm_vec3_add(entity->position, move, entity->position);
+
+        if (r_debug_draw_bullets.value)
+            r_add_line(sbox, &sbox->renderer, prev_position, entity->position,
+                COLOR_LIGHT_BLUE, 2.5f);
     }
 
-    if (sbox->time - projectile->last_particle >= PROJECTILE_PARTICLE_RATE) {
+    if (projectile->gravity) {
+        projectile->velocity[1] -= PHYS_GRAVITY * sbox->dt;
+    }
+
+    if (projectile->particles && sbox->time - projectile->last_particle >= PROJECTILE_PARTICLE_RATE) {
         projectile->last_particle = sbox->time;
         r_add_partfx_projectile_smoke(sbox, &sbox->renderer, entity->position);
     }

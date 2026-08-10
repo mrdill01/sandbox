@@ -520,6 +520,8 @@ static void tick_step_sounds(sbox_t* sbox, player_t* player) {
 }
 
 void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
+    prof_start(sbox, &sbox->prof);
+
     if (player->buttons & PLAYER_BUTTON_CROUCH) set_move_mode(player, MOVE_CROUCH);
     else if (player->buttons & PLAYER_BUTTON_SPRINT) set_move_mode(player, MOVE_SPRINT);
     else set_move_mode(player, MOVE_WALK);
@@ -571,6 +573,8 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     if (player->is_bot)
         bot_tick(sbox, player);
+
+    prof_end(sbox, &sbox->prof);
 }
 
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {

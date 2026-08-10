@@ -22,7 +22,9 @@ int main(int argc, char* argv[]) {
 
     #ifdef SBOX_DEBUG
     cmd_run(&sbox, "host", NULL, 0);
-    cmd_run(&sbox, "connect", NULL, 0);
+    const char* args[] = {"127.0.0.1", "25565"};
+    cmd_run(&sbox, "connect", args, 2);
+
     ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
     SDL_GL_SwapWindow(sbox.window);
     #endif

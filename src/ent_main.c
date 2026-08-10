@@ -170,6 +170,7 @@ void entlist_free(sbox_t* sbox, entlist_t* entlist) {
 		entity_t* entity = entlist->ents[i];
 		if (!entity) continue;
 		entity_free(sbox, entity);
+		entlist->ents[i] = NULL;
 	}
 
 	info(sbox, "freed %d entities", entlist->len);
@@ -182,15 +183,15 @@ static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
 	
 	entity->local_bbox = mesh->bbox;
 
-	mat4 rotation;
-	glm_quat_rotate(GLM_MAT4_IDENTITY, entity->rotation, rotation);
 	entity->world_bbox = entity->local_bbox;
-	entity->world_bbox = bbox_rotate(&entity->world_bbox, rotation);
+	entity->world_bbox = bbox_rotate(&entity->world_bbox, entity->rotation);
 	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
 	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
 }
 
 void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
+	prof_start(sbox, &sbox->prof);
+
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
 		if (!entity) continue;
@@ -224,6 +225,8 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		default: break;
 		}
 	}
+
+	prof_end(sbox, &sbox->prof);
 }
 
 void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
