@@ -73,8 +73,8 @@ typedef struct player_t {
     bool is_me;
     bool is_bot;
     char* name;
-    bbox_t bbox;
     move_mode_t move_mode;
+    bbox_t bbox;
     vec3 position;
     vec3 velocity;
     vec3 move_input;

@@ -51,11 +51,13 @@ bool phys_line_trace(
             if (!entity->data.mesh.enable_collision) continue;
             
             if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
-                float t;
+                float t = 0.0f;
                 if (ray_intersects_mesh(
                     entity->position, entity->rotation, start, dir,
                     entity->data.mesh.mesh, &t, max_distance))
                 {
+                    trace.distance = t;
+                    
                     if (entity->data.mesh.materials[0]->is_water) {
                         if (trace.enter_water_point[0] == 0.0f &&
                             trace.enter_water_point[1] == 0.0f &&
@@ -75,7 +77,7 @@ bool phys_line_trace(
 
                     vec3 scaled_dir;
                     glm_vec3_copy(dir, scaled_dir);
-                    glm_vec3_scale(scaled_dir, t, scaled_dir);
+                    glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
 
                     vec3 end;
                     glm_vec3_add(start, scaled_dir, end);

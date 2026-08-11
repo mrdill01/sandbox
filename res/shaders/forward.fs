@@ -179,24 +179,5 @@ void main() {
     vec3 ambient = vec3(0.5f, 0.5f, 0.9f) * sample.albedo.rgb * sample.ao;
 
     vec3 color = direct + ambient;
-    float alpha = sample.albedo.a;
-
-    if (is_water == 1) {
-        /*vec2 depth_uv = gl_FragCoord.xy / screen_size;
-        float bg_depth = texture(g_depth, depth_uv).r;
-        float surface_depth = linearize_depth(gl_FragCoord.z);
-        float depth_difference = bg_depth - surface_depth;
-
-        float water_depth = clamp(depth_difference / 3.0f, 0.0f, 1.0f);
-        //water_depth = 1.0f - exp(-water_depth * 3.0f);
-
-        float foam = clamp(1.0f - (depth_difference / 0.5f), 0.0f, 1.0f);
-
-        color = mix(vec3(0.5f, 0.75f, 1.0f), vec3(0.0f, 0.0f, 1.0f), water_depth) * color;
-        alpha = mix(0.0f, 1.0f, bg_depth);*/
-        //color = mix(vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), water_depth);
-        //color = vec3(foam);
-    }
-
-    frag_color = vec4(color, alpha);
+    frag_color = vec4(color, sample.albedo.a);
 }

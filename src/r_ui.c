@@ -467,8 +467,8 @@ static void draw_pause_menu(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_death_screen(sbox_t* sbox, ui_t* ui) {
-    int width = 500.0f;
-    int height = 300.0f;
+    int width = 400.0f;
+    int height = 200.0f;
 
     ui_draw_texture(sbox,
         ui,

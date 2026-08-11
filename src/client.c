@@ -54,6 +54,8 @@ void cl_disconnect(sbox_t* sbox, client_t* client) {
     info(sbox, "[client] disconnecting...");
     enet_peer_reset(client->peer);
     enet_host_destroy(client->host);
+    client->peer = NULL;
+    client->host = NULL;
     info(sbox, "[client] disconnected!");
 }
 

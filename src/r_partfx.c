@@ -26,7 +26,7 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t t
         }
 
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
-            trace.point, velocity, texture,
+            trace.point, velocity, texture, GLM_VEC3_ONE,
             alpha, size, lifetime, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
     }
@@ -42,7 +42,7 @@ void r_add_partfx_shoot_hit(sbox_t* sbox, renderer_t* renderer, trace_result_t t
         glm_vec3_sub(bullet_hole_position, offset, bullet_hole_position);
 
         r_add_particle(sbox, &sbox->renderer,
-            bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole,
+            bullet_hole_position, GLM_VEC3_ZERO, renderer->p_bullet_hole, GLM_VEC3_ONE,
             1.0f, random(0.065f, 0.085f), 30.0f, 0);
     }
 }
@@ -57,7 +57,7 @@ void r_add_partfx_shoot_hit_water(sbox_t* sbox, renderer_t* renderer, trace_resu
 
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, trace.enter_water_point,
-                velocity, renderer->p_water,
+                velocity, renderer->p_water, GLM_VEC3_ONE,
                 0.4f, random(0.11f, 0.14f), 3.0f, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
     }
@@ -89,7 +89,7 @@ void r_add_partfx_shoot_beam(
         
         texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
         r_add_particle(sbox, &sbox->renderer,
-            position, velocity, texture,
+            position, velocity, texture, GLM_VEC3_ONE,
             0.15f, random(0.05f, 0.065f), random(1.0f, 1.5f),
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
@@ -105,7 +105,7 @@ void r_add_partfx_projectile_smoke(
 
     texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
     r_add_particle(sbox, &sbox->renderer,
-        position, velocity, texture,
+        position, velocity, texture, GLM_VEC3_ONE,
         0.3f, random(0.125f, 0.175f), random(1.3f, 1.5f), PARTICLE_FADE_OUT);
 }
 
@@ -117,7 +117,7 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
             random(-2.0f, 2.0f)};
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, position, velocity, material->albedo,
-                0.75f, random(0.025f, 0.075f), 0.5f, PARTICLE_FADE_OUT);
+                GLM_VEC3_ONE, 0.75f, random(0.025f, 0.075f), 0.5f, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
 
         vec3 smoke_position = {
@@ -129,7 +129,7 @@ void r_add_partfx_hit_ground(sbox_t* sbox, renderer_t* renderer, vec3 position, 
             random(-0.25f, 0.25f),
             random(-0.25f, 0.25f)};
         r_add_particle(sbox, &sbox->renderer, smoke_position, smoke_velocity,
-            renderer->p_smoke, 0.5f, 0.4f, random(2.0f, 3.0f), PARTICLE_FADE_OUT);
+            renderer->p_smoke, GLM_VEC3_ONE, 0.5f, 0.4f, random(2.0f, 3.0f), PARTICLE_FADE_OUT);
     }
 }
 
@@ -151,7 +151,7 @@ void r_add_partfx_enter_water(
 
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, new_position, new_velocity, renderer->p_water,
-                0.4f, random(0.11f, 0.14f), 3.0f, PARTICLE_FADE_OUT);
+                GLM_VEC3_ONE, 0.4f, random(0.11f, 0.14f), 3.0f, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
     }
 }
@@ -174,7 +174,7 @@ void r_add_partfx_step_water(
 
         particle_t* particle =
             r_add_particle(sbox, &sbox->renderer, new_position, new_velocity, renderer->p_water,
-                0.35f, random(0.11f, 0.14f), 3.0f, PARTICLE_FADE_OUT);
+                GLM_VEC3_ONE, 0.35f, random(0.11f, 0.14f), 3.0f, PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
     }
 }
@@ -190,7 +190,8 @@ void r_add_partfx_explosion(
         
         r_add_particle(sbox, &sbox->renderer,
             position, velocity, renderer->p_fire,
-            random(0.85f, 1.0f), random(0.45f, 0.55f), random(0.3f, 0.35f),
+            (vec3){1.0f, random(0.25f, 1.0f), 0.5f},
+            random(0.75f, 1.0f), random(0.35f, 0.5f), random(0.225f, 0.275f),
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 
@@ -201,8 +202,28 @@ void r_add_partfx_explosion(
             random(-10.0f, 10.0f)};
         
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
-            position, velocity, renderer->p_fire,
+            position, velocity, renderer->p_fire, GLM_VEC3_ONE,
             1.0f, random(0.025f, 0.05f), random(0.2f, 0.3f), PARTICLE_FADE_OUT);
+        particle->apply_gravity = true;
+    }
+
+    for (int i = 0; i < 100; i++) {
+        vec3 new_position;
+        glm_vec3_copy(position, new_position);
+        new_position[0] += random(-0.5f, 0.5f);
+        new_position[1] += random(-0.5f, 0.5f);
+        new_position[2] += random(-0.5f, 0.5f);
+
+        vec3 velocity = {
+            random(-0.2f, 0.2f),
+            random(4.0f, 6.5f),
+            random(-0.2f, 0.2f)};
+
+        texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
+        particle_t* particle = r_add_particle(sbox, &sbox->renderer,
+            new_position, velocity, texture, (vec3){1.0f, random(0.25f, 0.5f), 0.2f},
+            1.0f, random(0.2f, 0.3f), random(1.5f, 2.0f),
+            PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
         particle->apply_gravity = true;
     }
 
@@ -217,20 +238,20 @@ void r_add_partfx_explosion(
             position[1] + random(-0.25f, 0.25f),
             position[2] + random(-0.25f, 0.25f)};
         r_add_particle(sbox, &sbox->renderer, new_position, velocity,
-            renderer->p_smoke, 0.5f, random(0.5f, 1.0f), random(2.0f, 3.0f),
+            renderer->p_smoke, GLM_VEC3_ONE, 0.5f, random(0.5f, 1.0f), random(2.0f, 3.0f),
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 }
 
 void r_add_partfx_pickup_coin(sbox_t* sbox, renderer_t* renderer, vec3 position) {
-    for (int i = 0; i < 40; i++) {
+    for (int i = 0; i < 16; i++) {
         vec3 velocity = {
             random(-3.0f, 3.0f),
             random(-3.0f, 3.0f),
             random(-3.0f, 3.0f)};
         
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
-            position, velocity, renderer->p_coin,
+            position, velocity, renderer->p_coin, GLM_VEC3_ONE,
             1.0f, random(0.05f, 0.1f), random(1.0f, 1.5f),
             PARTICLE_FADE_OUT);
         particle->apply_gravity = true;
@@ -243,6 +264,7 @@ particle_t* r_add_particle(
     vec3 position,
     vec3 velocity,
     texture_t* texture,
+    vec3 color,
     float alpha,
     float size,
     float lifetime,
@@ -263,6 +285,7 @@ particle_t* r_add_particle(
     glm_vec3_copy(position, particle->position);
     glm_vec3_copy(velocity, particle->velocity);
     particle->texture = texture;
+    glm_vec3_copy(color, particle->color);
     particle->alpha = alpha;
     particle->init_alpha = alpha;
     particle->size = size;
@@ -339,6 +362,7 @@ void r_render_particles(sbox_t* sbox, renderer_t* renderer) {
         r_set_vec3(sbox, renderer, "camera_up", renderer->camera.up);
 
         r_set_texture(sbox, renderer, "particle", particle->texture, 0);
+        r_set_vec3(sbox, renderer, "color", particle->color);
         r_set_float(sbox, renderer, "alpha", particle->alpha);
 
         r_draw_mesh(renderer, particle->mesh);

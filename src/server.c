@@ -32,6 +32,8 @@ void sv_stop(sbox_t* sbox, server_t* server) {
 
     info(sbox, "sv_stop()...");
     enet_host_destroy(server->host);
+    server->host = NULL;
+    server->is_running = false;
     info(sbox, "server stopped!");
 }
 

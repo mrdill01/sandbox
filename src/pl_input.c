@@ -11,19 +11,30 @@ void player_input(sbox_t* sbox, player_t* player) {
     reset_input(sbox, player);
     if (!player->is_me || SDL_IsTextInputActive()) return;
     
+    camera_t* camera = &sbox->renderer.camera;
     if (player_is_dead(player)) {
         if (sbox->keys[SDL_SCANCODE_SPACE]) {
             sbox->keys[SDL_SCANCODE_SPACE] = false;
             gm_respawn_player(sbox, player);
         }
 
+        if (sbox->keys[SDL_SCANCODE_Z])
+            camera_add_pitch(camera, -m_sens.value);
+
+        if (sbox->keys[SDL_SCANCODE_X])
+            camera_add_pitch(camera, m_sens.value);
+
+        if (sbox->keys[SDL_SCANCODE_LEFT])
+            camera_add_yaw(camera, -m_sens.value);
+
+        if (sbox->keys[SDL_SCANCODE_RIGHT])
+            camera_add_yaw(camera, m_sens.value);
+
         return;
     }
 
     if (sbox->ui_state != UI_STATE_IN_GAME)
         return;
-
-    camera_t* camera = &sbox->renderer.camera;
     
     if (sbox->keys[SDL_SCANCODE_Z])
         camera_add_pitch(camera, -m_sens.value);

@@ -51,10 +51,8 @@ static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
             weapon->recoil * 0.1f : weapon->recoil;
         
         sbox->renderer.camera.shake[0] += weapon->recoil * 14.0f;
-        sbox->renderer.camera.shake[1] += weapon->recoil * 14.0f *
-            ((random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f);
-        sbox->renderer.camera.shake[2] += weapon->recoil * 14.0f *
-            ((random(0.0f, 1.0f) >= 0.5f) ? 1.0f : -1.0f);
+        sbox->renderer.camera.shake[1] += weapon->recoil * 14.0f * random(-1.0f, 1.0f);
+        sbox->renderer.camera.shake[2] += weapon->recoil * 14.0f * random(-1.0f, 1.0f);
 
         if (weapon->is_projectile) {
             vec3 velocity;

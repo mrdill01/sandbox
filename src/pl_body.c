@@ -104,7 +104,7 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
     glm_vec3_copy(player->velocity, velocity);
     velocity[1] = 0.0f;
 
-    if (player->is_grounded && glm_vec3_dot(velocity, velocity) > 0.0f) {
+    if (player->is_grounded && glm_vec3_dot(velocity, velocity) > 0.0f && !player_is_dead(player)) {
         if (body->walk_cycle) {
             blend_poses(sbox, player, &body->walk_a, &body->walk_b,
                 body->walk_timer / player_get_step_rate(sbox, player));

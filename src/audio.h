@@ -37,6 +37,8 @@ typedef struct {
     sound_t* exit_water_sound;
     sound_t* explosion_sound;
     sound_t* pickup_coin_sound;
+    sound_t* hurt_sound;
+    sound_t* fall_damage_sound;
     sound_t* inventory_open_sound;
     sound_t* inventory_close_sound;
     sound_t* hotbar_select_sound;

@@ -33,6 +33,7 @@ void map_load(sbox_t* sbox, map_t* map) {
     mesh_t* table2_mesh = mesh_load(sbox, "res/meshes/table2.obj");
     mesh_t* bench_mesh = mesh_load(sbox, "res/meshes/bench.obj");
     mesh_t* stone_wall_mesh = mesh_load(sbox, "res/meshes/stone_wall.obj");
+    mesh_t* bridge_mesh = mesh_load(sbox, "res/meshes/bridge.obj");
     mesh_t* water_mesh = mesh_load(sbox, "res/meshes/water.obj");
     mesh_t* underwater_mesh = mesh_load(sbox, "res/meshes/underwater.obj");
     mesh_t* car_mesh = mesh_load(sbox, "res/meshes/car.obj");
@@ -401,6 +402,25 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
+    for (int i = 0; i < 48; i++) {
+        float x = random(28.0f, 44.0f);
+        float y = -0.5f;
+        float z = random(12.0f, 28.0f);
+
+        mesh_t* mesh = cactus_mesh;
+        material_t* material = cactus;
+        if (random(0.0f, 1.0f) >= 0.15f) {
+            mesh = grass_mesh;
+            material = cactus2;
+        }
+
+        entity_init_mesh(sbox, "cactus", x, y, z, mesh, &entity);
+        entity_mesh_set_material(sbox, entity, material, 0);
+        glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
+        glm_vec3_scale(entity->scale, random(0.5f, 1.5f), entity->scale);
+        entlist_add(sbox, &map->entlist, entity);
+    }
+
     entity_init_mesh(sbox, "floor(8)", 40.0f, -0.5f, 24.0f, floor_mesh, &entity);
     entity_mesh_set_material(sbox, entity, sand, 0);
     entlist_add(sbox, &map->entlist, entity);
@@ -544,8 +564,8 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "table", 2.0f, -0.5f, 3.25f, table_mesh, &entity);
-    entity_mesh_set_material(sbox, entity, tile2, 0);
-    entity_mesh_set_material(sbox, entity, metal, 1);
+    entity_mesh_set_material(sbox, entity, wood, 0);
+    entity_mesh_set_material(sbox, entity, tile2, 1);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "barrel", 1.5f, 0.0f, 0.0f, barrel_mesh, &entity);
@@ -699,6 +719,16 @@ void map_load(sbox_t* sbox, map_t* map) {
     glm_quat(entity->rotation, rad(90.0f), 0.0f, 1.0f, 0.0f);
     entlist_add(sbox, &map->entlist, entity);
 
+    entity_init_mesh(sbox, "stairs", 20.0f, -0.5f, 27.0f, stairs_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    for (int i = 0; i < 10; i++) {
+        entity_init_mesh(sbox, "bridge", 20.0f, -0.5f, 36.5f + i * 6.0f, bridge_mesh, &entity);
+        entity_mesh_set_material(sbox, entity, concrete, 0);
+        entlist_add(sbox, &map->entlist, entity);
+    }
+    
     entity_init_mesh(sbox, "stone wall", 12.0f, -0.5f, -11.0f, stone_wall_mesh, &entity);
     entity_mesh_set_material(sbox, entity, stone, 0);
     entlist_add(sbox, &map->entlist, entity);
@@ -1003,9 +1033,9 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    for (int i = 0; i < 20; i++) {
-        float x = random(-32.0f, 32.0f);
-        float z = random(-32.0f, 32.0f);
+    for (int i = 0; i < 12; i++) {
+        float x = random(-8.0f, 40.0f);
+        float z = random(-40.0f, 16.0f);
 
         vec3 size;
         bbox_get_size(&coin_mesh->bbox, size);
@@ -1018,8 +1048,8 @@ void map_load(sbox_t* sbox, map_t* map) {
         //r_add_line(sbox, &sbox->renderer, start, dir, COLOR_GREEN, 5.0f);
 
         //if (phys_line_trace(sbox, start, dir, max_distance, &sbox->map.entlist, -1, &trace)) {
-        for (int j = -3; j <= 3; j++) {
-            for (int k = -3; k <= 3; k++) {
+        for (int j = -2; j <= 2; j++) {
+            for (int k = -2; k <= 2; k++) {
                 entity_init_pickup(sbox, "coin",
                     (vec3){x + j, start[1] + 0.1f, z + k},
                     coin_mesh, sbox->audio.pickup_coin_sound, &entity);
@@ -1051,7 +1081,7 @@ void map_load(sbox_t* sbox, map_t* map) {
 void map_free(sbox_t* sbox, map_t* map) {
     if (!map->is_loaded) return;
     entlist_free(sbox, &map->entlist);
-    map->is_loaded = false;
+    map_init(sbox, map);
 }
 
 static void send_to_renderer(sbox_t* sbox, map_t* map) {

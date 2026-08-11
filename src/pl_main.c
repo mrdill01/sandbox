@@ -24,6 +24,12 @@
 static float get_max_speed(sbox_t* sbox, player_t* player);
 static float get_height(sbox_t* sbox, player_t* player);
 
+static void update_bbox(sbox_t* sbox, player_t* player) {
+    float height = get_height(sbox, player);
+    player->bbox = bbox_new((vec3){-RADIUS, -height / 2.0f, -RADIUS},
+        (vec3){RADIUS, height / 2.0f, RADIUS});
+}
+
 player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player_t* player = malloc(sizeof(player_t));
     player->id = id;
@@ -31,9 +37,8 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->is_bot = is_bot;
     player->name = malloc(MAX_NAME_LEN);
     strcpy(player->name, cl_name.string);
-    player->bbox = bbox_new((vec3){-RADIUS, -HEIGHT / 2.0f, -RADIUS},
-        (vec3){RADIUS, HEIGHT / 2.0f, RADIUS});
     player->move_mode = MOVE_WALK;
+    update_bbox(sbox, player);
     glm_vec3_copy((vec3){0.0f, 2.0f, -4.5f}, player->position);
     glm_vec3_zero(player->velocity);
     glm_vec3_zero(player->move_input);
@@ -105,6 +110,9 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
 }
 
 static float get_height(sbox_t* sbox, player_t* player) {
+    if (player_is_dead(player))
+        return 0.3f;
+    
     switch (player->move_mode) {
     case MOVE_WALK:
     case MOVE_SPRINT:
@@ -250,9 +258,11 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
     player->item_anim[1] = -0.04f;
 
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
-        float fall_damage = powf(-player->velocity[1], 1.4f);
-        fall_damage = 0.0f; /* TODO: temporary */
+        float fall_damage = powf(-player->velocity[1], 1.25f);
         player_add_damage(sbox, player, fall_damage);
+
+        a_play(sbox, &sbox->audio, sbox->audio.fall_damage_sound,
+            player->position, random(0.85f, 1.15f));
     }
 
     player->velocity[1] = 0.0f;
@@ -415,8 +425,8 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera->position[2] = player->position[2];
 
     if (player->move_input[0]) {
-        float roll = -player->move_input[0] * 3.0f;
-        camera->angles[2] = interp_to(camera->angles[2], roll, 10.0f, sbox->dt);
+        float roll = -player->move_input[0] * 4.0f;
+        camera->angles[2] = interp_to(camera->angles[2], roll, 7.0f, sbox->dt);
     } else {
         camera->angles[2] = interp_to(camera->angles[2], 0.0f, 5.0f, sbox->dt);
     }
@@ -458,6 +468,7 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
 }
 
 static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
+    return;
     vec3 start;
     glm_vec3_copy(camera->position, start);
     
@@ -526,6 +537,8 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     else if (player->buttons & PLAYER_BUTTON_SPRINT) set_move_mode(player, MOVE_SPRINT);
     else set_move_mode(player, MOVE_WALK);
 
+    update_bbox(sbox, player);
+
     vec3 forward;
     glm_vec3_copy(camera->forward, forward);
     glm_vec3_scale(forward, player->move_input[2], forward);
@@ -587,6 +600,8 @@ void player_add_damage(sbox_t* sbox, player_t* player, float damage) {
 
     player->health -= damage;
     player->health = clamp(player->health, 0.0f, 100.0f);
+
+    a_play(sbox, &sbox->audio, sbox->audio.hurt_sound, player->position, random(0.85f, 1.15f));
 
     if (player_is_dead(player)) {
         player->death_time = sbox->time;

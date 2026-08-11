@@ -152,6 +152,7 @@ typedef struct {
     vec3 position;
     vec3 velocity;
     texture_t* texture;
+    vec3 color;
     float alpha;
     float init_alpha;
     float size;
@@ -358,6 +359,7 @@ particle_t* r_add_particle(
     vec3 position,
     vec3 velocity,
     texture_t* texture,
+    vec3 color,
     float alpha,
     float size,
     float lifetime,

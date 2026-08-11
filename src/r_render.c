@@ -486,7 +486,8 @@ static void render_screen(sbox_t* sbox, renderer_t* renderer) {
     r_set_mat4(sbox, renderer, "projection", renderer->projection);
     r_set_vec3(sbox, renderer, "view_position", renderer->camera.position);
     r_set_vec3(sbox, renderer, "view_direction", renderer->camera.forward);
-    r_set_int(sbox, renderer, "head_in_water", sbox->player->head_in_water);
+    r_set_int(sbox, renderer, "head_in_water",
+        (sbox->player) ? sbox->player->head_in_water : 0);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
     prof_end(sbox, &sbox->prof);
