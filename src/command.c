@@ -3,7 +3,7 @@
 #include "console.h"
 #include "net.h"
 
-cmd_t help = {"help", "", "Shows a help message for the console.", false};
+cmd_t help = {"help", "[cmd/cvar]", "Shows a help message for the console.", false};
 cmd_t cmdlist = {"cmdlist", "", "Prints all commands to the console.", false};
 cmd_t cvarlist = {"cvarlist", "", "Prints all cvars to the console.", false};
 cmd_t reset = {"reset", "", "Resets a cvar to its default value.", false};
@@ -59,8 +59,25 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     }
 
     if (strcmp(cmd->name, "help") == 0) {
+        if (argc == 1) {
+            cvar_t* cvar = cvar_find(sbox, args[0]);
+            if (cvar) {
+                info(sbox, cvar->desc);
+                return;
+            }
+
+            cmd_t* cmd = cmd_find(sbox, args[0]);
+            if (cmd) {
+                info(sbox, cmd->desc);
+                return;
+            }
+
+            error(sbox, "command or cvar not found: %s", args[0]);
+            return;
+        }
+
         info(sbox,
-            "The console is used to run commands or set the values of cvars (config variables).");
+            "The console is used to run commands or set the values of cvars.");
         info(sbox,
             "Type 'cvarlist' for a list of cvars and 'cmdlist' for a list of commands.");
         info(sbox,
@@ -87,9 +104,16 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
     }
 
     if (strcmp(cmd->name, "reset") == 0) {
-        cvar_t* cvar = cvar_find(sbox, args[0]);
-        if (!cvar)
+        if (argc != 1) {
+            cmd_show_usage(sbox, cmd->name);
             return;
+        }
+
+        cvar_t* cvar = cvar_find(sbox, args[0]);
+        if (!cvar) {
+            error(sbox, "cvar not found: %s", args[0]);
+            return;
+        }
         cvar_set(sbox, args[0], cvar->init);
         info(sbox, "reset cvar %s", cvar->name);
     }
@@ -149,6 +173,9 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         cl_connect(sbox, &sbox->client, args[0], atoi(args[1]));
         
         sbox->ui_state = UI_STATE_LOADING;
+        ui_render(sbox, &sbox->renderer.ui, &sbox->renderer);
+        SDL_GL_SwapWindow(sbox->window);
+
         map_load(sbox, &sbox->map);
 
         sbox->players[0] = gm_spawn_player(sbox, false);

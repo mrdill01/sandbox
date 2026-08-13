@@ -15,9 +15,8 @@ cvar_t sv_round_time = {"sv_round_time", "600", true, false,
 	"Determines how long a round lasts for."};
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, true,
 	"Set to values less than 1.0 for slow-motion."};
-cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, false,
-	"How long for players to respawn."};
-cvar_t sv_destruction = {"sv_destruction", "0", false, true,
+cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, false, "How long for players to respawn."};
+cvar_t sv_destruction = {"sv_destruction", "1", false, true,
 	"Allow the map to be destroyed by explosions."};
 cvar_t sv_random_seed = {"sv_random_seed", "12345", true, false, "Random seed value."};
 cvar_t r_width = {"r_width", "960.0f", true, false, "Renderer width."};
@@ -33,11 +32,11 @@ cvar_t r_viewmodel = {"r_viewmodel", "1", true, false,
 	"Enables or disables rendering of the viewmodel."};
 cvar_t r_hud = {"r_hud", "1", true, true, "Enables or disables rendering of the heads-up-display."};
 cvar_t r_debug_menu = {"r_debug_menu", "1", true, false, "Debug menu."};
-cvar_t r_debug_draw_colliders = {"r_debug_draw_colliders", "0", true, true,
+cvar_t r_debug_colliders = {"r_debug_colliders", "0", true, true,
 	"Draw colliders."};
-cvar_t r_debug_draw_bullets = {"r_debug_draw_bullets", "0", true, true,
+cvar_t r_debug_bullets = {"r_debug_bullets", "0", true, true,
 	"Draw bullet traces."};
-cvar_t r_debug_draw_players = {"r_debug_draw_players", "0", true, true,
+cvar_t r_debug_players = {"r_debug_players", "0", true, true,
 	"Draw player bounding boxes."};
 cvar_t r_debug_buffer = {"r_debug_buffer", "0", true, false,
 	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
@@ -45,7 +44,7 @@ cvar_t a_device = {"a_device", "(null)", true, false, "Audio output device (defa
 cvar_t a_volume = {"a_volume", "0.2f", true, false, "Audio volume."};
 cvar_t m_sens = {"m_sens", "10.0f", true, false, "Mouse sensitivity."};
 cvar_t console = {"console", "0", true, false, "Show the developer console."};
-cvar_t profiler = {"profiler", "0", true, false, "Shows the performance profiler."};
+cvar_t profiler = {"profiler", "1", true, false, "Shows the performance profiler."};
 cvar_t noclip = {"noclip", "0", true, true, "Enables flight / disables collision."};
 cvar_t cl_name = {"cl_name", "Player", true, false, "Display name."};
 cvar_t edit_mode = {"edit_mode", "0", true, true, "Enable edit mode."};
@@ -84,9 +83,9 @@ void sbox_init(sbox_t* sbox) {
     cvar_register(sbox, &r_viewmodel, NULL);
     cvar_register(sbox, &r_hud, NULL);
     cvar_register(sbox, &r_debug_menu, NULL);
-    cvar_register(sbox, &r_debug_draw_colliders, NULL);
-    cvar_register(sbox, &r_debug_draw_bullets, NULL);
-    cvar_register(sbox, &r_debug_draw_players, NULL);
+    cvar_register(sbox, &r_debug_colliders, NULL);
+    cvar_register(sbox, &r_debug_bullets, NULL);
+    cvar_register(sbox, &r_debug_players, NULL);
     cvar_register(sbox, &r_debug_buffer, NULL);
     cvar_register(sbox, &a_device, NULL);
     cvar_register(sbox, &a_volume, NULL);
@@ -189,10 +188,6 @@ void sbox_reload_resources(sbox_t* sbox) {
 	sbox->renderer.skybox_shader = shader_load(sbox,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");
 	
-	sbox->renderer.earth_shader = shader_load(sbox,
-        "earth", "res/shaders/earth.vs", "res/shaders/earth.fs");
-
-	map_free(sbox, &sbox->map);
 	map_load(sbox, &sbox->map);
 
 	info(sbox, "resources reloaded!");

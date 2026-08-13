@@ -38,13 +38,10 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "line", "res/shaders/line.vs", "res/shaders/line.fs");
     renderer->item_shader = shader_load(sbox,
         "item", "res/shaders/item.vs", "res/shaders/item.fs");
-    renderer->earth_shader = shader_load(sbox,
-        "earth", "res/shaders/earth.vs", "res/shaders/earth.fs");
     renderer->active_shader = NULL;
     
     renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
     renderer->sphere_mesh = mesh_load(sbox, "res/meshes/sphere.obj");
-    renderer->earth_mesh = mesh_load(sbox, "res/meshes/earth.obj");
 
     for (int i = 0; i < MAX_TEXTURES; i++)
         renderer->bound_textures[i] = NULL;
@@ -55,12 +52,6 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         "res/textures/materials/default_r.png",
         "res/textures/materials/default_n.png",
         1, 1, false, PHYS_MAT_METAL);
-    renderer->earth_material = material_load(sbox,
-        "earth",
-        "res/textures/materials/earth.png",
-        "res/textures/materials/earth_r.png",
-        "res/textures/materials/earth_n.png",
-        1, 1, false, PHYS_MAT_GRASS);
 
     renderer->gbuffer = NULL;
     renderer->screen_buffer = NULL;
@@ -270,7 +261,7 @@ void r_on_resize(sbox_t* sbox) {
     renderer->gbuffer = framebuffer_new(sbox);
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA);
     framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
     framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
     framebuffer_finish(sbox, renderer->gbuffer);

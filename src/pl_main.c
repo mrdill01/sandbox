@@ -17,6 +17,7 @@
 #define AIR_STOPSPEED 2.0f
 #define FRICTION 5.0f
 #define FRICTION_WATER 2.0f
+#define FRICTION_FLIGHT 3.0f
 #define AIR_CONTROL 0.0f
 #define INTERP_HEIGHT_SPEED 5.5f
 #define MAX_INTERACT_DISTANCE 8.0f
@@ -45,7 +46,7 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     glm_vec3_zero(player->target_dir);
     player->buttons = 0;
     player->target_speed = get_max_speed(sbox, player);
-    player->is_grounded = true;
+    player->is_grounded = false;
     player->is_jumping = false;
     player->ground_mat = PHYS_MAT_NONE;
     player->fall_distance = 0.0f;
@@ -154,6 +155,8 @@ static void accelerate(sbox_t* sbox, player_t* player, float target_speed, float
         accel_speed = add_speed;
 
     player->velocity[0] += accel_speed * player->target_dir[0];
+    if (player->move_mode == MOVE_FLIGHT)
+        player->velocity[1] += accel_speed * player->target_dir[1];
     player->velocity[2] += accel_speed * player->target_dir[2];
 }
 
@@ -164,6 +167,7 @@ static void move_flight(sbox_t* sbox, player_t* player) {
     else
         accel = AIR_ACCEL;
     
+    apply_friction(sbox, player, FRICTION_FLIGHT);
     accelerate(sbox, player, player->target_speed, accel);
 }
 
@@ -300,6 +304,7 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
     trace_result_t trace;
     
     bool was_in_water = player->water_level > 0.0f;
+    player->is_grounded = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
@@ -314,7 +319,6 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
             enter_water(sbox, player);
         
     } else {
-        player->is_grounded = false;
         if (was_grounded)
             leave_ground(sbox, player);
 
@@ -325,8 +329,9 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
 }
 
 static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
-    if (player->is_jumping ||
-        player->fall_distance >= MAX_STEDOWN ||
+    if (player->is_grounded ||
+        player->is_jumping ||
+        player->fall_distance > MAX_STEDOWN ||
         player->move_mode == MOVE_FLIGHT)
         return;
     
@@ -341,6 +346,8 @@ static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, 
 }
 
 static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+    if (player->move_mode == MOVE_FLIGHT) return;
+
     vec3 start;
     player_get_top_position(sbox, player, start);
     vec3 dir = {0.0f, 1.0f, 0.0f};
@@ -425,10 +432,10 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     camera->position[2] = player->position[2];
 
     if (player->move_input[0]) {
-        float roll = -player->move_input[0] * 4.0f;
-        camera->angles[2] = interp_to(camera->angles[2], roll, 7.0f, sbox->dt);
+        float roll = -player->move_input[0] * 3.0f;
+        camera->angles[2] = interp_to(camera->angles[2], roll, 4.0f, sbox->dt);
     } else {
-        camera->angles[2] = interp_to(camera->angles[2], 0.0f, 5.0f, sbox->dt);
+        camera->angles[2] = interp_to(camera->angles[2], 0.0f, 8.0f, sbox->dt);
     }
 
     camera->shake[0] = interp_to(camera->shake[0], 0.0f, 4.0f, sbox->dt);
@@ -468,7 +475,6 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
 }
 
 static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
-    return;
     vec3 start;
     glm_vec3_copy(camera->position, start);
     
@@ -549,7 +555,7 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     vec3 up;
     glm_vec3_copy(camera->up, up);
-    glm_vec3_scale(up, player->move_input[2], up);
+    glm_vec3_scale(up, player->move_input[1], up);
 
     glm_vec3_add(player->target_dir, forward, player->target_dir);
     glm_vec3_add(player->target_dir, right, player->target_dir);
@@ -601,7 +607,7 @@ void player_add_damage(sbox_t* sbox, player_t* player, float damage) {
     player->health -= damage;
     player->health = clamp(player->health, 0.0f, 100.0f);
 
-    a_play(sbox, &sbox->audio, sbox->audio.hurt_sound, player->position, random(0.85f, 1.15f));
+    a_play(sbox, &sbox->audio, sbox->audio.hurt_sound, player->position, random(0.95f, 1.05f    ));
 
     if (player_is_dead(player)) {
         player->death_time = sbox->time;

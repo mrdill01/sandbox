@@ -9,7 +9,7 @@
 #define CON_MAX_INPUT 256
 #define CON_MAX_HISTORY 8192
 #define CON_MAX_ARGS 16
-#define CON_LINES_PER_PAGE 24
+#define CON_LINES_PER_PAGE 22
 
 typedef struct sbox_t sbox_t;
 

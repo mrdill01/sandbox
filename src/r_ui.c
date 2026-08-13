@@ -157,6 +157,13 @@ bool ui_draw_button(
 }
 
 static void draw_main_menu(sbox_t* sbox, ui_t* ui) {
+    ui_draw_texture(sbox,
+        ui,
+        ui->pixel,
+        (vec2){0.0f, 0.0f},
+        (vec2){r_width.value, r_height.value},
+        COLOR_LIGHT_BLUE);
+    
     vec2 button_size = {256.0f, 48.0f};
     vec2 position = {
         r_width.value / 2.0f - (button_size[0] / 2.0f) * 2.0f,
@@ -196,10 +203,11 @@ static void draw_loading_screen(sbox_t* sbox, ui_t* ui) {
         COLOR_LIGHT_BLUE);
 
     float font_size = 64.0f;
+    const char* text = "LOADING...";
     vec2 position = {
-        r_width.value / 2.0f - ui_measure_text("LOADING GAME...", font_size) / 2.0f,
+        r_width.value / 2.0f - ui_measure_text(text, font_size) / 2.0f,
         r_height.value / 2.0f - font_size / 2.0f};
-    ui_draw_text_thick(sbox, ui, "LOADING GAME...", position, font_size, 12, COLOR_WHITE);
+    ui_draw_text_thick(sbox, ui, text, position, font_size, 12, COLOR_WHITE);
 }
 
 static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
@@ -296,7 +304,7 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 
     const inventory_t* inventory = &sbox->player->inventory;
     vec2 size = {48.0f, 48.0f};
-    vec2 position = {0.0f, r_height.value - (size[1] * 4.0f)};
+    vec2 position = {0.0f, r_height.value - (size[1] * HOTBAR_SLOTS)};
 
     for (int i = 0; i < HOTBAR_SLOTS; i++) {
         item_t* item = inventory->items[i];
@@ -372,13 +380,36 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
         ui_draw_texture(sbox, ui, ui->crosshair, position, size, COLOR_WHITE);
     }
 
+    item_t* item = inventory_get_item(sbox, &sbox->player->inventory);
+    if (item) {
+        weapon_t* weapon = &item->data.weapon;
+        if (weapon) {
+            char text[32];
+            sprintf(text, "Ammo: %d/%d", weapon->ammo_loaded, weapon->ammo_unloaded);
+            float font_size = 64.0f;
+            float width = ui_measure_text(text, font_size);
+            ui_draw_text_thick(sbox, ui, text,
+                (vec2){64.0f + 10.0f, r_height.value - font_size},
+                font_size, 5, COLOR_WHITE);
+
+            if (weapon->is_reloading) {
+                sprintf(text, "RELOADING");
+                float font_size = 40.0f;
+                float width = ui_measure_text(text, font_size);
+                ui_draw_text_thick(sbox, ui, text,
+                    (vec2){r_width.value / 2.0f - width / 2.0f, r_height.value / 2.0f + 100.0f},
+                    font_size, 5, COLOR_GREEN);
+            }
+        }
+    }
+    
     char text[32];
-    sprintf(text, "%d HP", (int)ceilf(sbox->player->health));
+    sprintf(text, "Health: %d", (int)ceilf(sbox->player->health));
     float font_size = 64.0f;
     float width = ui_measure_text(text, font_size);
-    ui_draw_text_shadow(sbox, ui, text,
+    ui_draw_text_thick(sbox, ui, text,
         (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
-        font_size, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
+        font_size, 5, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
 
     if (sbox->player->inventory.coins >= sbox->map.coins) {
         sprintf(text, "ALL COINS COLLECTED!");
@@ -504,8 +535,11 @@ static void draw_death_screen(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
+    float font_size = 28.0f;
+    float spacing = font_size * 0.65f;
+
     int width = 800.0f;
-    int height = 400.0f; 
+    int height = CON_LINES_PER_PAGE * spacing;
     int title_height = 40.0f;
 
     ui_draw_texture(sbox,
@@ -525,12 +559,9 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
         (vec2){width, height},
         (vec4){0.0f, 0.0f, 0.2f, 0.6f});
 
-    float font_size = 25.0f;
-    float spacing = font_size * 0.65f;
-
     for (int i = 0; i < CON_LINES_PER_PAGE; i++) {
         ui_draw_text_shadow(sbox, ui,
-            con->history[i + con->history_len + con->scroll - CON_LINES_PER_PAGE],
+            con->history[i + con->history_len - con->scroll - CON_LINES_PER_PAGE],
             (vec2){r_width.value / 2.0f - width / 2.0f, title_height + spacing * i},
             font_size, COLOR_WHITE);
     }

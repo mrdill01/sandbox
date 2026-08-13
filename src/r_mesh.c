@@ -201,42 +201,39 @@ void mesh_free(sbox_t* sbox, mesh_t* mesh) {
 }
 
 void mesh_deform(
-    sbox_t* sbox, mesh_t* mesh, vec3 position, vec3 point, vec3 direction, float distance)
+    sbox_t* sbox,
+    mesh_t* mesh,
+    vec3 position,
+    vec3 point,
+    vec3 direction,
+    float radius,
+    float distance)
 {
     for (size_t i = 0; i < mesh->nbuffers; i++) {
         mesh_buffer_t* buffer = mesh->buffers[i];
         if (!buffer) continue;
 
-        float shortest_distance = INFINITY;
-        int target_start = 0;
         for (int v = 0; v < buffer->nvertices; v += 9) {
-            float x = buffer->vertices[v + 0];
-            float y = buffer->vertices[v + 1];
-            float z = buffer->vertices[v + 2];
-            vec3 vertex_ws = {position[0] + x, position[1] + y, position[2] + z};
+            vec3 vertex_ws = {
+                position[0] + buffer->vertices[v + 0],
+                position[1] + buffer->vertices[v + 1],
+                position[2] + buffer->vertices[v + 2]};
+
+            float falloff = glm_vec3_distance(point, vertex_ws) / radius;
+            falloff = pow(falloff, 50.0f);
+            falloff = clamp(falloff, 0.0f, 1.0f);
             
-            if (glm_vec3_distance(point, vertex_ws) < shortest_distance) {
-                shortest_distance = glm_vec3_distance(point, vertex_ws);
-                target_start = v;
-            }
-        }
+            buffer->vertices[v + 0] -= direction[0] * distance * falloff;
+            buffer->vertices[v + 1] -= direction[1] * distance * falloff;
+            buffer->vertices[v + 2] -= direction[2] * distance * falloff;
 
-        float* x = &buffer->vertices[target_start + 0];
-        float* y = &buffer->vertices[target_start + 1];
-        float* z = &buffer->vertices[target_start + 2];
+            mesh->bbox.min[0] = min(mesh->bbox.min[0], buffer->vertices[v + 0]);
+            mesh->bbox.min[1] = min(mesh->bbox.min[1], buffer->vertices[v + 1]);
+            mesh->bbox.min[2] = min(mesh->bbox.min[2], buffer->vertices[v + 2]);
 
-        *x -= direction[0] * distance;
-        *y -= direction[1] * distance;
-        *z -= direction[2] * distance;
-
-        for (int v = 0; v < buffer->nvertices; v += 9) {
-            mesh->bbox.min[0] = min(mesh->bbox.min[0], *x);
-            mesh->bbox.min[1] = min(mesh->bbox.min[1], *y);
-            mesh->bbox.min[2] = min(mesh->bbox.min[2], *z);
-
-            mesh->bbox.max[0] = max(mesh->bbox.max[0], *x);
-            mesh->bbox.max[1] = max(mesh->bbox.max[1], *y);
-            mesh->bbox.max[2] = max(mesh->bbox.max[2], *z);
+            mesh->bbox.max[0] = max(mesh->bbox.max[0], buffer->vertices[v + 0]);
+            mesh->bbox.max[1] = max(mesh->bbox.max[1], buffer->vertices[v + 1]);
+            mesh->bbox.max[2] = max(mesh->bbox.max[2], buffer->vertices[v + 2]);
         }
 
         mesh_buffer_upload(sbox, buffer);

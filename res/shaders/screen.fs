@@ -20,6 +20,7 @@ uniform vec3 view_position;
 uniform vec3 view_direction;
 uniform vec3 sun_direction;
 uniform int head_in_water;
+uniform int aiming_sniper;
 
 float linearize_depth(float depth) {
     float ndc = depth * 2.0f - 1.0f;
@@ -37,25 +38,26 @@ vec3 vignette(vec3 color, vec2 uv, float radius, float smoothness) {
 }
 
 void main() {
-    vec3 color = texture(screen, vs_uv).rgb;
-    if (head_in_water == 1) {
-        color *= vec3(0.0f, 0.25f, 1.0f);
-    }
-    color = vignette(color, vs_uv, 0.5f, 0.25f);
+    vec2 uv = vs_uv;
+
+    vec3 color = texture(screen, uv).rgb;
+    if (head_in_water == 1)
+        color *= vec3(0.0f, 0.5f, 1.0f);
+    color = vignette(color, uv, 0.5f, 0.25f);
     color = color / (color + vec3(1.0f));
     color = pow(color, vec3(1.0f / GAMMA)); 
 
     if (debug_buffer == 0)
         frag_color = vec4(color, 1.0f);
     else if (debug_buffer == 1)
-        frag_color = vec4(texture(g_position, vs_uv).rgb, 1.0f);
+        frag_color = vec4(texture(g_position, uv).rgb, 1.0f);
     else if (debug_buffer == 2)
-        frag_color = vec4(texture(g_albedo_roughness, vs_uv).rgb, 1.0f);
+        frag_color = vec4(texture(g_albedo_roughness, uv).rgb, 1.0f);
     else if (debug_buffer == 3)
-        frag_color = vec4(vec3(texture(g_albedo_roughness, vs_uv).a), 1.0f);
+        frag_color = vec4(vec3(texture(g_albedo_roughness, uv).a), 1.0f);
     else if (debug_buffer == 4)
-        frag_color = vec4(texture(g_normal, vs_uv).rgb * 0.5f + 0.5f, 1.0f);
+        frag_color = vec4(texture(g_normal, uv).rgb * 0.5f + 0.5f, 1.0f);
     else if (debug_buffer == 5)
-        frag_color = vec4(vec3(texture(g_depth, vs_uv).r), 1.0f);
-    //frag_color = vec4(vec3(linearize_depth(texture(sun_shadow, vs_uv).r)), 1.0f);
+        frag_color = vec4(vec3(texture(g_depth, uv).r), 1.0f);
+    //frag_color = vec4(vec3(linearize_depth(texture(sun_shadow, uv).r)), 1.0f);
 }

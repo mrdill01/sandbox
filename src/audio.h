@@ -9,6 +9,7 @@
 #include <AL/alc.h>
 
 #define NUM_SPEECH_SOUNDS 19
+#define NUM_HOTBAR_SELECT_SOUNDS 4
 
 typedef struct sbox_t sbox_t;
 typedef struct player_t player_t;
@@ -41,7 +42,7 @@ typedef struct {
     sound_t* fall_damage_sound;
     sound_t* inventory_open_sound;
     sound_t* inventory_close_sound;
-    sound_t* hotbar_select_sound;
+    sound_t* hotbar_select_sounds[NUM_HOTBAR_SELECT_SOUNDS];
     sound_t* button_hover_sound;
     sound_t* button_press_sound;
 } audio_t;

@@ -23,8 +23,8 @@ float max(float a, float b) {
 	return (a > b) ? a : b;
 }
 
-float clamp(float x, float a, float b) {
-    return min(max(x, a), b);
+float clamp(float x, float lo, float hi) {
+    return max(lo, min(x, hi));
 }
 
 float lerp(float a, float b, float t) {

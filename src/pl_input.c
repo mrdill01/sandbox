@@ -71,8 +71,10 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_A])
         player->move_input[0] += 1.0f;
 
-    if (sbox->keys[SDL_SCANCODE_SPACE])
+    if (sbox->keys[SDL_SCANCODE_SPACE]) {
         player->buttons |= PLAYER_BUTTON_JUMP;
+        player->move_input[1] += 1.0f;
+    }
     
     if (sbox->keys[SDL_SCANCODE_LCTRL]) {
         player->buttons |= PLAYER_BUTTON_CROUCH;
@@ -81,11 +83,16 @@ void player_input(sbox_t* sbox, player_t* player) {
 
     if (sbox->keys[SDL_SCANCODE_LSHIFT]) {
         player->buttons |= PLAYER_BUTTON_SPRINT;
-        player->move_input[1] += 1.0f;
     }
 
     if (sbox->keys[SDL_SCANCODE_E] || sbox->keys[SDL_SCANCODE_RCTRL])
         player->buttons |= PLAYER_BUTTON_FIRE;
+
+    if (sbox->keys[SDL_SCANCODE_R]) {
+        sbox->keys[SDL_SCANCODE_R] = false;
+        item_t* item = inventory_get_item(sbox, &sbox->player->inventory);
+        weapon_reload(sbox, &item->data.weapon, player);
+    }
 
     if (sbox->keys[SDL_SCANCODE_LALT])
         player->buttons |= PLAYER_BUTTON_AIM;
@@ -118,6 +125,16 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_4]) {
         sbox->keys[SDL_SCANCODE_4] = false;
         inventory_select_hotbar_slot(sbox, &player->inventory, 3);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_5]) {
+        sbox->keys[SDL_SCANCODE_5] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 4);
+    }
+
+    if (sbox->keys[SDL_SCANCODE_6]) {
+        sbox->keys[SDL_SCANCODE_6] = false;
+        inventory_select_hotbar_slot(sbox, &player->inventory, 5);
     }
 
     if (sbox->keys[SDL_SCANCODE_I]) {

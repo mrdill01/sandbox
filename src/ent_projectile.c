@@ -50,7 +50,7 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
         sbox, entity->position, direction, max_distance, entlist, projectile->owner_id, &trace))
     {
         entity_t* explosion = NULL;
-        entity_init_explosion(sbox, "explosion", entity->position, M_PI, direction,
+        entity_init_explosion(sbox, "explosion", entity->position, 2.0f, direction,
             2.0f, 12.0f, &explosion);
         entlist_add(sbox, &sbox->map.entlist, explosion);
         entlist_remove(sbox, &sbox->map.entlist, entity);
@@ -64,7 +64,7 @@ void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t*
         glm_vec3_scale(move, sbox->dt, move);
         glm_vec3_add(entity->position, move, entity->position);
 
-        if (r_debug_draw_bullets.value)
+        if (r_debug_bullets.value)
             r_add_line(sbox, &sbox->renderer, prev_position, entity->position,
                 COLOR_LIGHT_BLUE, 2.5f);
     }

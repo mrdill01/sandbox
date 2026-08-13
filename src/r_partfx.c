@@ -221,7 +221,7 @@ void r_add_partfx_explosion(
 
         texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
         particle_t* particle = r_add_particle(sbox, &sbox->renderer,
-            new_position, velocity, texture, (vec3){1.0f, random(0.25f, 0.5f), 0.2f},
+            new_position, velocity, texture, (vec3){1.0f, random(0.5f, 1.0f), 0.2f},
             1.0f, random(0.2f, 0.3f), random(1.5f, 2.0f),
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
         particle->apply_gravity = true;
@@ -244,7 +244,7 @@ void r_add_partfx_explosion(
 }
 
 void r_add_partfx_pickup_coin(sbox_t* sbox, renderer_t* renderer, vec3 position) {
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 10; i++) {
         vec3 velocity = {
             random(-3.0f, 3.0f),
             random(-3.0f, 3.0f),

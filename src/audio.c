@@ -121,7 +121,12 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->fall_damage_sound = sound_load(sbox, audio, "res/sounds/fall_damage.wav");
     audio->inventory_open_sound = sound_load(sbox, audio, "res/sounds/inventory_open.wav");
     audio->inventory_close_sound = sound_load(sbox, audio, "res/sounds/inventory_close.wav");
-    audio->hotbar_select_sound = sound_load(sbox, audio, "res/sounds/hotbar_select.wav");
+
+    audio->hotbar_select_sounds[0] = sound_load(sbox, audio, "res/sounds/hotbar_select.wav");
+    audio->hotbar_select_sounds[1] = sound_load(sbox, audio, "res/sounds/hotbar_select2.wav");
+    audio->hotbar_select_sounds[2] = sound_load(sbox, audio, "res/sounds/hotbar_select3.wav");
+    audio->hotbar_select_sounds[3] = sound_load(sbox, audio, "res/sounds/hotbar_select4.wav");
+
     audio->button_hover_sound = sound_load(sbox, audio, "res/sounds/button_hover.wav");
     audio->button_press_sound = sound_load(sbox, audio, "res/sounds/button_press.wav");
 }

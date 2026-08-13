@@ -202,7 +202,7 @@ void tick(sbox_t* sbox) {
 
     if (sbox->keys[SDL_SCANCODE_F4]) {
         sbox->keys[SDL_SCANCODE_F4] = false;
-        cvar_toggle(sbox, "r_debug_draw_colliders");
+        cvar_toggle(sbox, "r_debug_colliders");
     }
 
     if (sbox->keys[SDL_SCANCODE_F5]) {

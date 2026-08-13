@@ -212,17 +212,14 @@ typedef struct {
     shader_t* screen_shader;
     shader_t* line_shader;
     shader_t* item_shader;
-    shader_t* earth_shader;
     shader_t* active_shader;
 
     mesh_t* quad_mesh;
     mesh_t* sphere_mesh;
-    mesh_t* earth_mesh;
 
     texture_t* bound_textures[MAX_TEXTURES];
 
     material_t* default_material;
-    material_t* earth_material;
 
     framebuffer_t* gbuffer;
     framebuffer_t* screen_buffer;
@@ -273,7 +270,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path);
 mesh_t* mesh_copy(sbox_t* sbox, const mesh_t* original);
 void mesh_free(sbox_t* sbox, mesh_t* mesh);
 void mesh_deform(
-    sbox_t* sbox, mesh_t* mesh, vec3 position, vec3 point, vec3 normal, float distance);
+    sbox_t* sbox, mesh_t* mesh, vec3 position, vec3 point, vec3 normal, float radius, float distance);
 
 texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
     texture_format_t format, texture_filter_t filter);

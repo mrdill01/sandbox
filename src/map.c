@@ -8,6 +8,8 @@ void map_init(sbox_t* sbox, map_t* map) {
 }
 
 void map_load(sbox_t* sbox, map_t* map) {
+    if (map->is_loaded)
+	    map_free(sbox, &sbox->map);
     info(sbox, "loading map...");
     srand(sv_random_seed.value);
     
@@ -454,6 +456,18 @@ void map_load(sbox_t* sbox, map_t* map) {
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "floor(14)", 40.0f, -0.5f, 8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(12)", 48.0f, -0.5f, 0.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(13)", 48.0f, -0.5f, -8.0f, floor_mesh, &entity);
+    entity_mesh_set_material(sbox, entity, concrete, 0);
+    entlist_add(sbox, &map->entlist, entity);
+
+    entity_init_mesh(sbox, "floor(14)", 48.0f, -0.5f, 8.0f, floor_mesh, &entity);
     entity_mesh_set_material(sbox, entity, concrete, 0);
     entlist_add(sbox, &map->entlist, entity);
 
@@ -1033,7 +1047,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         entlist_add(sbox, &map->entlist, entity);
     }
 
-    for (int i = 0; i < 12; i++) {
+    /*for (int i = 0; i < 12; i++) {
         float x = random(-8.0f, 40.0f);
         float z = random(-40.0f, 16.0f);
 
@@ -1061,7 +1075,7 @@ void map_load(sbox_t* sbox, map_t* map) {
         }
             
         //}
-    }
+    }*/
 
     const char* paths[6] = {
         "res/textures/skies/sky_right.png",

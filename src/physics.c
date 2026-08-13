@@ -57,6 +57,15 @@ bool phys_line_trace(
                     entity->data.mesh.mesh, &t, max_distance))
                 {
                     trace.distance = t;
+
+                    vec3 scaled_dir;
+                    glm_vec3_copy(dir, scaled_dir);
+                    glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
+
+                    vec3 end;
+                    glm_vec3_add(start, scaled_dir, end);
+
+                    //glm_vec3_copy(end, trace.point);
                     
                     if (entity->data.mesh.materials[0]->is_water) {
                         if (trace.enter_water_point[0] == 0.0f &&
@@ -74,15 +83,6 @@ bool phys_line_trace(
 
                         continue;
                     }
-
-                    vec3 scaled_dir;
-                    glm_vec3_copy(dir, scaled_dir);
-                    glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
-
-                    vec3 end;
-                    glm_vec3_add(start, scaled_dir, end);
-
-                    //glm_vec3_copy(end, trace.point);
 
                     compute_trace_normal(&trace, &entity->world_bbox);
                     trace.entity = entity;

@@ -163,6 +163,11 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         body_part_t* it = part;
         while (it) {
             glm_translate(drawcall.model, it->offset);
+            it = it->parent;
+        }
+
+        it = part;
+        while (it) {
             glm_quat_rotate(drawcall.model, it->rotation, drawcall.model);
             it = it->parent;
         }
@@ -179,7 +184,7 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
         r_add_drawcall(renderer, drawcall);
     }
 
-    if (r_debug_draw_players.value) {
+    if (r_debug_players.value) {
         bbox_t world = bbox_translate(&player->bbox, player->position);
         r_add_line_box(sbox, &sbox->renderer, &world, COLOR_PURPLE, 0.0f);
     }

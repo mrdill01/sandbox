@@ -44,15 +44,18 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
         for (int i = 0; i < sbox->map.entlist.len; i++) {
             entity_t* other = sbox->map.entlist.ents[i];
             if (!other || other->type != ENTITY_MESH) continue;
+            if (other->data.mesh.materials[0] && other->data.mesh.materials[0]->is_water)
+                continue;
 
             if (bbox_sphere_intersects(&other->world_bbox, entity->position, explosion->radius)) {
                 vec3 direction;
-                glm_vec3_sub(entity->position, other->position, direction);
+                glm_vec3_sub(other->position, entity->position, direction);
                 glm_vec3_normalize(direction);
 
-                float amount = 1.0f;
+                float amount = 0.5f;
                 mesh_deform(sbox,
-                    other->data.mesh.mesh, other->position, entity->position, direction, amount);
+                    other->data.mesh.mesh, other->position, entity->position,
+                    direction, explosion->radius, amount);
             }
         }
     }
