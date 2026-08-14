@@ -1,5 +1,5 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 #include "math.h"
 
 #include "../include/gl.h"
@@ -7,7 +7,7 @@
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "../include/tinyobj_loader_c.h"
 
-mesh_buffer_t* mesh_buffer_new(sbox_t* sbox, size_t nvertices, size_t nindices) {
+mesh_buffer_t* mesh_buffer_new(quark_t* quark, size_t nvertices, size_t nindices) {
     mesh_buffer_t* buffer = malloc(sizeof(mesh_buffer_t));
     glGenVertexArrays(1, &buffer->vao);
     glGenBuffers(1, &buffer->vbo);
@@ -19,7 +19,7 @@ mesh_buffer_t* mesh_buffer_new(sbox_t* sbox, size_t nvertices, size_t nindices) 
     return buffer;
 }
 
-void mesh_buffer_upload(sbox_t* sbox, mesh_buffer_t* buffer) {
+void mesh_buffer_upload(quark_t* quark, mesh_buffer_t* buffer) {
     glBindVertexArray(buffer->vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, buffer->vbo);
@@ -47,18 +47,18 @@ void mesh_buffer_upload(sbox_t* sbox, mesh_buffer_t* buffer) {
 }
 
 mesh_t* mesh_new(
-    sbox_t* sbox, mesh_buffer_t** buffers, size_t nbuffers, uint8_t nmaterials, bbox_t bbox)
+    quark_t* quark, mesh_buffer_t** buffers, size_t nbuffers, uint8_t nmaterials, bbox_t bbox)
 {
     mesh_t* mesh = malloc(sizeof(mesh_t));
     mesh->buffers = buffers;
     mesh->nbuffers = nbuffers;
     for (size_t i = 0; i < nbuffers; i++)
-        mesh_buffer_upload(sbox, mesh->buffers[i]);
+        mesh_buffer_upload(quark, mesh->buffers[i]);
 
     mesh->nmaterials = nmaterials;
     mesh->bbox = bbox;
-    mesh->next = sbox->meshes;
-    sbox->meshes = mesh;
+    mesh->next = quark->meshes;
+    quark->meshes = mesh;
     return mesh;
 }
 
@@ -73,8 +73,8 @@ static void file_callback(void *ctx,
     *len = strlen(*buf);
 }
 
-mesh_t* mesh_load(sbox_t* sbox, const char* path) {
-    info(sbox, "loading mesh %s", path);
+mesh_t* mesh_load(quark_t* quark, const char* path) {
+    info(quark, "loading mesh %s", path);
 
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;
@@ -88,7 +88,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         &materials, &num_materials,
         path,
         file_callback,
-        sbox,
+        quark,
         0);
 
     if (result != TINYOBJ_SUCCESS) {
@@ -100,7 +100,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
         default: msg = "unknown"; break;
         }
 
-        error(sbox, "failed to load mesh %s: %s", path, msg);
+        error(quark, "failed to load mesh %s: %s", path, msg);
         return NULL;
     }
 
@@ -108,7 +108,7 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     mesh_buffer_t** buffers = malloc(sizeof(mesh_buffer_t*) * nbuffers);
 
     int stride = 9;
-    buffers[0] = mesh_buffer_new(sbox, attrib.num_faces * stride, attrib.num_faces);
+    buffers[0] = mesh_buffer_new(quark, attrib.num_faces * stride, attrib.num_faces);
     
     if (num_materials == 0)
         num_materials = 1;
@@ -164,27 +164,27 @@ mesh_t* mesh_load(sbox_t* sbox, const char* path) {
     tinyobj_attrib_free(&attrib);
     tinyobj_shapes_free(shapes, num_shapes);
     tinyobj_materials_free(materials, num_materials);
-    return mesh_new(sbox, buffers, nbuffers, num_materials, bbox);
+    return mesh_new(quark, buffers, nbuffers, num_materials, bbox);
 }
 
-mesh_t* mesh_copy(sbox_t* sbox, const mesh_t* original) {
+mesh_t* mesh_copy(quark_t* quark, const mesh_t* original) {
     mesh_buffer_t** buffers = malloc(sizeof(mesh_buffer_t*) * original->nbuffers);
     for (size_t i = 0; i < original->nbuffers; i++) {
         mesh_buffer_t* original_buffer = original->buffers[i];
         if (!original_buffer) continue;
 
-        buffers[i] = mesh_buffer_new(sbox, original_buffer->nvertices, original_buffer->nindices);
+        buffers[i] = mesh_buffer_new(quark, original_buffer->nvertices, original_buffer->nindices);
         memcpy(buffers[i]->vertices,
             original_buffer->vertices, original_buffer->nvertices * sizeof(float));
         memcpy(buffers[i]->indices,
             original_buffer->indices, original_buffer->nindices * sizeof(uint32_t));
     }
 
-    mesh_t* mesh = mesh_new(sbox, buffers, original->nbuffers, original->nmaterials, original->bbox);
+    mesh_t* mesh = mesh_new(quark, buffers, original->nbuffers, original->nmaterials, original->bbox);
     return mesh;
 }
 
-void mesh_free(sbox_t* sbox, mesh_t* mesh) {
+void mesh_free(quark_t* quark, mesh_t* mesh) {
     if (!mesh) return;
     for (size_t i = 0; i < mesh->nbuffers; i++) {
         mesh_buffer_t* buffer = mesh->buffers[i];
@@ -201,7 +201,7 @@ void mesh_free(sbox_t* sbox, mesh_t* mesh) {
 }
 
 void mesh_deform(
-    sbox_t* sbox,
+    quark_t* quark,
     mesh_t* mesh,
     vec3 position,
     vec3 point,
@@ -236,6 +236,6 @@ void mesh_deform(
             mesh->bbox.max[2] = max(mesh->bbox.max[2], buffer->vertices[v + 2]);
         }
 
-        mesh_buffer_upload(sbox, buffer);
+        mesh_buffer_upload(quark, buffer);
     }
 }

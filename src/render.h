@@ -27,7 +27,7 @@
 #define COLOR_LIGHT_BLUE (vec4){0.0f, 0.5f, 1.0f, 1.0f}
 #define COLOR_PURPLE (vec4){0.5f, 0.0f, 0.5f, 1.0f}
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 typedef enum phys_material_t phys_material_t;
 typedef struct trace_result_t trace_result_t;
 
@@ -246,39 +246,39 @@ typedef struct {
     render_stats_t stats;
 } renderer_t;
 
-void camera_init(sbox_t* sbox, camera_t* camera);
-void camera_tick(sbox_t* sbox, camera_t* camera);
+void camera_init(quark_t* quark, camera_t* camera);
+void camera_tick(quark_t* quark, camera_t* camera);
 void camera_add_pitch(camera_t* camera, float pitch);
 void camera_add_yaw(camera_t* camera, float yaw);
 void camera_add_roll(camera_t* camera, float roll);
 void camera_get_projection_matrix(camera_t* camera, int width, int height, mat4 proj);
 void camera_get_view_matrix(camera_t* camera, mat4 view);
 
-shader_t* shader_new(sbox_t* sbox,
+shader_t* shader_new(quark_t* quark,
     const char* name,
     const char* vs, const char* vname,
     const char* fs, const char* fname);
-shader_t* shader_load(sbox_t* sbox, const char* name, const char* vpath, const char* fpath);
-void shader_free(sbox_t* sbox, shader_t* shader);
+shader_t* shader_load(quark_t* quark, const char* name, const char* vpath, const char* fpath);
+void shader_free(quark_t* quark, shader_t* shader);
 
-mesh_buffer_t* mesh_buffer_new(sbox_t* sbox, size_t num_vertices, size_t num_indices);
-void mesh_buffer_upload(sbox_t* sbox, mesh_buffer_t* buffer);
+mesh_buffer_t* mesh_buffer_new(quark_t* quark, size_t num_vertices, size_t num_indices);
+void mesh_buffer_upload(quark_t* quark, mesh_buffer_t* buffer);
 
-mesh_t* mesh_new(sbox_t* sbox,
+mesh_t* mesh_new(quark_t* quark,
     mesh_buffer_t** buffers, size_t nbuffers, uint8_t nmaterials, bbox_t bbox);
-mesh_t* mesh_load(sbox_t* sbox, const char* path);
-mesh_t* mesh_copy(sbox_t* sbox, const mesh_t* original);
-void mesh_free(sbox_t* sbox, mesh_t* mesh);
+mesh_t* mesh_load(quark_t* quark, const char* path);
+mesh_t* mesh_copy(quark_t* quark, const mesh_t* original);
+void mesh_free(quark_t* quark, mesh_t* mesh);
 void mesh_deform(
-    sbox_t* sbox, mesh_t* mesh, vec3 position, vec3 point, vec3 normal, float radius, float distance);
+    quark_t* quark, mesh_t* mesh, vec3 position, vec3 point, vec3 normal, float radius, float distance);
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
+texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
     texture_format_t format, texture_filter_t filter);
-texture_t* texture_load(sbox_t* sbox, const char* path, texture_filter_t filter);
-texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]);
-void texture_free(sbox_t* sbox, texture_t* texture);
+texture_t* texture_load(quark_t* quark, const char* path, texture_filter_t filter);
+texture_t* texture_load_cubemap(quark_t* quark, const char* paths[6]);
+void texture_free(quark_t* quark, texture_t* texture);
 
-material_t* material_load(sbox_t* sbox,
+material_t* material_load(quark_t* quark,
     const char* name,
     const char* albedo_path,
     const char* roughness_path,
@@ -287,71 +287,71 @@ material_t* material_load(sbox_t* sbox,
     float tiley,
     bool is_translucent,
     int phys_mat);
-void material_free(sbox_t* sbox, material_t* material);
+void material_free(quark_t* quark, material_t* material);
 
-framebuffer_t* framebuffer_new(sbox_t* sbox);
+framebuffer_t* framebuffer_new(quark_t* quark);
 void framebuffer_add_texture(
-    sbox_t* sbox, framebuffer_t* framebuffer, int width, int height, texture_format_t format);
-void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height);
-void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer);
+    quark_t* quark, framebuffer_t* framebuffer, int width, int height, texture_format_t format);
+void framebuffer_add_depth_buffer(quark_t* quark, framebuffer_t* framebuffer, int width, int height);
+void framebuffer_finish(quark_t* quark, framebuffer_t* framebuffer);
 void framebuffer_free(framebuffer_t* framebuffer);
 
-void ui_init(sbox_t* sbox, ui_t* ui);
+void ui_init(quark_t* quark, ui_t* ui);
 
-void ui_draw_texture_ex(sbox_t* sbox, ui_t* ui,
+void ui_draw_texture_ex(quark_t* quark, ui_t* ui,
     texture_t* texture,
     vec2 dest_pos, vec2 dest_size,
     vec2 src_pos, vec2 src_size,
     vec4 color);
 void ui_draw_texture(
-    sbox_t* sbox, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color);
+    quark_t* quark, ui_t* ui, texture_t* texture, vec2 pos, vec2 size, vec4 color);
 
 void ui_draw_text(
-    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
+    quark_t* quark, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
 void ui_draw_text_bg(
-    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
+    quark_t* quark, ui_t* ui, const char* message, vec2 position, float size, vec4 color);
 void ui_draw_text_thick(
-    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, float size, int w, vec4 color);
+    quark_t* quark, ui_t* ui, const char* message, vec2 position, float size, int w, vec4 color);
 float ui_measure_text(const char* message, float size);
 
 bool ui_draw_button(
-    sbox_t* sbox, ui_t* ui, const char* message, vec2 position, vec2 size);
-void ui_render(sbox_t* sbox, ui_t* ui, renderer_t* renderer);
+    quark_t* quark, ui_t* ui, const char* message, vec2 position, vec2 size);
+void ui_render(quark_t* quark, ui_t* ui, renderer_t* renderer);
 
-void r_init(sbox_t* sbox, renderer_t* renderer);
-void r_free(sbox_t* sbox, renderer_t* renderer);
-void r_tick(sbox_t* sbox, renderer_t* renderer);
+void r_init(quark_t* quark, renderer_t* renderer);
+void r_free(quark_t* quark, renderer_t* renderer);
+void r_tick(quark_t* quark, renderer_t* renderer);
 
-void r_reload(sbox_t* sbox, renderer_t* renderer);
-void r_on_resize(sbox_t* sbox);
-void r_on_toggle_fullscreen(sbox_t* sbox);
+void r_reload(quark_t* quark, renderer_t* renderer);
+void r_on_resize(quark_t* quark);
+void r_on_toggle_fullscreen(quark_t* quark);
 
-void r_add_line(sbox_t* sbox,
+void r_add_line(quark_t* quark,
     renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time);
-void r_add_line_box(sbox_t* sbox,
+void r_add_line_box(quark_t* quark,
     renderer_t* renderer, const bbox_t* box, vec4 color, float decay_time);
-void r_render_lines(sbox_t* sbox, renderer_t* renderer);
+void r_render_lines(quark_t* quark, renderer_t* renderer);
 
 void r_add_partfx_shoot_hit(
-    sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
+    quark_t* quark, renderer_t* renderer, trace_result_t trace);
 void r_add_partfx_shoot_hit_water(
-    sbox_t* sbox, renderer_t* renderer, trace_result_t trace);
+    quark_t* quark, renderer_t* renderer, trace_result_t trace);
 void r_add_partfx_shoot_beam(
-    sbox_t* sbox, renderer_t* renderer, vec3 start, vec3 dir, float distance);
+    quark_t* quark, renderer_t* renderer, vec3 start, vec3 dir, float distance);
 void r_add_partfx_projectile_smoke(
-    sbox_t* sbox, renderer_t* renderer, vec3 position);
+    quark_t* quark, renderer_t* renderer, vec3 position);
 void r_add_partfx_hit_ground(
-    sbox_t* sbox, renderer_t* renderer, vec3 position, material_t* material);
+    quark_t* quark, renderer_t* renderer, vec3 position, material_t* material);
 void r_add_partfx_enter_water(
-    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
+    quark_t* quark, renderer_t* renderer, vec3 position, vec3 velocity);
 void r_add_partfx_step_water(
-    sbox_t* sbox, renderer_t* renderer, vec3 position, vec3 velocity);
+    quark_t* quark, renderer_t* renderer, vec3 position, vec3 velocity);
 void r_add_partfx_explosion(
-    sbox_t* sbox, renderer_t* renderer, vec3 position, float radius);
-void r_add_partfx_pickup_coin(sbox_t* sbox, renderer_t* renderer, vec3 position);
+    quark_t* quark, renderer_t* renderer, vec3 position, float radius);
+void r_add_partfx_pickup_coin(quark_t* quark, renderer_t* renderer, vec3 position);
 
 particle_t* r_add_particle(
-    sbox_t* sbox,
+    quark_t* quark,
     renderer_t* renderer,
     vec3 position,
     vec3 velocity,
@@ -361,28 +361,28 @@ particle_t* r_add_particle(
     float size,
     float lifetime,
     uint32_t flags);
-void r_tick_particles(sbox_t* sbox, renderer_t* renderer);
-void r_render_particles(sbox_t* sbox, renderer_t* renderer);
-int r_get_particle_count(sbox_t* sbox, renderer_t* renderer);
+void r_tick_particles(quark_t* quark, renderer_t* renderer);
+void r_render_particles(quark_t* quark, renderer_t* renderer);
+int r_get_particle_count(quark_t* quark, renderer_t* renderer);
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall);
 void r_clear_drawcalls(renderer_t* renderer);
 
 void r_set_shader(renderer_t* renderer, shader_t* shader);
 void r_set_texture(
-    sbox_t* sbox, renderer_t* renderer, const char* name, texture_t* texture, int slot);
-void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot);
+    quark_t* quark, renderer_t* renderer, const char* name, texture_t* texture, int slot);
+void r_set_material(quark_t* quark, renderer_t* renderer, const material_t* material, int slot);
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer);
 
-void r_set_int(sbox_t* sbox, renderer_t* renderer, const char* name, int i);
-void r_set_float(sbox_t* sbox, renderer_t* renderer, const char* name, float f);
-void r_set_vec2(sbox_t* sbox, renderer_t* renderer, const char* name, vec2 v);
-void r_set_vec3(sbox_t* sbox, renderer_t* renderer, const char* name, vec3 v);
-void r_set_vec4(sbox_t* sbox, renderer_t* renderer, const char* name, vec4 v);
-void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m);
+void r_set_int(quark_t* quark, renderer_t* renderer, const char* name, int i);
+void r_set_float(quark_t* quark, renderer_t* renderer, const char* name, float f);
+void r_set_vec2(quark_t* quark, renderer_t* renderer, const char* name, vec2 v);
+void r_set_vec3(quark_t* quark, renderer_t* renderer, const char* name, vec3 v);
+void r_set_vec4(quark_t* quark, renderer_t* renderer, const char* name, vec4 v);
+void r_set_mat4(quark_t* quark, renderer_t* renderer, const char* name, mat4 m);
 
 void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh);
-void r_render(sbox_t* sbox, renderer_t* renderer);
-void r_reset_stats(sbox_t* sbox, renderer_t* renderer);
+void r_render(quark_t* quark, renderer_t* renderer);
+void r_reset_stats(quark_t* quark, renderer_t* renderer);
 
 #endif

@@ -1,4 +1,4 @@
-#include "sbox.h"
+#include "quark.h"
 #include "net.h"
 
 #include <stdarg.h>
@@ -50,150 +50,150 @@ cvar_t cl_name = {"cl_name", "Player", true, false, "Display name."};
 cvar_t edit_mode = {"edit_mode", "0", true, true, "Enable edit mode."};
 cvar_t edit_snap_size = {"edit_snap_size", "0.2f", true, false, "Edit mode snap size."};
 
-void sbox_init(sbox_t* sbox) {
-	con_init(sbox, &sbox->console);
-	info(sbox, "%s", SBOX_VERSION);
+void quark_init(quark_t* quark) {
+	con_init(quark, &quark->console);
+	info(quark, "%s", QUARK_VERSION);
 
-	#ifdef SBOX_DEBUG
-	info(sbox, "DEBUG BUILD (undefine SBOX_DEBUG for release)");
+	#ifdef QUARK_DEBUG
+	info(quark, "DEBUG BUILD (undefine SBOX_DEBUG for release)");
 	#endif
 
     time_t current_time = time(NULL);
 	struct tm* local_time = localtime(&current_time);
 	char* time_string = asctime(local_time);
 	time_string[strlen(time_string) - 1] = '\0';
-    info(sbox, "current date and time: %s", time_string);
+    info(quark, "current date and time: %s", time_string);
 	
-    sbox->cvars = NULL;
-	cvar_register(sbox, &sv_cheats, NULL);
-    cvar_register(sbox, &sv_timescale, NULL);
-    cvar_register(sbox, &sv_respawn_time, NULL);
-    cvar_register(sbox, &sv_destruction, NULL);
-    cvar_register(sbox, &sv_random_seed, NULL);
-    cvar_register(sbox, &cl_name, NULL);
-    cvar_register(sbox, &r_width, NULL);
-    cvar_register(sbox, &r_height, NULL);
-    cvar_register(sbox, &r_scale, NULL);
-    cvar_register(sbox, &r_fullscreen, r_on_toggle_fullscreen);
-    cvar_register(sbox, &r_vsync, NULL);
-    cvar_register(sbox, &r_fov, NULL);
-    cvar_register(sbox, &r_shadows, NULL);
-    cvar_register(sbox, &r_shadow_res, NULL);
-    cvar_register(sbox, &r_third_person, NULL);
-    cvar_register(sbox, &r_viewmodel, NULL);
-    cvar_register(sbox, &r_hud, NULL);
-    cvar_register(sbox, &r_debug_menu, NULL);
-    cvar_register(sbox, &r_debug_colliders, NULL);
-    cvar_register(sbox, &r_debug_bullets, NULL);
-    cvar_register(sbox, &r_debug_players, NULL);
-    cvar_register(sbox, &r_debug_buffer, NULL);
-    cvar_register(sbox, &a_device, NULL);
-    cvar_register(sbox, &a_volume, NULL);
-    cvar_register(sbox, &m_sens, NULL);
-    cvar_register(sbox, &console, NULL);
-    cvar_register(sbox, &profiler, NULL);
-    cvar_register(sbox, &noclip, NULL);
-    cvar_register(sbox, &edit_mode, NULL);
-    cvar_register(sbox, &edit_snap_size, NULL);
+    quark->cvars = NULL;
+	cvar_register(quark, &sv_cheats, NULL);
+    cvar_register(quark, &sv_timescale, NULL);
+    cvar_register(quark, &sv_respawn_time, NULL);
+    cvar_register(quark, &sv_destruction, NULL);
+    cvar_register(quark, &sv_random_seed, NULL);
+    cvar_register(quark, &cl_name, NULL);
+    cvar_register(quark, &r_width, NULL);
+    cvar_register(quark, &r_height, NULL);
+    cvar_register(quark, &r_scale, NULL);
+    cvar_register(quark, &r_fullscreen, r_on_toggle_fullscreen);
+    cvar_register(quark, &r_vsync, NULL);
+    cvar_register(quark, &r_fov, NULL);
+    cvar_register(quark, &r_shadows, NULL);
+    cvar_register(quark, &r_shadow_res, NULL);
+    cvar_register(quark, &r_third_person, NULL);
+    cvar_register(quark, &r_viewmodel, NULL);
+    cvar_register(quark, &r_hud, NULL);
+    cvar_register(quark, &r_debug_menu, NULL);
+    cvar_register(quark, &r_debug_colliders, NULL);
+    cvar_register(quark, &r_debug_bullets, NULL);
+    cvar_register(quark, &r_debug_players, NULL);
+    cvar_register(quark, &r_debug_buffer, NULL);
+    cvar_register(quark, &a_device, NULL);
+    cvar_register(quark, &a_volume, NULL);
+    cvar_register(quark, &m_sens, NULL);
+    cvar_register(quark, &console, NULL);
+    cvar_register(quark, &profiler, NULL);
+    cvar_register(quark, &noclip, NULL);
+    cvar_register(quark, &edit_mode, NULL);
+    cvar_register(quark, &edit_snap_size, NULL);
 
-	sbox->cmds = NULL;
-	cmd_init(sbox);
+	quark->cmds = NULL;
+	cmd_init(quark);
 
-	cfg_write(sbox, DEFAULT_CFG_PATH);
+	cfg_write(quark, DEFAULT_CFG_PATH);
 
-	sbox->running = true;
-	sbox->now = SDL_GetPerformanceCounter();
-	sbox->last = 0;
-	sbox->dt = 0.0;
-	sbox->time = 0.0;
+	quark->running = true;
+	quark->now = SDL_GetPerformanceCounter();
+	quark->last = 0;
+	quark->dt = 0.0;
+	quark->time = 0.0;
 
-	prof_init(sbox, &sbox->prof);
+	prof_init(quark, &quark->prof);
 
 	for (int i = 0; i < NUM_KEYS; i++)
-		sbox->keys[i] = false;
+		quark->keys[i] = false;
 	
 	for (int i = 0; i < NUM_BUTTONS; i++) {
-		sbox->buttons[i] = false;
-		sbox->prev_buttons[i] = false;
+		quark->buttons[i] = false;
+		quark->prev_buttons[i] = false;
 	}
 
-	sbox->mx = 0.0f;
-	sbox->my = 0.0f;
-	sbox->mxdt = 0.0f;
-	sbox->mydt = 0.0f;
+	quark->mx = 0.0f;
+	quark->my = 0.0f;
+	quark->mxdt = 0.0f;
+	quark->mydt = 0.0f;
 
-	sbox->window = NULL;
-	sbox->gl_context = NULL;
-	sbox->shaders = NULL;
-	sbox->meshes = NULL;
-	sbox->textures = NULL;
-	sbox->materials = NULL;
+	quark->window = NULL;
+	quark->gl_context = NULL;
+	quark->shaders = NULL;
+	quark->meshes = NULL;
+	quark->textures = NULL;
+	quark->materials = NULL;
 
-	net_init(sbox);
-	sv_init(sbox, &sbox->server);
-	cl_init(sbox, &sbox->client);
+	net_init(quark);
+	sv_init(quark, &quark->server);
+	cl_init(quark, &quark->client);
 
-	sbox->ui_state = UI_STATE_MAIN_MENU;
-	gm_start(sbox, &sbox->gm, GAME_MODE_CTF);
+	quark->ui_state = UI_STATE_MAIN_MENU;
+	gm_start(quark, &quark->gm, GAME_MODE_CTF);
 
 	for (int i = 0; i < MAX_PLAYERS; i++)
-		sbox->players[i] = NULL;
+		quark->players[i] = NULL;
 }
 
-void sbox_free(sbox_t* sbox) {
-	cl_disconnect(sbox, &sbox->client);
-	sv_stop(sbox, &sbox->server);
-    map_free(sbox, &sbox->map);
-	con_free(sbox, &sbox->console);
-	net_free(sbox);
+void quark_free(quark_t* quark) {
+	cl_disconnect(quark, &quark->client);
+	sv_stop(quark, &quark->server);
+    map_free(quark, &quark->map);
+	con_free(quark, &quark->console);
+	net_free(quark);
 }
 
-void sbox_tick(sbox_t* sbox) {
-	sbox->last = sbox->now;
-	sbox->now = SDL_GetPerformanceCounter();
-   	sbox->dt = (sbox->now - sbox->last) / (double)SDL_GetPerformanceFrequency() * sv_timescale.value;
-	sbox->time += sbox->dt;
+void quark_tick(quark_t* quark) {
+	quark->last = quark->now;
+	quark->now = SDL_GetPerformanceCounter();
+   	quark->dt = (quark->now - quark->last) / (double)SDL_GetPerformanceFrequency() * sv_timescale.value;
+	quark->time += quark->dt;
 
-	sv_tick(sbox, &sbox->server);
-	cl_tick(sbox, &sbox->client);
-	gm_tick(sbox, &sbox->gm);
+	sv_tick(quark, &quark->server);
+	cl_tick(quark, &quark->client);
+	gm_tick(quark, &quark->gm);
 
-	a_tick(sbox, &sbox->audio, sbox->player, &sbox->renderer.camera);
+	a_tick(quark, &quark->audio, quark->player, &quark->renderer.camera);
 	
 	for (int i = 0; i < MAX_PLAYERS; i++) {
-		player_t* player = sbox->players[i];
+		player_t* player = quark->players[i];
 		if (!player) continue;
-		player_input(sbox, player);
-		player_tick(sbox, sbox->players[i], &sbox->renderer.camera, &sbox->map.entlist);
+		player_input(quark, player);
+		player_tick(quark, quark->players[i], &quark->renderer.camera, &quark->map.entlist);
 	}
 
-	map_tick(sbox, &sbox->map);
+	map_tick(quark, &quark->map);
 
-	prof_tick(sbox, &sbox->prof);
-	r_tick(sbox, &sbox->renderer);
+	prof_tick(quark, &quark->prof);
+	r_tick(quark, &quark->renderer);
 }
 
-void sbox_reload_resources(sbox_t* sbox) {
-	info(sbox, "reloading resources...");
+void quark_reload_resources(quark_t* quark) {
+	info(quark, "reloading resources...");
 
-	sbox->renderer.gbuffer_shader = shader_load(sbox,
+	quark->renderer.gbuffer_shader = shader_load(quark,
         "gbuffer", "res/shaders/gbuffer.vs", "res/shaders/gbuffer.fs");
 
-	sbox->renderer.screen_shader = shader_load(sbox,
+	quark->renderer.screen_shader = shader_load(quark,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
 
-	sbox->renderer.forward_shader = shader_load(sbox,
+	quark->renderer.forward_shader = shader_load(quark,
         "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
 
-	sbox->renderer.skybox_shader = shader_load(sbox,
+	quark->renderer.skybox_shader = shader_load(quark,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");
 	
-	map_load(sbox, &sbox->map);
+	map_load(quark, &quark->map);
 
-	info(sbox, "resources reloaded!");
+	info(quark, "resources reloaded!");
 }
 
-void info(sbox_t* sbox, const char* msg, ...) {
+void info(quark_t* quark, const char* msg, ...) {
     char buffer[MAX_MSG_LEN];
 	va_list args;
 	va_start(args, msg);
@@ -205,10 +205,10 @@ void info(sbox_t* sbox, const char* msg, ...) {
 	sprintf(text, "%s", buffer);
 
 	puts(text);
-	con_add_history(sbox, &sbox->console, text);
+	con_add_history(quark, &quark->console, text);
 }
 
-void error(sbox_t* sbox, const char* msg, ...) {
+void error(quark_t* quark, const char* msg, ...) {
     char buffer[MAX_MSG_LEN];
 	va_list args;
 	va_start(args, msg);
@@ -220,16 +220,16 @@ void error(sbox_t* sbox, const char* msg, ...) {
 	sprintf(text, "error: %s", buffer);
 
 	puts(text);
-	con_add_history(sbox, &sbox->console, text);
+	con_add_history(quark, &quark->console, text);
 
-	#ifdef SBOX_DEBUG
+	#ifdef QUARK_DEBUG
 	exit(EXIT_FAILURE);
 	#endif
 }
 
-char* load_file(sbox_t* sbox, const char* path) {
+char* load_file(quark_t* quark, const char* path) {
 	FILE* fp = fopen(path, "r");
-	if (!fp) error(sbox, "failed to open %s for reading", path);
+	if (!fp) error(quark, "failed to open %s for reading", path);
 	
 	fseek(fp, 0, SEEK_END);
 	size_t len = ftell(fp);
@@ -242,8 +242,8 @@ char* load_file(sbox_t* sbox, const char* path) {
 	return text;
 }
 
-void clear_file(sbox_t* sbox, const char* path) {
+void clear_file(quark_t* quark, const char* path) {
 	FILE* fp = fopen(path, "w");
-	if (!fp) error(sbox, "failed to clear file %s", path);
+	if (!fp) error(quark, "failed to clear file %s", path);
 	fclose(fp);
 }

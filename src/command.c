@@ -1,5 +1,5 @@
 #include "command.h"
-#include "sbox.h"
+#include "quark.h"
 #include "console.h"
 #include "net.h"
 
@@ -15,28 +15,28 @@ cmd_t connect_ = {"connect", "<ip> <port>", "Connects the client to a server.", 
 cmd_t disconnect = {"disconnect", "", "Disconnects from the server.", false};
 cmd_t quit = {"quit", "", "Quits the game.", false};
 
-void cmd_init(sbox_t* sbox) {
-    cmd_register(sbox, &help);
-    cmd_register(sbox, &cmdlist);
-    cmd_register(sbox, &cvarlist);
-    cmd_register(sbox, &reset);
-    cmd_register(sbox, &clear);
-    cmd_register(sbox, &teleport);
-    cmd_register(sbox, &bot);
-    cmd_register(sbox, &host);
-    cmd_register(sbox, &connect_);
-    cmd_register(sbox, &disconnect);
-    cmd_register(sbox, &quit);
+void cmd_init(quark_t* quark) {
+    cmd_register(quark, &help);
+    cmd_register(quark, &cmdlist);
+    cmd_register(quark, &cvarlist);
+    cmd_register(quark, &reset);
+    cmd_register(quark, &clear);
+    cmd_register(quark, &teleport);
+    cmd_register(quark, &bot);
+    cmd_register(quark, &host);
+    cmd_register(quark, &connect_);
+    cmd_register(quark, &disconnect);
+    cmd_register(quark, &quit);
 }
 
-void cmd_register(sbox_t* sbox, cmd_t* cmd) {
-    info(sbox, "register command %s", cmd->name);
-    cmd->next = sbox->cmds;
-    sbox->cmds = cmd;
+void cmd_register(quark_t* quark, cmd_t* cmd) {
+    info(quark, "register command %s", cmd->name);
+    cmd->next = quark->cmds;
+    quark->cmds = cmd;
 }
 
-cmd_t* cmd_find(sbox_t* sbox, const char* name) {
-    cmd_t* cmd = sbox->cmds;
+cmd_t* cmd_find(quark_t* quark, const char* name) {
+    cmd_t* cmd = quark->cmds;
     while (cmd) {
         if (strcmp(cmd->name, name) == 0)
             return cmd;
@@ -46,58 +46,58 @@ cmd_t* cmd_find(sbox_t* sbox, const char* name) {
     return NULL;
 }
 
-void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
-    cmd_t* cmd = cmd_find(sbox, name);
+void cmd_run(quark_t* quark, const char* name, const char** args, int argc) {
+    cmd_t* cmd = cmd_find(quark, name);
     if (!cmd) {
-        error(sbox, "command not found: %s", name);
+        error(quark, "command not found: %s", name);
         return;
     }
 
     if (cmd->is_cheat && !sv_cheats.value) {
-        error(sbox, "the %s command requires sv_cheats to be set to 1", cmd->name);
+        error(quark, "the %s command requires sv_cheats to be set to 1", cmd->name);
         return;
     }
 
     if (strcmp(cmd->name, "help") == 0) {
         if (argc == 1) {
-            cvar_t* cvar = cvar_find(sbox, args[0]);
+            cvar_t* cvar = cvar_find(quark, args[0]);
             if (cvar) {
-                info(sbox, "%s\n(default value: %s)", cvar->desc, cvar->init);
+                info(quark, "%s\n(default value: %s)", cvar->desc, cvar->init);
                 return;
             }
 
-            cmd_t* cmd = cmd_find(sbox, args[0]);
+            cmd_t* cmd = cmd_find(quark, args[0]);
             if (cmd) {
-                info(sbox, cmd->desc);
+                info(quark, cmd->desc);
                 return;
             }
 
-            error(sbox, "command or cvar not found: %s", args[0]);
+            error(quark, "command or cvar not found: %s", args[0]);
             return;
         }
 
-        info(sbox,
+        info(quark,
             "The console is used to run commands or set the values of cvars.");
-        info(sbox,
+        info(quark,
             "Type 'cvarlist' for a list of cvars and 'cmdlist' for a list of commands.");
-        info(sbox,
+        info(quark,
             "Press escape or F1 to close the console. Press enter to submit input.");
         return;
     }
 
     if (strcmp(cmd->name, "cmdlist") == 0) {
-        cmd_t* cmd = sbox->cmds;
+        cmd_t* cmd = quark->cmds;
         while (cmd) {
-            info(sbox, "%20s %16s %s", cmd->name, cmd->usage, cmd->desc);
+            info(quark, "%20s %16s %s", cmd->name, cmd->usage, cmd->desc);
             cmd = cmd->next;
         }
         return;
     }
 
     if (strcmp(cmd->name, "cvarlist") == 0) {
-        cvar_t* cvar = sbox->cvars;
+        cvar_t* cvar = quark->cvars;
         while (cvar) {
-            info(sbox, "%20s %s %s", cvar->name, cvar->string, cvar->desc);
+            info(quark, "%20s %s %s", cvar->name, cvar->string, cvar->desc);
             cvar = cvar->next;
         }
         return;
@@ -105,27 +105,27 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
 
     if (strcmp(cmd->name, "reset") == 0) {
         if (argc != 1) {
-            cmd_show_usage(sbox, cmd->name);
+            cmd_show_usage(quark, cmd->name);
             return;
         }
 
-        cvar_t* cvar = cvar_find(sbox, args[0]);
+        cvar_t* cvar = cvar_find(quark, args[0]);
         if (!cvar) {
-            error(sbox, "cvar not found: %s", args[0]);
+            error(quark, "cvar not found: %s", args[0]);
             return;
         }
-        cvar_set(sbox, args[0], cvar->init);
-        info(sbox, "reset cvar %s", cvar->name);
+        cvar_set(quark, args[0], cvar->init);
+        info(quark, "reset cvar %s", cvar->name);
     }
 
     if (strcmp(cmd->name, "clear") == 0) {
-        sbox->console.history_len = 0;
+        quark->console.history_len = 0;
         return;
     }
 
     if (strcmp(cmd->name, "teleport") == 0) {
         if (argc != 3) {
-            cmd_show_usage(sbox, cmd->name);
+            cmd_show_usage(quark, cmd->name);
             return;
         }
 
@@ -133,85 +133,85 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         float y = atof(args[1]);
         float z = atof(args[2]);
 
-        player_teleport(sbox, sbox->player, (vec3){x, y, z});
+        player_teleport(quark, quark->player, (vec3){x, y, z});
         return;
     }
 
     if (strcmp(cmd->name, "bot") == 0) {
         if (argc != 1) {
-            cmd_show_usage(sbox, cmd->name);
+            cmd_show_usage(quark, cmd->name);
             return;
         }
 
         if (strcmp(args[0], "spawn") == 0) {
-            player_t* bot = gm_spawn_player(sbox, true);
-            player_teleport(sbox, bot, sbox->player->look_trace.point);
+            player_t* bot = gm_spawn_player(quark, true);
+            player_teleport(quark, bot, quark->player->look_trace.point);
         
         } else if (strcmp(args[0], "kickall") == 0) {
             for (int i = 0; i < MAX_PLAYERS; i++) {
-                player_t* player = sbox->players[i];
+                player_t* player = quark->players[i];
                 if (!player) continue;
                 if (player->is_bot) {
-                    player_free(sbox, player);
-                    sbox->players[i] = NULL;
+                    player_free(quark, player);
+                    quark->players[i] = NULL;
                 }
             }
         }
     }
 
     if (strcmp(cmd->name, "host") == 0) {
-        sv_start(sbox, &sbox->server, NET_PORT);
+        sv_start(quark, &quark->server, NET_PORT);
         return;
     }
 
     if (strcmp(cmd->name, "connect") == 0) {
         if (argc != 2) {
-            cmd_show_usage(sbox, cmd->name);
+            cmd_show_usage(quark, cmd->name);
             return;
         }
 
-        cl_connect(sbox, &sbox->client, args[0], atoi(args[1]));
+        cl_connect(quark, &quark->client, args[0], atoi(args[1]));
         
-        sbox->ui_state = UI_STATE_LOADING;
-        ui_render(sbox, &sbox->renderer.ui, &sbox->renderer);
-        SDL_GL_SwapWindow(sbox->window);
+        quark->ui_state = UI_STATE_LOADING;
+        ui_render(quark, &quark->renderer.ui, &quark->renderer);
+        SDL_GL_SwapWindow(quark->window);
 
-        map_load(sbox, &sbox->map);
+        map_load(quark, &quark->map);
 
-        sbox->players[0] = gm_spawn_player(sbox, false);
-        sbox->player = sbox->players[0];
-        sbox->player->is_me = true;
+        quark->players[0] = gm_spawn_player(quark, false);
+        quark->player = quark->players[0];
+        quark->player->is_me = true;
         return;
     }
 
     if (strcmp(cmd->name, "disconnect") == 0) {
-        cl_disconnect(sbox, &sbox->client);
-        sv_stop(sbox, &sbox->server);
+        cl_disconnect(quark, &quark->client);
+        sv_stop(quark, &quark->server);
         
-        map_free(sbox, &sbox->map);
-        sbox->player = NULL;
+        map_free(quark, &quark->map);
+        quark->player = NULL;
         for (int i = 0; i < MAX_PLAYERS; i++) {
-            if (!sbox->players[i]) continue;
-            player_free(sbox, sbox->players[i]);
-		    sbox->players[i] = NULL;
+            if (!quark->players[i]) continue;
+            player_free(quark, quark->players[i]);
+		    quark->players[i] = NULL;
         }
         
-        sbox->ui_state = UI_STATE_MAIN_MENU;
+        quark->ui_state = UI_STATE_MAIN_MENU;
         return;
     }
 
     if (strcmp(cmd->name, "quit") == 0) {
-        sbox->running = false;
+        quark->running = false;
         return;
     }
 }
 
-void cmd_show_usage(sbox_t* sbox, const char* name) {
-    cmd_t* cmd = cmd_find(sbox, name);
+void cmd_show_usage(quark_t* quark, const char* name) {
+    cmd_t* cmd = cmd_find(quark, name);
     if (!cmd) {
-        error(sbox, "command not found: %s", name);
+        error(quark, "command not found: %s", name);
         return;
     }
 
-    info(sbox, "usage: %s %s", cmd->name, cmd->usage);
+    info(quark, "usage: %s %s", cmd->name, cmd->usage);
 }

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 typedef struct player_t player_t;
 
 typedef enum {
@@ -23,10 +23,10 @@ typedef struct {
     float timer;
 } game_mode_t;
 
-void gm_start(sbox_t* sbox, game_mode_t* gm, game_mode_type_t gm_type);
-void gm_tick(sbox_t* sbox, game_mode_t* gm);
-void gm_set_state(sbox_t* sbox, game_mode_t* gm, game_state_t state);
-player_t* gm_spawn_player(sbox_t* sbox, bool is_bot);
-void gm_respawn_player(sbox_t* sbox, player_t* player);
+void gm_start(quark_t* quark, game_mode_t* gm, game_mode_type_t gm_type);
+void gm_tick(quark_t* quark, game_mode_t* gm);
+void gm_set_state(quark_t* quark, game_mode_t* gm, game_state_t state);
+player_t* gm_spawn_player(quark_t* quark, bool is_bot);
+void gm_respawn_player(quark_t* quark, player_t* player);
 
 #endif

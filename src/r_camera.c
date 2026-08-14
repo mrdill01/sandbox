@@ -1,9 +1,9 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 
 #define PITCH_LIMIT 89.99
 
-void camera_init(sbox_t* sbox, camera_t* camera) {
+void camera_init(quark_t* quark, camera_t* camera) {
     glm_vec3_zero(camera->position);
     glm_quat_identity(camera->rotation);
     glm_vec3_copy((vec3){0.0f, 90.0f, 0.0f}, camera->angles);
@@ -16,7 +16,7 @@ void camera_init(sbox_t* sbox, camera_t* camera) {
     camera->far = 100.0f;
 }
 
-void camera_tick(sbox_t* sbox, camera_t* camera) {
+void camera_tick(quark_t* quark, camera_t* camera) {
     quat yaw;
     quat roll;
     quat pitch;

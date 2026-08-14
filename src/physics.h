@@ -6,6 +6,7 @@
 
 #define PHYS_GRAVITY 9.81f
 #define PHYS_TRACE_STEP 0.01f
+#define PHYS_MAX_IGNORE_ENTITES 1
 
 typedef enum phys_material_t {
     PHYS_MAT_NONE,
@@ -33,12 +34,14 @@ typedef struct trace_result_t {
 } trace_result_t;
 
 bool phys_line_trace(
-    sbox_t* sbox,
+    quark_t* quark,
     vec3 start,
     vec3 dir,
     double max_distance,
     entlist_t* entlist,
     int ignore_player_id,
+    int ignore_entities[PHYS_MAX_IGNORE_ENTITES],
+    size_t nignore_entities,
     trace_result_t* out);
 
 #endif

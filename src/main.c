@@ -1,4 +1,4 @@
-#include "sbox.h"
+#include "quark.h"
 #include "render.h"
 
 #include <stdlib.h>
@@ -9,234 +9,234 @@
 
 #include "../include/gl.h"
 
-bool init(sbox_t* sbox);
-void tick(sbox_t* sbox);
-void quit_game(sbox_t* sbox);
+bool init(quark_t* quark);
+void tick(quark_t* quark);
+void quit_game(quark_t* quark);
 
 int main(int argc, char* argv[]) {
-    sbox_t sbox;
-    if (!init(&sbox))
+    quark_t quark;
+    if (!init(&quark))
         return EXIT_FAILURE;
 
     SDL_StopTextInput();
 
-    #ifdef SBOX_DEBUG
-    cmd_run(&sbox, "host", NULL, 0);
+    #ifdef QUARK_DEBUG
+    cmd_run(&quark, "host", NULL, 0);
     const char* args[] = {"127.0.0.1", "25565"};
-    cmd_run(&sbox, "connect", args, 2);
+    cmd_run(&quark, "connect", args, 2);
 
-    ui_render(&sbox, &sbox.renderer.ui, &sbox.renderer);
-    SDL_GL_SwapWindow(sbox.window);
+    ui_render(&quark, &quark.renderer.ui, &quark.renderer);
+    SDL_GL_SwapWindow(quark.window);
     #endif
 
-    while (sbox.running) {
-        tick(&sbox);
-        r_render(&sbox, &sbox.renderer);
+    while (quark.running) {
+        tick(&quark);
+        r_render(&quark, &quark.renderer);
     }
 
-    quit_game(&sbox);
+    quit_game(&quark);
     return EXIT_SUCCESS;
 }
 
-bool init(sbox_t* sbox) {
-    sbox_init(sbox);
+bool init(quark_t* quark) {
+    quark_init(quark);
 
-    info(sbox, "initializing SDL...");
+    info(quark, "initializing SDL...");
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        error(sbox, "failed to initialize SDL: %s", SDL_GetError());
+        error(quark, "failed to initialize SDL: %s", SDL_GetError());
         return false;
     }
 
-    info(sbox, "SDL initialized!");
+    info(quark, "SDL initialized!");
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, R_GL_MAJ);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, R_GL_MIN);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-    info(sbox, "creating window...");
+    info(quark, "creating window...");
 
-    sbox->window = SDL_CreateWindow("quark",
+    quark->window = SDL_CreateWindow("quark",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         r_width.value,
         r_height.value,
         SDL_WINDOW_OPENGL);
 
-    if (!sbox->window) {
-        error(sbox, "failed to open window: %s", SDL_GetError());
+    if (!quark->window) {
+        error(quark, "failed to open window: %s", SDL_GetError());
         return false;
     }
 
-    info(sbox, "window created!");
-    info(sbox, "setting up OpenGL context...");
+    info(quark, "window created!");
+    info(quark, "setting up OpenGL context...");
 
-    sbox->gl_context = SDL_GL_CreateContext(sbox->window);
+    quark->gl_context = SDL_GL_CreateContext(quark->window);
 
-    if (!sbox->gl_context) {
-        error(sbox, "failed to setup OpenGL context: %s", SDL_GetError());
+    if (!quark->gl_context) {
+        error(quark, "failed to setup OpenGL context: %s", SDL_GetError());
         return false;
     }
 
-    info(sbox, "created OpenGL context!");
-    info(sbox, "loading OpenGL functions...");
+    info(quark, "created OpenGL context!");
+    info(quark, "loading OpenGL functions...");
 
     if (!gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress)) {
-        error(sbox, "failed to initialize GLAD");
+        error(quark, "failed to initialize GLAD");
         return false;
     }
 
-    info(sbox, "OpenGL loaded!");
-    info(sbox, "GPU: %s", glGetString(GL_RENDERER));
-    info(sbox, "vendor: %s", glGetString(GL_VENDOR));
-    info(sbox, "version: %s", glGetString(GL_VERSION));
+    info(quark, "OpenGL loaded!");
+    info(quark, "GPU: %s", glGetString(GL_RENDERER));
+    info(quark, "vendor: %s", glGetString(GL_VENDOR));
+    info(quark, "version: %s", glGetString(GL_VERSION));
 
-    r_init(sbox, &sbox->renderer);
-    a_init(sbox, &sbox->audio);
-    map_init(sbox, &sbox->map);
+    r_init(quark, &quark->renderer);
+    a_init(quark, &quark->audio);
+    map_init(quark, &quark->map);
     return true;
 }
 
-void tick(sbox_t* sbox) {
+void tick(quark_t* quark) {
     for (int i = 0; i < NUM_BUTTONS; i++)
-        sbox->prev_buttons[i] = sbox->buttons[i];
-    sbox->mxdt = 0.0f;
-    sbox->mydt = 0.0f;
+        quark->prev_buttons[i] = quark->buttons[i];
+    quark->mxdt = 0.0f;
+    quark->mydt = 0.0f;
 
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
-        case SDL_QUIT: sbox->running = false; break;
+        case SDL_QUIT: quark->running = false; break;
         case SDL_WINDOWEVENT: {
             switch (e.window.event) {
             case SDL_WINDOWEVENT_RESIZED: {
-                cvar_set_value(sbox, "r_width", e.window.data1);
-                cvar_set_value(sbox, "r_height", e.window.data2);
-                r_on_resize(sbox);
+                cvar_set_value(quark, "r_width", e.window.data1);
+                cvar_set_value(quark, "r_height", e.window.data2);
+                r_on_resize(quark);
                 break;
             }
             }
             break;
         }
         case SDL_KEYDOWN: {
-            sbox->keys[e.key.keysym.scancode] = true;
+            quark->keys[e.key.keysym.scancode] = true;
             break;
         }
         case SDL_KEYUP: {
-            sbox->keys[e.key.keysym.scancode] = false;
+            quark->keys[e.key.keysym.scancode] = false;
             break;
         }
         case SDL_MOUSEMOTION: {
-            sbox->mx = e.motion.x;
-            sbox->my = e.motion.y;
-            sbox->mxdt = e.motion.xrel;
-            sbox->mydt = e.motion.yrel;
+            quark->mx = e.motion.x;
+            quark->my = e.motion.y;
+            quark->mxdt = e.motion.xrel;
+            quark->mydt = e.motion.yrel;
             break;
         }
         case SDL_MOUSEBUTTONDOWN: {
-            sbox->buttons[e.button.button] = true;
+            quark->buttons[e.button.button] = true;
             break;
         }
         case SDL_MOUSEBUTTONUP: {
-            sbox->buttons[e.button.button] = false;
+            quark->buttons[e.button.button] = false;
             break;
         }
         case SDL_TEXTINPUT: {
-            strcat(sbox->console.input, e.text.text);
+            strcat(quark->console.input, e.text.text);
             break;
         }
         }
     }
 
-    sbox_tick(sbox);
+    quark_tick(quark);
 
-    if (sbox->keys[SDL_SCANCODE_ESCAPE]) {
-        sbox->keys[SDL_SCANCODE_ESCAPE] = false;
-        if (console.value) con_close(sbox, &sbox->console);
-        else if (sbox->ui_state == UI_STATE_IN_GAME ||
-            sbox->ui_state == UI_STATE_DEAD) sbox->ui_state = UI_STATE_PAUSE_MENU;
-        else sbox->ui_state = UI_STATE_IN_GAME;
+    if (quark->keys[SDL_SCANCODE_ESCAPE]) {
+        quark->keys[SDL_SCANCODE_ESCAPE] = false;
+        if (console.value) con_close(quark, &quark->console);
+        else if (quark->ui_state == UI_STATE_IN_GAME ||
+            quark->ui_state == UI_STATE_DEAD) quark->ui_state = UI_STATE_PAUSE_MENU;
+        else quark->ui_state = UI_STATE_IN_GAME;
     }
 
-    if (sbox->keys[SDL_SCANCODE_F1]) {
-        sbox->keys[SDL_SCANCODE_F1] = false;
+    if (quark->keys[SDL_SCANCODE_F1]) {
+        quark->keys[SDL_SCANCODE_F1] = false;
         if (console.value)
-            con_close(sbox, &sbox->console);
+            con_close(quark, &quark->console);
         else
-            con_open(sbox, &sbox->console);
+            con_open(quark, &quark->console);
     }
 
     if (console.value) {
-        if (sbox->keys[SDL_SCANCODE_RETURN]) {
-            sbox->keys[SDL_SCANCODE_RETURN] = false;
-            con_submit(sbox, &sbox->console);
+        if (quark->keys[SDL_SCANCODE_RETURN]) {
+            quark->keys[SDL_SCANCODE_RETURN] = false;
+            con_submit(quark, &quark->console);
         }
 
-        if (sbox->keys[SDL_SCANCODE_UP]) {
-            sbox->keys[SDL_SCANCODE_UP] = false;
-            if (sbox->console.scroll > -353)
-                sbox->console.scroll -= 1;
+        if (quark->keys[SDL_SCANCODE_UP]) {
+            quark->keys[SDL_SCANCODE_UP] = false;
+            if (quark->console.scroll > -353)
+                quark->console.scroll -= 1;
         }
 
-        if (sbox->keys[SDL_SCANCODE_DOWN]) {
-            sbox->keys[SDL_SCANCODE_DOWN] = false;
-            if (sbox->console.scroll < sbox->console.history_len - 1 - 20)
-                sbox->console.scroll += 1;
+        if (quark->keys[SDL_SCANCODE_DOWN]) {
+            quark->keys[SDL_SCANCODE_DOWN] = false;
+            if (quark->console.scroll < quark->console.history_len - 1 - 20)
+                quark->console.scroll += 1;
         }
 
-        if (sbox->keys[SDL_SCANCODE_BACKSPACE]) {
-            sbox->keys[SDL_SCANCODE_BACKSPACE] = false;
-            sbox->console.input[strlen(sbox->console.input) - 1] = '\0';
+        if (quark->keys[SDL_SCANCODE_BACKSPACE]) {
+            quark->keys[SDL_SCANCODE_BACKSPACE] = false;
+            quark->console.input[strlen(quark->console.input) - 1] = '\0';
         }
     }
 
-    if (sbox->keys[SDL_SCANCODE_F2]) {
-        sbox->keys[SDL_SCANCODE_F2] = false;
-        sbox_reload_resources(sbox);
+    if (quark->keys[SDL_SCANCODE_F2]) {
+        quark->keys[SDL_SCANCODE_F2] = false;
+        quark_reload_resources(quark);
     }
 
-    if (sbox->keys[SDL_SCANCODE_F3]) {
-        sbox->keys[SDL_SCANCODE_F3] = false;
-        cvar_toggle(sbox, "r_debug_menu");
+    if (quark->keys[SDL_SCANCODE_F3]) {
+        quark->keys[SDL_SCANCODE_F3] = false;
+        cvar_toggle(quark, "r_debug_menu");
     }
 
-    if (sbox->keys[SDL_SCANCODE_F4]) {
-        sbox->keys[SDL_SCANCODE_F4] = false;
-        cvar_toggle(sbox, "r_debug_colliders");
+    if (quark->keys[SDL_SCANCODE_F4]) {
+        quark->keys[SDL_SCANCODE_F4] = false;
+        cvar_toggle(quark, "r_debug_colliders");
     }
 
-    if (sbox->keys[SDL_SCANCODE_F5]) {
-        sbox->keys[SDL_SCANCODE_F5] = false;
-        if (r_debug_buffer.value == 0) cvar_set(sbox, "r_debug_buffer", "1");
-        else if (r_debug_buffer.value == 1) cvar_set(sbox, "r_debug_buffer", "2");
-        else if (r_debug_buffer.value == 2) cvar_set(sbox, "r_debug_buffer", "3");
-        else if (r_debug_buffer.value == 3) cvar_set(sbox, "r_debug_buffer", "4");
-        else if (r_debug_buffer.value == 4) cvar_set(sbox, "r_debug_buffer", "5");
-        else if (r_debug_buffer.value == 5) cvar_set(sbox, "r_debug_buffer", "0");
+    if (quark->keys[SDL_SCANCODE_F5]) {
+        quark->keys[SDL_SCANCODE_F5] = false;
+        if (r_debug_buffer.value == 0) cvar_set(quark, "r_debug_buffer", "1");
+        else if (r_debug_buffer.value == 1) cvar_set(quark, "r_debug_buffer", "2");
+        else if (r_debug_buffer.value == 2) cvar_set(quark, "r_debug_buffer", "3");
+        else if (r_debug_buffer.value == 3) cvar_set(quark, "r_debug_buffer", "4");
+        else if (r_debug_buffer.value == 4) cvar_set(quark, "r_debug_buffer", "5");
+        else if (r_debug_buffer.value == 5) cvar_set(quark, "r_debug_buffer", "0");
     }
 
-    if (sbox->keys[SDL_SCANCODE_F11] ||
-        (sbox->keys[SDL_SCANCODE_LALT] && sbox->keys[SDL_SCANCODE_RETURN]))
+    if (quark->keys[SDL_SCANCODE_F11] ||
+        (quark->keys[SDL_SCANCODE_LALT] && quark->keys[SDL_SCANCODE_RETURN]))
     {
-        sbox->keys[SDL_SCANCODE_F11] = false;
-        sbox->keys[SDL_SCANCODE_RETURN] = false;
-        cvar_toggle(sbox, "r_fullscreen");
+        quark->keys[SDL_SCANCODE_F11] = false;
+        quark->keys[SDL_SCANCODE_RETURN] = false;
+        cvar_toggle(quark, "r_fullscreen");
     }
 }
 
-void quit_game(sbox_t* sbox) {
-    info(sbox, "shutting down...");
+void quit_game(quark_t* quark) {
+    info(quark, "shutting down...");
 
-    r_free(sbox, &sbox->renderer);
-    a_free(sbox, &sbox->audio);
+    r_free(quark, &quark->renderer);
+    a_free(quark, &quark->audio);
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (!sbox->players[i]) continue;
-        player_free(sbox, sbox->players[i]);
+        if (!quark->players[i]) continue;
+        player_free(quark, quark->players[i]);
     }
     
-    SDL_GL_DeleteContext(sbox->gl_context);
-    SDL_DestroyWindow(sbox->window);
+    SDL_GL_DeleteContext(quark->gl_context);
+    SDL_DestroyWindow(quark->window);
     SDL_Quit();
 
-    sbox_free(sbox);
+    quark_free(quark);
 }

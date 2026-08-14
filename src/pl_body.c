@@ -1,49 +1,49 @@
 #include "player.h"
-#include "sbox.h"
+#include "quark.h"
 
 static body_part_t create_body_part(
-    sbox_t* sbox, const char* path, vec3 offset, body_part_t* parent)
+    quark_t* quark, const char* path, vec3 offset, body_part_t* parent)
 {
     body_part_t part;
-    part.mesh = mesh_load(sbox, path);
+    part.mesh = mesh_load(quark, path);
     glm_vec3_copy(offset, part.offset);
     glm_quat_identity(part.rotation);
     part.parent = parent;
     return part;
 }
 
-static void setup_rig(sbox_t* sbox, player_t* player, body_t* body) {
+static void setup_rig(quark_t* quark, player_t* player, body_t* body) {
     body->parts[BODY_TORSO] = create_body_part(
-        sbox, "res/meshes/player/torso.obj", GLM_VEC3_ZERO, NULL);
+        quark, "res/meshes/player/torso.obj", GLM_VEC3_ZERO, NULL);
     body->parts[BODY_HEAD] = create_body_part(
-        sbox, "res/meshes/player/head.obj", (vec3){0.0f, 0.6f, 0.0f}, &body->parts[BODY_TORSO]);
+        quark, "res/meshes/player/head.obj", (vec3){0.0f, 0.6f, 0.0f}, &body->parts[BODY_TORSO]);
     
     body->parts[BODY_LEFT_UPPER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
+        quark, "res/meshes/player/upper_leg.obj", (vec3){-0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_LEFT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.0f, -0.25f, 0.0f},
+        quark, "res/meshes/player/upper_leg.obj", (vec3){-0.0f, -0.25f, 0.0f},
             &body->parts[BODY_LEFT_UPPER_ARM]);
     
     body->parts[BODY_RIGHT_UPPER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
+        quark, "res/meshes/player/upper_leg.obj", (vec3){0.25f, 0.25f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_RIGHT_LOWER_ARM] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.0, -0.25f, 0.0f},
+        quark, "res/meshes/player/upper_leg.obj", (vec3){0.0, -0.25f, 0.0f},
             &body->parts[BODY_RIGHT_UPPER_ARM]);
     
     body->parts[BODY_LEFT_UPPER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
+        quark, "res/meshes/player/upper_leg.obj", (vec3){-0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_LEFT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
+        quark, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
             &body->parts[BODY_LEFT_UPPER_LEG]);
     
     body->parts[BODY_RIGHT_UPPER_LEG] = create_body_part(
-        sbox, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
+        quark, "res/meshes/player/upper_leg.obj", (vec3){0.1f, -0.1f, 0.0f}, &body->parts[BODY_TORSO]);
     body->parts[BODY_RIGHT_LOWER_LEG] = create_body_part(
-        sbox, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
+        quark, "res/meshes/player/lower_leg.obj", (vec3){0.0f, -0.35f, 0.0f},
             &body->parts[BODY_RIGHT_UPPER_LEG]);
 }
 
-static void setup_poses(sbox_t* sbox, player_t* player, body_t* body) {
+static void setup_poses(quark_t* quark, player_t* player, body_t* body) {
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
         glm_quat_identity(body->default_pose.bones[i]);
         glm_quat_identity(body->current_pose.bones[i]);
@@ -71,15 +71,15 @@ static void setup_poses(sbox_t* sbox, player_t* player, body_t* body) {
         rad(-stride), 1.0f, 0.0f, 0.0f);
 }
 
-void player_init_body(sbox_t* sbox, player_t* player) {
+void player_init_body(quark_t* quark, player_t* player) {
     body_t* body = &player->body;
-    setup_rig(sbox, player, body);    
-    setup_poses(sbox, player, body);   
+    setup_rig(quark, player, body);    
+    setup_poses(quark, player, body);   
     body->walk_timer = 0.0f;
     body->walk_cycle = false;
 }
 
-static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, float t) {
+static void blend_poses(quark_t* quark, player_t* player, pose_t* a, pose_t* b, float t) {
     body_t* body = &player->body;
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
         quat rotation;
@@ -88,12 +88,12 @@ static void blend_poses(sbox_t* sbox, player_t* player, pose_t* a, pose_t* b, fl
     }
 }
 
-void player_tick_body(sbox_t* sbox, player_t* player) {
+void player_tick_body(quark_t* quark, player_t* player) {
     body_t* body = &player->body;
 
     if (player->is_me) {
-        //glm_quat(body->rotation, rad(-sbox->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
-        glm_quat_copy(sbox->renderer.camera.rotation, body->rotation);
+        //glm_quat(body->rotation, rad(-quark->renderer.camera.angles[1] + 90.0f), 0.0f, 1.0f, 0.0f);
+        glm_quat_copy(quark->renderer.camera.rotation, body->rotation);
         if (player_is_dead(player))
             glm_quat(body->rotation, rad(-90.0f), 1.0f, 0.0f, 0.0f);
     } else {
@@ -106,15 +106,15 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
 
     if (player->is_grounded && glm_vec3_dot(velocity, velocity) > 0.0f && !player_is_dead(player)) {
         if (body->walk_cycle) {
-            blend_poses(sbox, player, &body->walk_a, &body->walk_b,
-                body->walk_timer / player_get_step_rate(sbox, player));
+            blend_poses(quark, player, &body->walk_a, &body->walk_b,
+                body->walk_timer / player_get_step_rate(quark, player));
         } else {
-            blend_poses(sbox, player, &body->walk_b, &body->walk_a,
-                body->walk_timer / player_get_step_rate(sbox, player));
+            blend_poses(quark, player, &body->walk_b, &body->walk_a,
+                body->walk_timer / player_get_step_rate(quark, player));
         }
         
-        body->walk_timer += sbox->dt;
-        if (body->walk_timer >= player_get_step_rate(sbox, player)) {
+        body->walk_timer += quark->dt;
+        if (body->walk_timer >= player_get_step_rate(quark, player)) {
             body->walk_timer = 0.0f;
             body->walk_cycle = !body->walk_cycle;
         }
@@ -123,9 +123,9 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
     } else {
         body->walk_timer = 0.0f;
         body->walk_cycle = false;
-        body->idle_timer += sbox->dt;
-        blend_poses(sbox, player, &body->current_pose, &body->default_pose,
-            body->idle_timer / player_get_step_rate(sbox, player));
+        body->idle_timer += quark->dt;
+        blend_poses(quark, player, &body->current_pose, &body->default_pose,
+            body->idle_timer / player_get_step_rate(quark, player));
     }
 
     for (int i = 0; i < NUM_BODY_PARTS; i++) {
@@ -133,7 +133,7 @@ void player_tick_body(sbox_t* sbox, player_t* player) {
     }
 }
 
-void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
+void player_render_body(quark_t* quark, player_t* player, renderer_t* renderer) {
     if (!player->is_thirdperson && player->is_me) return;
     
     body_t* body = &player->body;
@@ -186,6 +186,6 @@ void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer) {
 
     if (r_debug_players.value) {
         bbox_t world = bbox_translate(&player->bbox, player->position);
-        r_add_line_box(sbox, &sbox->renderer, &world, COLOR_PURPLE, 0.0f);
+        r_add_line_box(quark, &quark->renderer, &world, COLOR_PURPLE, 0.0f);
     }
 }

@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "render.h"
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 
 typedef struct {
     bool is_loaded;
@@ -13,9 +13,9 @@ typedef struct {
     int coins;
 } map_t;
 
-void map_init(sbox_t* sbox, map_t* map);
-void map_load(sbox_t* sbox, map_t* map);
-void map_free(sbox_t* sbox, map_t* map);
-void map_tick(sbox_t* sbox, map_t* map);
+void map_init(quark_t* quark, map_t* map);
+void map_load(quark_t* quark, map_t* map);
+void map_free(quark_t* quark, map_t* map);
+void map_tick(quark_t* quark, map_t* map);
 
 #endif

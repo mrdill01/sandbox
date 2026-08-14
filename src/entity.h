@@ -63,7 +63,7 @@ typedef enum {
 } vehicle_type_t;
 
 typedef struct {
-    vec3 velocity;
+
 } veh_helicopter;
 
 typedef struct {
@@ -114,10 +114,10 @@ typedef struct entlist_t {
 } entlist_t;
 
 void entity_init_common(
-	sbox_t* sbox, const char* name, entity_type_t type, vec3 position, entity_t** out);
-void entity_init_mesh(sbox_t* sbox,
+	quark_t* quark, const char* name, entity_type_t type, vec3 position, entity_t** out);
+void entity_init_mesh(quark_t* quark,
     const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
-void entity_init_projectile(sbox_t* sbox,
+void entity_init_projectile(quark_t* quark,
     const char* name,
     vec3 position,
     int owner_id,
@@ -128,40 +128,40 @@ void entity_init_projectile(sbox_t* sbox,
     float damage,
     bool particles,
     entity_t** out);
-void entity_init_explosion(sbox_t* sbox,
+void entity_init_explosion(quark_t* quark,
     const char* name, vec3 position, float radius, vec3 direction,
     float min_force, float max_force, entity_t** out);
-void entity_init_pickup(sbox_t* sbox,
+void entity_init_pickup(quark_t* quark,
     const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out);
-void entity_init_vehicle(sbox_t* sbox,
+void entity_init_vehicle(quark_t* quark,
     const char* name, vec3 position, mesh_t* mesh, vehicle_type_t type, entity_t** out);
-void entity_init_sun_light(sbox_t* sbox,
+void entity_init_sun_light(quark_t* quark,
     const char* name,
     float x, float y, float z,
     vec3 dir, vec3 color, entity_t** out);
-void entity_init_point_light(sbox_t* sbox,
+void entity_init_point_light(quark_t* quark,
     const char* name, float x, float y, float z, vec3 color, entity_t** out);
-void entity_free(sbox_t* sbox, entity_t* entity);
+void entity_free(quark_t* quark, entity_t* entity);
 
-void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t* projectile);
-void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* explosion);
-void entity_tick_pickup(sbox_t* sbox, entity_t* entity, entity_pickup_t* pickup);
-void entity_tick_vehicle(sbox_t* sbox, entity_t* entity, entity_vehicle_t* vehicle);
-void entity_tick_vehicle_helicopter(sbox_t* sbox, entity_t* entity, veh_helicopter* heli);
+void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_t* projectile);
+void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t* explosion);
+void entity_tick_pickup(quark_t* quark, entity_t* entity, entity_pickup_t* pickup);
+void entity_tick_vehicle(quark_t* quark, entity_t* entity, entity_vehicle_t* vehicle);
+void entity_tick_vehicle_helicopter(quark_t* quark, entity_t* entity, veh_helicopter* heli);
 
-mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity);
-void entity_get_materials(sbox_t* sbox, entity_t* entity, material_t** materials, size_t* nmaterials);
-bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
+mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity);
+void entity_get_materials(quark_t* quark, entity_t* entity, material_t** materials, size_t* nmaterials);
+bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall);
 
-void entity_mesh_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
-void entity_pickup_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
-void entity_vehicle_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
+void entity_mesh_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
+void entity_pickup_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
+void entity_vehicle_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
 
-void entlist_init(sbox_t* sbox, entlist_t* entlist);
-void entlist_free(sbox_t* sbox, entlist_t* entlist);
-void entlist_tick(sbox_t* sbox, entlist_t* entlist);
-void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity);
-void entlist_remove(sbox_t* sbox, entlist_t* entlist, entity_t* entity);
-entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name);
+void entlist_init(quark_t* quark, entlist_t* entlist);
+void entlist_free(quark_t* quark, entlist_t* entlist);
+void entlist_tick(quark_t* quark, entlist_t* entlist);
+void entlist_add(quark_t* quark, entlist_t* entlist, entity_t* entity);
+void entlist_remove(quark_t* quark, entlist_t* entlist, entity_t* entity);
+entity_t* entlist_find_by_name(quark_t* quark, entlist_t* entlist, const char* name);
 
 #endif

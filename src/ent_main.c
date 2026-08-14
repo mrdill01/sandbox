@@ -1,8 +1,8 @@
 #include "entity.h"
-#include "sbox.h"
+#include "quark.h"
 
 void entity_init_common(
-	sbox_t* sbox, const char* name, entity_type_t type, vec3 position, entity_t** out)
+	quark_t* quark, const char* name, entity_type_t type, vec3 position, entity_t** out)
 {
 	if (!out) return;
 
@@ -17,12 +17,12 @@ void entity_init_common(
 	glm_vec3_zero(entity->velocity);
 	entity->local_bbox = (bbox_t){0};
 	entity->world_bbox = (bbox_t){0};
-	entity->spawn_time = sbox->time;
+	entity->spawn_time = quark->time;
 
 	*out = entity;
 }
 
-void entity_init_sun_light(sbox_t* sbox,
+void entity_init_sun_light(quark_t* quark,
     const char* name,
     float x, float y, float z,
     vec3 dir, vec3 color, entity_t** out)
@@ -30,7 +30,7 @@ void entity_init_sun_light(sbox_t* sbox,
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	entity_init_common(sbox, name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
+	entity_init_common(quark, name, ENTITY_SUN_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(dir, entity->data.sun_light.direction);
 	glm_normalize(entity->data.sun_light.direction);
 	glm_vec3_copy(color, entity->data.sun_light.color);
@@ -39,26 +39,26 @@ void entity_init_sun_light(sbox_t* sbox,
 	*out = entity;
 }
 
-void entity_init_point_light(sbox_t* sbox,
+void entity_init_point_light(quark_t* quark,
     const char* name, float x, float y, float z, vec3 color, entity_t** out)
 {
 	if (!out) return;
 
 	entity_t* entity = NULL;
-	entity_init_common(sbox, name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
+	entity_init_common(quark, name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
 	glm_vec3_copy(color, entity->data.point_light.color);
 
 	*out = entity;
 }
 
-void entity_free(sbox_t* sbox, entity_t* entity) {
+void entity_free(quark_t* quark, entity_t* entity) {
 	if (!entity) return;
 	if (entity->name)
 		free(entity->name);
     free(entity);
 }
 
-mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
+mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity) {
 	switch (entity->type) {
 	case ENTITY_MESH: return entity->data.mesh.mesh;
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
@@ -68,7 +68,7 @@ mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
 	}
 }
 
-void entity_get_materials(sbox_t* sbox,
+void entity_get_materials(quark_t* quark,
 	entity_t* entity,
 	material_t** materials,
 	size_t* nmaterials)
@@ -102,7 +102,7 @@ void entity_get_materials(sbox_t* sbox,
 	}
 }
 
-bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
+bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall) {
 	if (!entity || !drawcall)
 		return false;
 	
@@ -118,10 +118,10 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	drawcall->entity = malloc(strlen(entity->name));
 	strcpy(drawcall->entity, entity->name);
 
-	drawcall->mesh = entity_get_mesh(sbox, entity);
+	drawcall->mesh = entity_get_mesh(quark, entity);
 
 	size_t nmaterials = 0;
-	entity_get_materials(sbox, entity, drawcall->materials, &nmaterials);
+	entity_get_materials(quark, entity, drawcall->materials, &nmaterials);
 
 	drawcall->local_bbox = drawcall->mesh->bbox;
 	drawcall->world_bbox = entity->local_bbox;
@@ -152,25 +152,25 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	return true;
 }
 
-void entlist_init(sbox_t* sbox, entlist_t* entlist) {
+void entlist_init(quark_t* quark, entlist_t* entlist) {
 	entlist->len = 0;
 	entlist->ents = NULL;
 }
 
-void entlist_free(sbox_t* sbox, entlist_t* entlist) {
+void entlist_free(quark_t* quark, entlist_t* entlist) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
 		if (!entity) continue;
-		entity_free(sbox, entity);
+		entity_free(quark, entity);
 		entlist->ents[i] = NULL;
 	}
 
-	info(sbox, "freed %d entities", entlist->len);
+	info(quark, "freed %d entities", entlist->len);
 	free(entlist->ents);
 }
 
-static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
-	mesh_t* mesh = entity_get_mesh(sbox, entity);
+static void compute_bounding_box(quark_t* quark, entity_t* entity) {
+	mesh_t* mesh = entity_get_mesh(quark, entity);
 	if (!mesh) return;
 	
 	entity->local_bbox = mesh->bbox;
@@ -181,51 +181,51 @@ static void compute_bounding_box(sbox_t* sbox, entity_t* entity) {
 	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
 }
 
-void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
-	prof_start(sbox, &sbox->prof);
+void entlist_tick(quark_t* quark, entlist_t* entlist) {
+	prof_start(quark, &quark->prof);
 
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
 		if (!entity) continue;
-		compute_bounding_box(sbox, entity);
+		compute_bounding_box(quark, entity);
 
 		vec3 move;
 		glm_vec3_copy(entity->velocity, move);
-		glm_vec3_scale(move, sbox->dt, move);
+		glm_vec3_scale(move, quark->dt, move);
 		glm_vec3_add(entity->position, move, entity->position);
 
 		switch (entity->type) {
 		case ENTITY_MESH: {
 			entity_mesh_t* mesh = &entity->data.mesh;
 			if (mesh->is_pickup) {
-    			glm_quat(entity->rotation, rad(sbox->time * PICKUP_SPIN_RATE), 0.0f, 1.0f, 0.0f);
+    			glm_quat(entity->rotation, rad(quark->time * PICKUP_SPIN_RATE), 0.0f, 1.0f, 0.0f);
 			}
 			break;
 		}
 		case ENTITY_PROJECTILE: {
-			entity_tick_projectile(sbox, entity, &entity->data.projectile);
+			entity_tick_projectile(quark, entity, &entity->data.projectile);
 			break;
 		}
 		case ENTITY_EXPLOSION: {
-			entity_tick_explosion(sbox, entity, &entity->data.explosion);
+			entity_tick_explosion(quark, entity, &entity->data.explosion);
 			break;
 		}
 		case ENTITY_PICKUP: {
-			entity_tick_pickup(sbox, entity, &entity->data.pickup);
+			entity_tick_pickup(quark, entity, &entity->data.pickup);
 			break;
 		}
 		case ENTITY_VEHICLE: {
-			entity_tick_vehicle(sbox, entity, &entity->data.vehicle);
+			entity_tick_vehicle(quark, entity, &entity->data.vehicle);
 			break;
 		}
 		default: break;
 		}
 	}
 
-	prof_end(sbox, &sbox->prof);
+	prof_end(quark, &quark->prof);
 }
 
-void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
+void entlist_add(quark_t* quark, entlist_t* entlist, entity_t* entity) {
 	if (!entity) return;
 	int slot = -1;
 
@@ -248,13 +248,13 @@ void entlist_add(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
 	entity->id = slot;
 }
 
-void entlist_remove(sbox_t* sbox, entlist_t* entlist, entity_t* entity) {
+void entlist_remove(quark_t* quark, entlist_t* entlist, entity_t* entity) {
 	if (!entity || entity->id == -1) return;
 	entlist->ents[entity->id] = NULL;
-	entity_free(sbox, entity);
+	entity_free(quark, entity);
 }
 
-entity_t* entlist_find_by_name(sbox_t* sbox, entlist_t* entlist, const char* name) {
+entity_t* entlist_find_by_name(quark_t* quark, entlist_t* entlist, const char* name) {
 	for (size_t i = 0; i < entlist->len; i++) {
 		entity_t* entity = entlist->ents[i];
 		if (!entity) continue;

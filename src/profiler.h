@@ -3,7 +3,7 @@
 
 #define MAX_PROFILER_FUNCS 128
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 
 typedef struct {
     char* name;
@@ -17,14 +17,14 @@ typedef struct {
     double total;
 } profiler_t;
 
-void prof_init(sbox_t* sbox, profiler_t* prof);
-void prof_free(sbox_t* sbox, profiler_t* prof);
-void prof_tick(sbox_t* sbox, profiler_t* prof);
+void prof_init(quark_t* quark, profiler_t* prof);
+void prof_free(quark_t* quark, profiler_t* prof);
+void prof_tick(quark_t* quark, profiler_t* prof);
 
-void prof_start_impl(sbox_t* sbox, profiler_t* prof, const char* name);
-void prof_end_impl(sbox_t* sbox, profiler_t* prof, const char* name);
+void prof_start_impl(quark_t* quark, profiler_t* prof, const char* name);
+void prof_end_impl(quark_t* quark, profiler_t* prof, const char* name);
 
-#define prof_start(sbox, prof) prof_start_impl(sbox, prof, __func__);
-#define prof_end(sbox, prof) prof_end_impl(sbox, prof, __func__);
+#define prof_start(quark, prof) prof_start_impl(quark, prof, __func__);
+#define prof_end(quark, prof) prof_end_impl(quark, prof, __func__);
 
 #endif

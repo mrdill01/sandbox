@@ -1,5 +1,5 @@
 #include "physics.h"
-#include "sbox.h"
+#include "quark.h"
 
 static void compute_trace_normal(trace_result_t* trace, const bbox_t* bbox) {
     vec3 center;
@@ -24,12 +24,14 @@ static void compute_trace_normal(trace_result_t* trace, const bbox_t* bbox) {
 }
 
 bool phys_line_trace(
-    sbox_t* sbox,
+    quark_t* quark,
     vec3 start,
     vec3 dir,
     double max_distance,
     entlist_t* entlist,
     int ignore_player_id,
+    int ignore_entities[PHYS_MAX_IGNORE_ENTITES],
+    size_t nignore_entities,
     trace_result_t* out)
 {
     trace_result_t trace;
@@ -44,62 +46,69 @@ bool phys_line_trace(
     trace.phys_mat = PHYS_MAT_NONE;
 
     for (trace.distance = 0.0f; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
-        for (size_t j = 0; j < entlist->len; j++) {
-            entity_t* entity = entlist->ents[j];
+        for (size_t i = 0; i < entlist->len; i++) {
+            entity_t* entity = entlist->ents[i];
             if (!entity) continue;
+
+            bool skip_entity = false;
+            for (size_t j = 0; j < nignore_entities; j++)
+                if (ignore_entities[j] == entity->id)
+                    skip_entity = true;
+
+            if (skip_entity)
+                continue;
+            
             if (entity->type == ENTITY_MESH && !entity->data.mesh.enable_collision) continue;
             
-            if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
-                float t = 0.0f;
-                if (ray_intersects_mesh(
-                    entity->position, entity->rotation, start, dir,
-                    entity->data.mesh.mesh, &t, max_distance))
+            if (!bbox_point_intersects(&entity->world_bbox, trace.point))
+                continue;
+            
+            /*if (ray_intersects_mesh(
+                entity->position, entity->rotation, start, dir,
+                entity->data.mesh.mesh, &trace.distance, max_distance))
+                continue;*/
+
+            vec3 scaled_dir;
+            glm_vec3_copy(dir, scaled_dir);
+            glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
+
+            vec3 end;
+            glm_vec3_add(start, scaled_dir, end);
+
+            glm_vec3_copy(end, trace.point);
+            
+            if (entity->data.mesh.materials[0]->is_water) {
+                if (trace.enter_water_point[0] == 0.0f &&
+                    trace.enter_water_point[1] == 0.0f &&
+                    trace.enter_water_point[2] == 0.0f)
                 {
-                    trace.distance = t;
-
-                    vec3 scaled_dir;
-                    glm_vec3_copy(dir, scaled_dir);
-                    glm_vec3_scale(scaled_dir, t * max_distance, scaled_dir);
-
-                    vec3 end;
-                    glm_vec3_add(start, scaled_dir, end);
-
-                    //glm_vec3_copy(end, trace.point);
-                    
-                    if (entity->data.mesh.materials[0]->is_water) {
-                        if (trace.enter_water_point[0] == 0.0f &&
-                            trace.enter_water_point[1] == 0.0f &&
-                            trace.enter_water_point[2] == 0.0f)
-                        {
-                            glm_vec3_copy(trace.point, trace.enter_water_point);
-                        }
-                        
-                        trace.water_level = trace.distance / max_distance;
-                        
-                        if (trace.distance == 0.0f) {
-                            trace.start_in_water = true;
-                        }
-
-                        continue;
-                    }
-
-                    compute_trace_normal(&trace, &entity->world_bbox);
-                    trace.entity = entity;
-                    trace.material = entity->data.mesh.materials[0];
-                    trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
-
-                    if (out)
-                        *out = trace;
-
-                    return true;
+                    glm_vec3_copy(trace.point, trace.enter_water_point);
                 }
+                
+                trace.water_level = trace.distance / max_distance;
+                
+                if (trace.distance == 0.0f) {
+                    trace.start_in_water = true;
+                }
+
+                continue;
             }
+
+            compute_trace_normal(&trace, &entity->world_bbox);
+            trace.entity = entity;
+            trace.material = entity->data.mesh.materials[0];
+            trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
+
+            if (out)
+                *out = trace;
+
+            return true;
         }
 
         for (size_t j = 0; j < MAX_PLAYERS; j++) {
             if (j == ignore_player_id) continue;
             
-            player_t* player = sbox->players[j];
+            player_t* player = quark->players[j];
             if (!player) continue;
 
             bbox_t bbox = player->bbox;

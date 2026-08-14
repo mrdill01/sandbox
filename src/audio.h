@@ -11,7 +11,7 @@
 #define NUM_SPEECH_SOUNDS 19
 #define NUM_HOTBAR_SELECT_SOUNDS 4
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 typedef struct player_t player_t;
 typedef struct camera_t camera_t;
 
@@ -49,14 +49,14 @@ typedef struct {
     sound_t* button_press_sound;
 } audio_t;
 
-void a_init(sbox_t* sbox, audio_t* audio);
-void a_free(sbox_t* sbox, audio_t* audio);
-void a_tick(sbox_t* sbox, audio_t* audio, player_t* player, camera_t* camera);
-void a_play(sbox_t* sbox, audio_t* audio, sound_t* sound, vec3 position, float pitch);
-int a_get_max_source_count(sbox_t* sbox, audio_t* audio);
+void a_init(quark_t* quark, audio_t* audio);
+void a_free(quark_t* quark, audio_t* audio);
+void a_tick(quark_t* quark, audio_t* audio, player_t* player, camera_t* camera);
+void a_play(quark_t* quark, audio_t* audio, sound_t* sound, vec3 position, float pitch);
+int a_get_max_source_count(quark_t* quark, audio_t* audio);
 
-sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path);
-void sound_free(sbox_t* sbox, audio_t* audio, sound_t* sound);
-bool sound_is_playing(sbox_t* sbox, sound_t* sound);
+sound_t* sound_load(quark_t* quark, audio_t* audio, const char* path);
+void sound_free(quark_t* quark, audio_t* audio, sound_t* sound);
+bool sound_is_playing(quark_t* quark, sound_t* sound);
 
 #endif

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 
 typedef struct cmd_t {
     const char* name;
@@ -25,10 +25,10 @@ extern cmd_t connect_;
 extern cmd_t disconnect;
 extern cmd_t quit;
 
-void cmd_init(sbox_t* sbox);
-void cmd_register(sbox_t* sbox, cmd_t* cmd);
-cmd_t* cmd_find(sbox_t* sbox, const char* name);
-void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc);
-void cmd_show_usage(sbox_t* sbox, const char* name);
+void cmd_init(quark_t* quark);
+void cmd_register(quark_t* quark, cmd_t* cmd);
+cmd_t* cmd_find(quark_t* quark, const char* name);
+void cmd_run(quark_t* quark, const char* name, const char** args, int argc);
+void cmd_show_usage(quark_t* quark, const char* name);
 
 #endif

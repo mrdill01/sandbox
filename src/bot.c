@@ -1,12 +1,12 @@
 #include "player.h"
-#include "sbox.h"
+#include "quark.h"
 
-void bot_init(sbox_t* sbox, player_t* bot) {
-    bot->bot.last_speech = sbox->time;
-    bot->bot.last_speech_word = sbox->time;
+void bot_init(quark_t* quark, player_t* bot) {
+    bot->bot.last_speech = quark->time;
+    bot->bot.last_speech_word = quark->time;
 }
 
-static void move_to_target(sbox_t* sbox, player_t* bot, vec3 target, float stop_distance) {
+static void move_to_target(quark_t* quark, player_t* bot, vec3 target, float stop_distance) {
     if (!target)
         return;
     
@@ -20,29 +20,29 @@ static void move_to_target(sbox_t* sbox, player_t* bot, vec3 target, float stop_
     glm_vec3_normalize(bot->target_dir);
 }
 
-static void speak(sbox_t* sbox, player_t* bot, int nsounds) {
+static void speak(quark_t* quark, player_t* bot, int nsounds) {
     if (bot->bot.num_speech_words > 0) {
         if (bot->bot.last_speech_word)
         bot->bot.num_speech_words--;
 
-        sound_t* sound = sbox->audio.speech_sounds[(int)random(0, NUM_SPEECH_SOUNDS)];
-        a_play(sbox, &sbox->audio, sound, bot->position, random(0.85f, 1.15f));
-        bot->bot.last_speech_word = sbox->time;
+        sound_t* sound = quark->audio.speech_sounds[(int)random(0, NUM_SPEECH_SOUNDS)];
+        a_play(quark, &quark->audio, sound, bot->position, random(0.85f, 1.15f));
+        bot->bot.last_speech_word = quark->time;
     }
 
-    if (sbox->time - bot->bot.last_speech < 3.0f)
+    if (quark->time - bot->bot.last_speech < 3.0f)
         return;
-    bot->bot.last_speech = sbox->time;
+    bot->bot.last_speech = quark->time;
     bot->bot.num_speech_words = 5;
 }
 
-void bot_tick(sbox_t* sbox, player_t* bot) {
+void bot_tick(quark_t* quark, player_t* bot) {
     glm_vec3_zero(bot->target_dir);
     bot->buttons = 0;
 
     if ((int)random(0, 150) == 0)
         bot->buttons |= PLAYER_BUTTON_JUMP;
 
-    move_to_target(sbox, bot, sbox->player->position, 4.0f);
-    speak(sbox, bot, 5);
+    move_to_target(quark, bot, quark->player->position, 4.0f);
+    speak(quark, bot, 5);
 }

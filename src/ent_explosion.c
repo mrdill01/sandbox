@@ -1,12 +1,12 @@
 #include "entity.h"
-#include "sbox.h"
+#include "quark.h"
 
-void entity_init_explosion(sbox_t* sbox,
+void entity_init_explosion(quark_t* quark,
 	const char* name, vec3 position, float radius, vec3 direction,
     float min_force, float max_force, entity_t** out)
 {
     entity_t* entity = NULL;
-	entity_init_common(sbox, name, ENTITY_EXPLOSION, position, &entity);
+	entity_init_common(quark, name, ENTITY_EXPLOSION, position, &entity);
 	entity->data.explosion.radius = radius;
     glm_vec3_copy(direction, entity->data.explosion.direction);
     glm_vec3_normalize(entity->data.explosion.direction);
@@ -16,12 +16,12 @@ void entity_init_explosion(sbox_t* sbox,
     *out = entity;
 }
 
-void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* explosion) {
-    r_add_partfx_explosion(sbox, &sbox->renderer, entity->position, explosion->radius);
-    a_play(sbox, &sbox->audio, sbox->audio.explosion_sound, entity->position, random(0.85f, 1.15f));
+void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t* explosion) {
+    r_add_partfx_explosion(quark, &quark->renderer, entity->position, explosion->radius);
+    a_play(quark, &quark->audio, quark->audio.explosion_sound, entity->position, random(0.85f, 1.15f));
 
     for (int i = 0; i < MAX_PLAYERS; i++) {
-        player_t* player = sbox->players[i];
+        player_t* player = quark->players[i];
         if (!player) continue;
 
         float distance = glm_vec3_distance(player->position, entity->position);
@@ -36,13 +36,13 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
             glm_vec3_add(player->velocity, force_vec, player->velocity);
 
             if (!player->is_me)
-                player_add_damage(sbox, player, explosion->damage * factor);
+                player_add_damage(quark, player, explosion->damage * factor);
         }
     }
 
     if (sv_destruction.value) {
-        for (int i = 0; i < sbox->map.entlist.len; i++) {
-            entity_t* other = sbox->map.entlist.ents[i];
+        for (int i = 0; i < quark->map.entlist.len; i++) {
+            entity_t* other = quark->map.entlist.ents[i];
             if (!other || other->type != ENTITY_MESH) continue;
             if (other->data.mesh.materials[0] && other->data.mesh.materials[0]->is_water)
                 continue;
@@ -53,12 +53,12 @@ void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* e
                 glm_vec3_normalize(direction);
 
                 float amount = 0.5f;
-                mesh_deform(sbox,
+                mesh_deform(quark,
                     other->data.mesh.mesh, other->position, entity->position,
                     direction, explosion->radius, amount);
             }
         }
     }
 
-    entlist_remove(sbox, &sbox->map.entlist, entity);
+    entlist_remove(quark, &quark->map.entlist, entity);
 }

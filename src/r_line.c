@@ -1,9 +1,9 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 
 #include "../include/gl.h"
 
-void r_add_line(sbox_t* sbox,
+void r_add_line(quark_t* quark,
     renderer_t* renderer, vec3 start, vec3 end, vec4 color, float decay_time)
 {
     line_t* line = NULL;
@@ -32,21 +32,21 @@ void r_add_line(sbox_t* sbox,
     size_t nindices = sizeof(indices) / sizeof(indices[0]);
 
     mesh_buffer_t** buffers = malloc(sizeof(mesh_buffer_t*) * 1);
-    buffers[0] = mesh_buffer_new(sbox, nvertices, nindices);
+    buffers[0] = mesh_buffer_new(quark, nvertices, nindices);
     memcpy(buffers[0]->vertices, vertices, nvertices * sizeof(float));
     memcpy(buffers[0]->indices, indices, nindices * sizeof(uint32_t));
 
     bbox_t bbox = {0};
     if (line->mesh)
-        mesh_free(sbox, line->mesh);
+        mesh_free(quark, line->mesh);
     
-    line->mesh = mesh_new(sbox, buffers, 1, 0, bbox);
+    line->mesh = mesh_new(quark, buffers, 1, 0, bbox);
     glm_vec4_copy(color, line->color);
-    line->spawn_time = sbox->time;
+    line->spawn_time = quark->time;
     line->decay_time = decay_time;
 }
 
-void r_add_line_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
+void r_add_line_box(quark_t* quark, renderer_t* renderer, const bbox_t* bbox, vec4 color, float decay_time) {
     vec3 pairs[] = {
         {bbox->min[0], bbox->max[1], bbox->max[2]}, {bbox->max[0], bbox->max[1], bbox->max[2]},
         {bbox->min[0], bbox->min[1], bbox->max[2]}, {bbox->max[0], bbox->min[1], bbox->max[2]},
@@ -66,24 +66,24 @@ void r_add_line_box(sbox_t* sbox, renderer_t* renderer, const bbox_t* bbox, vec4
 
     size_t len = sizeof(pairs) / sizeof(pairs[0]);
     for (size_t i = 0; i < len; i += 2) {
-        r_add_line(sbox, renderer, pairs[i], pairs[i + 1], color, decay_time);
+        r_add_line(quark, renderer, pairs[i], pairs[i + 1], color, decay_time);
     }
 }
 
-void r_render_lines(sbox_t* sbox, renderer_t* renderer) {
+void r_render_lines(quark_t* quark, renderer_t* renderer) {
     r_set_shader(renderer, renderer->line_shader);
     
-    r_set_mat4(sbox, renderer, "view", renderer->view);
-    r_set_mat4(sbox, renderer, "projection", renderer->projection);
+    r_set_mat4(quark, renderer, "view", renderer->view);
+    r_set_mat4(quark, renderer, "projection", renderer->projection);
     
     for (int i = 0; i < MAX_LINES; i++) {
         line_t* line = &renderer->lines[i];
         if (line->is_free) continue;
-        if (sbox->time - line->spawn_time >= line->decay_time) {
+        if (quark->time - line->spawn_time >= line->decay_time) {
             line->is_free = true;
         }
 
-        r_set_vec4(sbox, renderer, "color", line->color);
+        r_set_vec4(quark, renderer, "color", line->color);
         glBindVertexArray(line->mesh->buffers[0]->vao);
         glDrawArrays(GL_LINES, 0, 3);   
     }

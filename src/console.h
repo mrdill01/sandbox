@@ -11,7 +11,7 @@
 #define CON_MAX_ARGS 16
 #define CON_LINES_PER_PAGE 21
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 
 typedef struct {
     char input[CON_MAX_INPUT];
@@ -20,13 +20,13 @@ typedef struct {
     int scroll;
 } console_t;
 
-void con_init(sbox_t* sbox, console_t* con);
-void con_free(sbox_t* sbox, console_t* con);
+void con_init(quark_t* quark, console_t* con);
+void con_free(quark_t* quark, console_t* con);
 
-void con_open(sbox_t* sbox, console_t* con);
-void con_close(sbox_t* sbox, console_t* con);
+void con_open(quark_t* quark, console_t* con);
+void con_close(quark_t* quark, console_t* con);
 
-void con_submit(sbox_t* sbox, console_t* con);
-void con_add_history(sbox_t* sbox, console_t* con, const char* text);
+void con_submit(quark_t* quark, console_t* con);
+void con_add_history(quark_t* quark, console_t* con, const char* text);
 
 #endif

@@ -13,7 +13,7 @@
 #define HOTBAR_SLOTS INVENTORY_HEIGHT
 #define WEAPON_SWITCH_DELAY 0.5f
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 typedef struct player_t player_t;
 
 typedef enum {
@@ -64,26 +64,26 @@ typedef struct {
     int coins;
 } inventory_t;
 
-item_t* item_new(sbox_t* sbox,
+item_t* item_new(quark_t* quark,
     item_type_t type,
     const char* name,
     mesh_t* mesh,
     material_t* materials[MAX_MATERIALS]);
-void item_free(sbox_t* sbox, item_t* item);
+void item_free(quark_t* quark, item_t* item);
 
-void weapon_fire(sbox_t* sbox, weapon_t* weapon, player_t* player);
-void weapon_reload(sbox_t* sbox, weapon_t* weapon, player_t* player);
-void weapon_finish_reload(sbox_t* sbox, weapon_t* weapon, player_t* player);
+void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player);
+void weapon_reload(quark_t* quark, weapon_t* weapon, player_t* player);
+void weapon_finish_reload(quark_t* quark, weapon_t* weapon, player_t* player);
 
-void inventory_init(sbox_t* sbox, inventory_t* inventory);
-void inventory_free(sbox_t* sbox, inventory_t* inventory);
-void inventory_give_item(sbox_t* sbox, inventory_t* inventory, item_t* item);
-void inventory_select_hotbar_slot(sbox_t* sbox, inventory_t* inventory, int slots);
-void inventory_open(sbox_t* sbox, inventory_t* inventory);
-void inventory_close(sbox_t* sbox, inventory_t* inventory);
-void inventory_toggle(sbox_t* sbox, inventory_t* inventory);
+void inventory_init(quark_t* quark, inventory_t* inventory);
+void inventory_free(quark_t* quark, inventory_t* inventory);
+void inventory_give_item(quark_t* quark, inventory_t* inventory, item_t* item);
+void inventory_select_hotbar_slot(quark_t* quark, inventory_t* inventory, int slots);
+void inventory_open(quark_t* quark, inventory_t* inventory);
+void inventory_close(quark_t* quark, inventory_t* inventory);
+void inventory_toggle(quark_t* quark, inventory_t* inventory);
 
-void inventory_set_item(sbox_t* sbox, inventory_t* inventory, int slot, item_t* item);
-item_t* inventory_get_item(sbox_t* sbox, inventory_t* inventory);
+void inventory_set_item(quark_t* quark, inventory_t* inventory, int slot, item_t* item);
+item_t* inventory_get_item(quark_t* quark, inventory_t* inventory);
 
 #endif

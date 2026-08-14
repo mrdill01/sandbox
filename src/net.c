@@ -1,22 +1,22 @@
 #include "net.h"
-#include "sbox.h"
+#include "quark.h"
 
 #define ENET_IMPLEMENTATION
 #define ENET_DLL
 #include "../include/enet.h"
 
-void net_init(sbox_t* sbox) {
-    info(sbox, "net_init()...");
+void net_init(quark_t* quark) {
+    info(quark, "net_init()...");
 
     int result = enet_initialize();
     if (result < 0) {
-        error(sbox, "failed to initialize enet (%d)", result);
+        error(quark, "failed to initialize enet (%d)", result);
         return;
     }
 
-    info(sbox, "network initialized!");
+    info(quark, "network initialized!");
 }
 
-void net_free(sbox_t* sbox) {
+void net_free(quark_t* quark) {
     enet_deinitialize();
 }

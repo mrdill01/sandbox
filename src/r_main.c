@@ -1,52 +1,52 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 #include "item.h"
 
 #include "../include/gl.h"
 
-void r_init(sbox_t* sbox, renderer_t* renderer) {
-    info(sbox, "r_init()...");
+void r_init(quark_t* quark, renderer_t* renderer) {
+    info(quark, "r_init()...");
 
-    camera_init(sbox, &renderer->camera);
+    camera_init(quark, &renderer->camera);
 
     renderer->ndrawcalls = 0;
     renderer->drawcalls = NULL;
     renderer->ntranslucent_drawcalls = 0;
     renderer->translucent_drawcalls = NULL;
 
-    renderer->gbuffer_shader = shader_load(sbox,
+    renderer->gbuffer_shader = shader_load(quark,
         "gbuffer", "res/shaders/gbuffer.vs", "res/shaders/gbuffer.fs");
-    renderer->viewmodel_shader = shader_load(sbox,
+    renderer->viewmodel_shader = shader_load(quark,
         "viewmodel", "res/shaders/viewmodel.vs", "res/shaders/viewmodel.fs"); 
-    renderer->ambient_light_shader = shader_load(sbox,
+    renderer->ambient_light_shader = shader_load(quark,
         "ambient_light", "res/shaders/ambient_light.vs", "res/shaders/ambient_light.fs"); 
-    renderer->sun_light_shader = shader_load(sbox,
+    renderer->sun_light_shader = shader_load(quark,
         "sun_light", "res/shaders/sun_light.vs", "res/shaders/sun_light.fs");
-    renderer->sun_shadow_shader = shader_load(sbox,
+    renderer->sun_shadow_shader = shader_load(quark,
         "sun_shadow", "res/shaders/sun_shadow.vs", "res/shaders/sun_shadow.fs");
-    renderer->point_light_shader = shader_load(sbox,
+    renderer->point_light_shader = shader_load(quark,
         "point_light", "res/shaders/point_light.vs", "res/shaders/point_light.fs"); 
-    renderer->forward_shader = shader_load(sbox,
+    renderer->forward_shader = shader_load(quark,
         "forward", "res/shaders/forward.vs", "res/shaders/forward.fs");
-    renderer->skybox_shader = shader_load(sbox,
+    renderer->skybox_shader = shader_load(quark,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs"); 
-    renderer->partfx_shader = shader_load(sbox,
+    renderer->partfx_shader = shader_load(quark,
         "partfx", "res/shaders/partfx.vs", "res/shaders/partfx.fs"); 
-    renderer->screen_shader = shader_load(sbox,
+    renderer->screen_shader = shader_load(quark,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
-    renderer->line_shader = shader_load(sbox,
+    renderer->line_shader = shader_load(quark,
         "line", "res/shaders/line.vs", "res/shaders/line.fs");
-    renderer->item_shader = shader_load(sbox,
+    renderer->item_shader = shader_load(quark,
         "item", "res/shaders/item.vs", "res/shaders/item.fs");
     renderer->active_shader = NULL;
     
-    renderer->quad_mesh = mesh_load(sbox, "res/meshes/quad.obj");
-    renderer->sphere_mesh = mesh_load(sbox, "res/meshes/sphere.obj");
+    renderer->quad_mesh = mesh_load(quark, "res/meshes/quad.obj");
+    renderer->sphere_mesh = mesh_load(quark, "res/meshes/sphere.obj");
 
     for (int i = 0; i < MAX_TEXTURES; i++)
         renderer->bound_textures[i] = NULL;
     
-    renderer->default_material = material_load(sbox,
+    renderer->default_material = material_load(quark,
         "default",
         "res/textures/materials/default.png",
         "res/textures/materials/default_r.png",
@@ -57,17 +57,17 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
     renderer->screen_buffer = NULL;
     renderer->sun_shadow_buffer = NULL;
     for (int i = 0; i < INVENTORY_SLOTS; i++) {
-        renderer->item_fbos[i] = framebuffer_new(sbox);
-        framebuffer_add_texture(sbox,
+        renderer->item_fbos[i] = framebuffer_new(quark);
+        framebuffer_add_texture(quark,
             renderer->item_fbos[i], ITEM_PREVIEW_RES, ITEM_PREVIEW_RES, TEX_FORMAT_RGBA);
-        framebuffer_finish(sbox, renderer->item_fbos[i]);
+        framebuffer_finish(quark, renderer->item_fbos[i]);
     }
-    r_on_resize(sbox);
+    r_on_resize(quark);
 
     glm_mat4_identity(renderer->projection);
     glm_mat4_identity(renderer->view);
 
-    ui_init(sbox, &renderer->ui);
+    ui_init(quark, &renderer->ui);
 
     for (int i = 0; i < MAX_LINES; i++) {
         line_t* line = &renderer->lines[i];
@@ -80,23 +80,23 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         line->decay_time = 0.0f;
     }
 
-    renderer->p_fire = texture_load(sbox, "res/textures/particles/p_fire.png", TEX_FILTER_NEAREST);
-    renderer->p_smoke = texture_load(sbox, "res/textures/particles/p_smoke.png", TEX_FILTER_NEAREST);
+    renderer->p_fire = texture_load(quark, "res/textures/particles/p_fire.png", TEX_FILTER_NEAREST);
+    renderer->p_smoke = texture_load(quark, "res/textures/particles/p_smoke.png", TEX_FILTER_NEAREST);
     renderer->p_steam[0] =
-        texture_load(sbox, "res/textures/particles/p_steam.png", TEX_FILTER_NEAREST);
+        texture_load(quark, "res/textures/particles/p_steam.png", TEX_FILTER_NEAREST);
     renderer->p_steam[1] =
-        texture_load(sbox, "res/textures/particles/p_steam2.png", TEX_FILTER_NEAREST);
+        texture_load(quark, "res/textures/particles/p_steam2.png", TEX_FILTER_NEAREST);
     renderer->p_steam[2] =
-        texture_load(sbox, "res/textures/particles/p_steam3.png", TEX_FILTER_NEAREST);
+        texture_load(quark, "res/textures/particles/p_steam3.png", TEX_FILTER_NEAREST);
     renderer->p_steam[3] =
-        texture_load(sbox, "res/textures/particles/p_steam4.png", TEX_FILTER_NEAREST);
-    renderer->p_bullet_hole = texture_load(sbox,
+        texture_load(quark, "res/textures/particles/p_steam4.png", TEX_FILTER_NEAREST);
+    renderer->p_bullet_hole = texture_load(quark,
         "res/textures/particles/p_bullet_hole.png", TEX_FILTER_NEAREST);
-    renderer->p_water = texture_load(sbox,
+    renderer->p_water = texture_load(quark,
         "res/textures/particles/p_water.png", TEX_FILTER_NEAREST);
-    renderer->p_blood = texture_load(sbox,
+    renderer->p_blood = texture_load(quark,
         "res/textures/particles/p_blood.png", TEX_FILTER_NEAREST);
-    renderer->p_coin = texture_load(sbox,
+    renderer->p_coin = texture_load(quark,
         "res/textures/particles/p_coin.png", TEX_FILTER_NEAREST);
 
     for (int i = 0; i < MAX_PARTICLES; i++) {
@@ -104,92 +104,89 @@ void r_init(sbox_t* sbox, renderer_t* renderer) {
         particle->is_free = true;
     }
 
-    r_reset_stats(sbox, renderer);
-    info(sbox, "renderer initialized!");
+    r_reset_stats(quark, renderer);
+    info(quark, "renderer initialized!");
 }
 
-void r_free(sbox_t* sbox, renderer_t* renderer) {
-    info(sbox, "r_free()...");
+void r_free(quark_t* quark, renderer_t* renderer) {
+    info(quark, "r_free()...");
 
     framebuffer_free(renderer->gbuffer);
     framebuffer_free(renderer->screen_buffer);
     framebuffer_free(renderer->sun_shadow_buffer);
 
     int n = 0;
-    shader_t* shader = sbox->shaders;
+    shader_t* shader = quark->shaders;
     while (shader) {
         shader_t* next = shader->next;
-        shader_free(sbox, shader);
+        shader_free(quark, shader);
         shader = next;
         n++;
     }
-    sbox->shaders = NULL;
+    quark->shaders = NULL;
 
-    info(sbox, "released %d shaders", n);
+    info(quark, "released %d shaders", n);
 
     n = 0;
-    mesh_t* mesh = sbox->meshes;
+    mesh_t* mesh = quark->meshes;
     while (mesh) {
         mesh_t* next = mesh->next;
-        mesh_free(sbox, mesh);
+        mesh_free(quark, mesh);
         mesh = next;
         n++;
     }
-    sbox->meshes = NULL;
+    quark->meshes = NULL;
 
-    info(sbox, "released %d meshes", n);
+    info(quark, "released %d meshes", n);
 
     n = 0;
-    texture_t* texture = sbox->textures;
+    texture_t* texture = quark->textures;
     while (texture) {
         texture_t* next = texture->next;
-        texture_free(sbox, texture);
+        texture_free(quark, texture);
         texture = next;
         n++;
     }
-    sbox->textures = NULL;
+    quark->textures = NULL;
 
-    info(sbox, "released %d textures", n);
+    info(quark, "released %d textures", n);
 
     n = 0;
-    material_t* material = sbox->materials;
+    material_t* material = quark->materials;
     while (material) {
         material_t* next = material->next;
-        material_free(sbox, material);
+        material_free(quark, material);
         material = next;
         n++;
     }
-    sbox->materials = NULL;
+    quark->materials = NULL;
 
-    info(sbox, "released %d materials", n);
+    info(quark, "released %d materials", n);
 
-    info(sbox, "renderer shut down!");
+    info(quark, "renderer shut down!");
 }
 
-static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
+static int sort_opaque(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
     if (!a || !b) return 0;
-    
-    return strcmp(a->materials[0]->name, b->materials[0]->name);
 	if (a->distance_to_camera > b->distance_to_camera) return 1;
 	return -1;
 }
 
-static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
+static int sort_translucent(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
     if (!a || !b) return 0;
-
 	if (a->distance_to_camera < b->distance_to_camera) return 1;
 	return -1;
 }
 
-void r_tick(sbox_t* sbox, renderer_t* renderer) {
+void r_tick(quark_t* quark, renderer_t* renderer) {
     SDL_GL_SetSwapInterval(r_vsync.value);
 
     if (renderer->nfps_samples < FPS_SAMPLE_RATE) {
-        renderer->fps_samples[renderer->nfps_samples++] = 1.0f / sbox->dt;
+        renderer->fps_samples[renderer->nfps_samples++] = 1.0f / quark->dt;
     } else {
         renderer->fps = 0.0f;
         for (int i = 0; i < FPS_SAMPLE_RATE; i++) {
@@ -199,7 +196,7 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
         renderer->nfps_samples = 0;
     }
 
-    r_tick_particles(sbox, renderer);
+    r_tick_particles(quark, renderer);
 
     for (size_t i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -208,11 +205,10 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 		bbox_get_center(&drawcall->world_bbox, center);
 
 		drawcall->distance_to_camera = glm_vec3_distance(
-            center, sbox->renderer.camera.position);
+            center, quark->renderer.camera.position);
 	}
 
-	qsort(renderer->drawcalls, renderer->ndrawcalls,
-        sizeof(drawcall_t), sort_front_to_back);
+	qsort(renderer->drawcalls, renderer->ndrawcalls, sizeof(drawcall_t), sort_opaque);
 
     for (size_t i = 0; i < renderer->ntranslucent_drawcalls; i++) {
         drawcall_t* drawcall = &renderer->translucent_drawcalls[i];
@@ -221,11 +217,11 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
 		bbox_get_center(&drawcall->world_bbox, center);
 
 		drawcall->distance_to_camera = glm_vec3_distance(
-            center, sbox->renderer.camera.position);
+            center, quark->renderer.camera.position);
 	}
 
 	qsort(renderer->translucent_drawcalls, renderer->ntranslucent_drawcalls,
-        sizeof(drawcall_t), sort_back_to_front);
+        sizeof(drawcall_t), sort_translucent);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -233,8 +229,8 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
             material_t* material = drawcall->materials[i];
             if (!material) continue;
             if (strcmp(material->name, "water") == 0) {
-                material->scrollx += material->scroll_speed * sbox->dt;
-                material->scrolly += material->scroll_speed * sbox->dt;
+                material->scrollx += material->scroll_speed * quark->dt;
+                material->scrolly += material->scroll_speed * quark->dt;
             }
         }
     }
@@ -245,16 +241,16 @@ void r_tick(sbox_t* sbox, renderer_t* renderer) {
             material_t* material = drawcall->materials[i];
             if (!material) continue;
             if (strcmp(material->name, "water") == 0) {
-                material->scrollx += material->scroll_speed * sbox->dt;
-                material->scrolly += material->scroll_speed * sbox->dt;
+                material->scrollx += material->scroll_speed * quark->dt;
+                material->scrolly += material->scroll_speed * quark->dt;
             }
         }
     }
 }
 
-void r_on_resize(sbox_t* sbox) {
+void r_on_resize(quark_t* quark) {
     glViewport(0, 0, r_width.value, r_height.value);
-    renderer_t* renderer = &sbox->renderer;
+    renderer_t* renderer = &quark->renderer;
 
     framebuffer_free(renderer->gbuffer);
     framebuffer_free(renderer->screen_buffer);
@@ -262,27 +258,27 @@ void r_on_resize(sbox_t* sbox) {
     int width = r_width.value * r_scale.value;
     int height = r_height.value * r_scale.value;
     
-    renderer->gbuffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA);
-    framebuffer_add_texture(sbox, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
-    framebuffer_add_depth_buffer(sbox, renderer->gbuffer, width, height);
-    framebuffer_finish(sbox, renderer->gbuffer);
+    renderer->gbuffer = framebuffer_new(quark);
+    framebuffer_add_texture(quark, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(quark, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_texture(quark, renderer->gbuffer, width, height, TEX_FORMAT_RGBA);
+    framebuffer_add_texture(quark, renderer->gbuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_depth_buffer(quark, renderer->gbuffer, width, height);
+    framebuffer_finish(quark, renderer->gbuffer);
 
-    renderer->screen_buffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->screen_buffer, width, height, TEX_FORMAT_RGBA_F16);
-    framebuffer_add_depth_buffer(sbox, renderer->screen_buffer, width, height);
-    framebuffer_finish(sbox, renderer->screen_buffer);
+    renderer->screen_buffer = framebuffer_new(quark);
+    framebuffer_add_texture(quark, renderer->screen_buffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_depth_buffer(quark, renderer->screen_buffer, width, height);
+    framebuffer_finish(quark, renderer->screen_buffer);
 
-    renderer->sun_shadow_buffer = framebuffer_new(sbox);
-    framebuffer_add_texture(sbox, renderer->sun_shadow_buffer,
+    renderer->sun_shadow_buffer = framebuffer_new(quark);
+    framebuffer_add_texture(quark, renderer->sun_shadow_buffer,
         r_shadow_res.value, r_shadow_res.value, TEX_FORMAT_DEPTH);
-    framebuffer_finish(sbox, renderer->sun_shadow_buffer);
+    framebuffer_finish(quark, renderer->sun_shadow_buffer);
 }
 
-void r_on_toggle_fullscreen(sbox_t* sbox) {
-    SDL_SetWindowFullscreen(sbox->window, (r_fullscreen.value) ? SDL_WINDOW_FULLSCREEN : 0);
+void r_on_toggle_fullscreen(quark_t* quark) {
+    SDL_SetWindowFullscreen(quark->window, (r_fullscreen.value) ? SDL_WINDOW_FULLSCREEN : 0);
 }
 
 void r_add_drawcall(renderer_t* renderer, drawcall_t drawcall) {
@@ -318,16 +314,16 @@ void r_set_shader(renderer_t* renderer, shader_t* shader) {
 }
 
 void r_set_texture(
-    sbox_t* sbox, renderer_t* renderer, const char* name, texture_t* texture, int slot)
+    quark_t* quark, renderer_t* renderer, const char* name, texture_t* texture, int slot)
 {
     if (!texture) return;
 
     if (slot > MAX_TEXTURES) {
-        error(sbox, "max texture limit reached (%d)", MAX_TEXTURES);
+        error(quark, "max texture limit reached (%d)", MAX_TEXTURES);
         return;
     }
 
-    r_set_int(sbox, renderer, name, slot);
+    r_set_int(quark, renderer, name, slot);
 
     if (renderer->bound_textures[slot] && renderer->bound_textures[slot]->id == texture->id)
         return;
@@ -343,9 +339,9 @@ void r_set_texture(
     glBindTexture(type, texture->id);
 }
 
-void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* material, int slot) {
+void r_set_material(quark_t* quark, renderer_t* renderer, const material_t* material, int slot) {
     if (!material) {
-        r_set_material(sbox, renderer, renderer->default_material, slot);
+        r_set_material(quark, renderer, renderer->default_material, slot);
         return;
     }
 
@@ -354,7 +350,7 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
 
     char slot_name[32];
     snprintf(slot_name, 32, "materials[%d].albedo", slot);
-    r_set_texture(sbox, renderer,
+    r_set_texture(quark, renderer,
         slot_name,
         (material->albedo) ?
             material->albedo :
@@ -362,7 +358,7 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
         nmaterial_textures * slot + 0);
     
     snprintf(slot_name, 32, "materials[%d].roughness", slot);
-    r_set_texture(sbox, renderer,
+    r_set_texture(quark, renderer,
         slot_name,
         (material->roughness) ?
             material->roughness :
@@ -370,7 +366,7 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
         nmaterial_textures * slot + 1);
 
     snprintf(slot_name, 32, "materials[%d].normal", slot);
-    r_set_texture(sbox, renderer,
+    r_set_texture(quark, renderer,
         slot_name,
         (material->normal) ?
             material->normal :
@@ -378,29 +374,29 @@ void r_set_material(sbox_t* sbox, renderer_t* renderer, const material_t* materi
         nmaterial_textures * slot + 2);
 
     snprintf(slot_name, 32, "materials[%d].wind_factor", slot);
-    r_set_float(sbox, renderer, slot_name, material->wind_factor);
+    r_set_float(quark, renderer, slot_name, material->wind_factor);
 
     snprintf(slot_name, 32, "materials[%d].tilex", slot);
-    r_set_float(sbox, renderer, slot_name, material->tilex);
+    r_set_float(quark, renderer, slot_name, material->tilex);
 
     snprintf(slot_name, 32, "materials[%d].tiley", slot);
-    r_set_float(sbox, renderer, slot_name, material->tiley);
+    r_set_float(quark, renderer, slot_name, material->tiley);
 
     snprintf(slot_name, 32, "materials[%d].scrollx", slot);
-    r_set_float(sbox, renderer, slot_name, material->scrollx);
+    r_set_float(quark, renderer, slot_name, material->scrollx);
 
     snprintf(slot_name, 32, "materials[%d].scrolly", slot);
-    r_set_float(sbox, renderer, slot_name, material->scrolly);
+    r_set_float(quark, renderer, slot_name, material->scrolly);
 }
 
 void r_set_framebuffer(renderer_t* renderer, framebuffer_t* framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, (framebuffer) ? framebuffer->id : 0);
 }
 
-static int get_uniform(sbox_t* sbox, renderer_t* renderer, const char* name) {
+static int get_uniform(quark_t* quark, renderer_t* renderer, const char* name) {
     GLint location = glGetUniformLocation(renderer->active_shader->id, name);
     if (location == -1) {
-        //info(sbox, "[%s] glGetUniformLocation returned -1 for %s",
+        //info(quark, "[%s] glGetUniformLocation returned -1 for %s",
         //    renderer->active_shader->name, name);
         return -1;
     }
@@ -408,28 +404,28 @@ static int get_uniform(sbox_t* sbox, renderer_t* renderer, const char* name) {
     return location;
 }
 
-void r_set_int(sbox_t* sbox, renderer_t* renderer, const char* name, int i) {
-    glUniform1i(get_uniform(sbox, renderer, name), i);
+void r_set_int(quark_t* quark, renderer_t* renderer, const char* name, int i) {
+    glUniform1i(get_uniform(quark, renderer, name), i);
 }
 
-void r_set_float(sbox_t* sbox, renderer_t* renderer, const char* name, float f) {
-    glUniform1f(get_uniform(sbox, renderer, name), f);
+void r_set_float(quark_t* quark, renderer_t* renderer, const char* name, float f) {
+    glUniform1f(get_uniform(quark, renderer, name), f);
 }
 
-void r_set_vec2(sbox_t* sbox, renderer_t* renderer, const char* name, vec2 v) {
-    glUniform2fv(get_uniform(sbox, renderer, name), 1, &v[0]);
+void r_set_vec2(quark_t* quark, renderer_t* renderer, const char* name, vec2 v) {
+    glUniform2fv(get_uniform(quark, renderer, name), 1, &v[0]);
 }
 
-void r_set_vec3(sbox_t* sbox, renderer_t* renderer, const char* name, vec3 v) {
-    glUniform3fv(get_uniform(sbox, renderer, name), 1, &v[0]);
+void r_set_vec3(quark_t* quark, renderer_t* renderer, const char* name, vec3 v) {
+    glUniform3fv(get_uniform(quark, renderer, name), 1, &v[0]);
 }
 
-void r_set_vec4(sbox_t* sbox, renderer_t* renderer, const char* name, vec4 v) {
-    glUniform4fv(get_uniform(sbox, renderer, name), 1, &v[0]);
+void r_set_vec4(quark_t* quark, renderer_t* renderer, const char* name, vec4 v) {
+    glUniform4fv(get_uniform(quark, renderer, name), 1, &v[0]);
 }
 
-void r_set_mat4(sbox_t* sbox, renderer_t* renderer, const char* name, mat4 m) {
-    glUniformMatrix4fv(get_uniform(sbox, renderer, name), 1, GL_FALSE, &m[0][0]);
+void r_set_mat4(quark_t* quark, renderer_t* renderer, const char* name, mat4 m) {
+    glUniformMatrix4fv(get_uniform(quark, renderer, name), 1, GL_FALSE, &m[0][0]);
 }
 
 void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
@@ -445,7 +441,7 @@ void r_draw_mesh(renderer_t* renderer, const mesh_t* mesh) {
     }
 }
 
-void r_reset_stats(sbox_t* sbox, renderer_t* renderer) {
+void r_reset_stats(quark_t* quark, renderer_t* renderer) {
     renderer->stats.drawcalls = 0;
     renderer->stats.meshes = 0;
     renderer->stats.tris = 0;

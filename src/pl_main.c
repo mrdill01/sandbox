@@ -1,5 +1,5 @@
 #include "player.h"
-#include "sbox.h"
+#include "quark.h"
 #include "entity.h"
 
 #define HEIGHT 1.5f
@@ -22,16 +22,16 @@
 #define INTERP_HEIGHT_SPEED 5.5f
 #define MAX_INTERACT_DISTANCE 8.0f
 
-static float get_max_speed(sbox_t* sbox, player_t* player);
-static float get_height(sbox_t* sbox, player_t* player);
+static float get_max_speed(quark_t* quark, player_t* player);
+static float get_height(quark_t* quark, player_t* player);
 
-static void update_bbox(sbox_t* sbox, player_t* player) {
-    float height = get_height(sbox, player);
+static void update_bbox(quark_t* quark, player_t* player) {
+    float height = get_height(quark, player);
     player->bbox = bbox_new((vec3){-RADIUS, -height / 2.0f, -RADIUS},
         (vec3){RADIUS, height / 2.0f, RADIUS});
 }
 
-player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
+player_t* player_new(quark_t* quark, int id, bool is_bot) {
     player_t* player = malloc(sizeof(player_t));
     player->id = id;
     player->is_me = false;
@@ -39,13 +39,13 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->name = malloc(MAX_NAME_LEN);
     strcpy(player->name, cl_name.string);
     player->move_mode = MOVE_WALK;
-    update_bbox(sbox, player);
+    update_bbox(quark, player);
     glm_vec3_copy((vec3){0.0f, 2.0f, -4.5f}, player->position);
     glm_vec3_zero(player->velocity);
     glm_vec3_zero(player->move_input);
     glm_vec3_zero(player->target_dir);
     player->buttons = 0;
-    player->target_speed = get_max_speed(sbox, player);
+    player->target_speed = get_max_speed(quark, player);
     player->is_grounded = false;
     player->is_jumping = false;
     player->looked_at_vehicle = NULL;
@@ -57,23 +57,23 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->last_step_time = 0.0f;
     player->head_blocked = false;
     player->is_thirdperson = false;
-    player->height = get_height(sbox, player);
-    inventory_init(sbox, &player->inventory);
+    player->height = get_height(quark, player);
+    inventory_init(quark, &player->inventory);
     player->walk_timer = 0.0f;
     glm_vec3_zero(player->item_position);
     glm_vec3_zero(player->item_anim);
     glm_vec3_zero(player->item_anim_angles);
     player->health = 100.0f;
     player->death_time = 0.0f;
-    player_init_body(sbox, player);
-    edit_init(sbox, &player->editor);
+    player_init_body(quark, player);
+    edit_init(quark, &player->editor);
     if (is_bot)
-        bot_init(sbox, player);
+        bot_init(quark, player);
     return player;
 }
 
-void player_free(sbox_t* sbox, player_t* player) {
-    inventory_free(sbox, &player->inventory);
+void player_free(quark_t* quark, player_t* player) {
+    inventory_free(quark, &player->inventory);
     free(player->name);
     free(player);
 }
@@ -97,14 +97,14 @@ static void set_move_mode(player_t* player, move_mode_t new_mode) {
     player->move_mode = new_mode;
 }
 
-static float get_max_speed(sbox_t* sbox, player_t* player) {
+static float get_max_speed(quark_t* quark, player_t* player) {
     float speed;
     switch (player->move_mode) {
     case MOVE_WALK: speed = MAX_SPEED_WALK; break;
     case MOVE_CROUCH: speed = MAX_SPEED_CROUCH; break;
     case MOVE_SPRINT: speed = MAX_SPEED_SPRINT; break;
     case MOVE_FLIGHT: speed = MAX_SPEED_FLIGHT; break;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     if (player->buttons & PLAYER_BUTTON_AIM)
@@ -113,7 +113,7 @@ static float get_max_speed(sbox_t* sbox, player_t* player) {
     return speed;
 }
 
-static float get_height(sbox_t* sbox, player_t* player) {
+static float get_height(quark_t* quark, player_t* player) {
     if (player_is_dead(player))
         return 0.3f;
     
@@ -122,19 +122,19 @@ static float get_height(sbox_t* sbox, player_t* player) {
     case MOVE_SPRINT:
     case MOVE_FLIGHT: return HEIGHT;
     case MOVE_CROUCH: return HEIGHT_CROUCH;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     return 0.0f;
 }
 
-static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
+static void apply_friction(quark_t* quark, player_t* player, float friction) {
     float speed = sqrt(player->velocity[0] * player->velocity[0] +
         player->velocity[1] * player->velocity[1] +
         player->velocity[2] * player->velocity[2]);
 
     float control = (speed < STOPSPEED) ? STOPSPEED : speed;
-    float drop = control * friction * sbox->dt;
+    float drop = control * friction * quark->dt;
 
     float new_speed = speed - drop;
     if (new_speed < 0.0f)
@@ -147,13 +147,13 @@ static void apply_friction(sbox_t* sbox, player_t* player, float friction) {
     player->velocity[2] *= new_speed;
 }
 
-static void accelerate(sbox_t* sbox, player_t* player, float target_speed, float accel) {
+static void accelerate(quark_t* quark, player_t* player, float target_speed, float accel) {
     float current_speed = glm_vec3_dot(player->velocity, player->target_dir);
     float add_speed = target_speed - current_speed;
     if (add_speed <= 0)
         return;
 
-    float accel_speed = accel * target_speed * sbox->dt;
+    float accel_speed = accel * target_speed * quark->dt;
     if (accel_speed > add_speed)
         accel_speed = add_speed;
 
@@ -163,23 +163,23 @@ static void accelerate(sbox_t* sbox, player_t* player, float target_speed, float
     player->velocity[2] += accel_speed * player->target_dir[2];
 }
 
-static void move_flight(sbox_t* sbox, player_t* player) {
+static void move_flight(quark_t* quark, player_t* player) {
     float accel;
     if (glm_vec3_dot(player->velocity, player->target_dir) < 0.0f)
         accel = AIR_STOPSPEED;
     else
         accel = AIR_ACCEL;
     
-    apply_friction(sbox, player, FRICTION_FLIGHT);
-    accelerate(sbox, player, player->target_speed, accel);
+    apply_friction(quark, player, FRICTION_FLIGHT);
+    accelerate(quark, player, player->target_speed, accel);
 }
 
-static void move_water(sbox_t* sbox, player_t* player) {
+static void move_water(quark_t* quark, player_t* player) {
     if (player->is_grounded)
         player->velocity[1] = 0.0f;
     
-    apply_friction(sbox, player, FRICTION_WATER);
-    accelerate(sbox, player, player->target_speed, ACCEL);
+    apply_friction(quark, player, FRICTION_WATER);
+    accelerate(quark, player, player->target_speed, ACCEL);
 
     for (int i = 0; i < 3; i++)
         player->velocity[i] *= 0.7f;
@@ -190,10 +190,10 @@ static void move_water(sbox_t* sbox, player_t* player) {
     }
 }
 
-static void move_ground(sbox_t* sbox, player_t* player) {
+static void move_ground(quark_t* quark, player_t* player) {
     player->velocity[1] = 0.0f;
-    apply_friction(sbox, player, FRICTION);
-    accelerate(sbox, player, player->target_speed, ACCEL);
+    apply_friction(quark, player, FRICTION);
+    accelerate(quark, player, player->target_speed, ACCEL);
 
     if ((player->buttons & PLAYER_BUTTON_JUMP) && !player->head_blocked) {
         player->velocity[1] = JUMPFORCE;
@@ -201,7 +201,7 @@ static void move_ground(sbox_t* sbox, player_t* player) {
     }
 }
 
-static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
+static void air_control(quark_t* quark, player_t* player, float target_speed) {
     if (fabs(target_speed) < 0.001f)
         return;
     
@@ -215,7 +215,7 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
 
     float dot = glm_vec3_dot(player->velocity, player->target_dir);
     float k = 32;
-    k *= AIR_CONTROL * dot * dot * sbox->dt;
+    k *= AIR_CONTROL * dot * dot * quark->dt;
 
     if (dot != 0.0f) {
         for (int i = 0; i < 3; i++)
@@ -228,37 +228,37 @@ static void air_control(sbox_t* sbox, player_t* player, float target_speed) {
     player->velocity[2] *= speed;
 }
 
-static void move_air(sbox_t* sbox, player_t* player) {
+static void move_air(quark_t* quark, player_t* player) {
     float accel;
     if (glm_vec3_dot(player->velocity, player->target_dir) < 0.0f)
         accel = AIR_STOPSPEED;
     else
         accel = AIR_ACCEL;
     
-    accelerate(sbox, player, player->target_speed, accel);
+    accelerate(quark, player, player->target_speed, accel);
 
     if (AIR_CONTROL > 0.0f)
-        air_control(sbox, player, player->target_speed);
+        air_control(quark, player, player->target_speed);
 
-    player->velocity[1] -= PHYS_GRAVITY * sbox->dt;
+    player->velocity[1] -= PHYS_GRAVITY * quark->dt;
 }
 
-static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
-    sound_t* sound = sbox->audio.jump_land_sounds[player->ground_mat];
+static void hit_ground(quark_t* quark, player_t* player, trace_result_t trace) {
+    sound_t* sound = quark->audio.jump_land_sounds[player->ground_mat];
     vec3 position;
-    player_get_bottom_position(sbox, player, position);
-    a_play(sbox, &sbox->audio, sound, position, random(0.85f, 1.15f));
+    player_get_bottom_position(quark, player, position);
+    a_play(quark, &quark->audio, sound, position, random(0.85f, 1.15f));
 
-    sound = sbox->audio.jump_land_base_sound;
-    a_play(sbox, &sbox->audio, sound, position, random(0.85f, 1.15f));
+    sound = quark->audio.jump_land_base_sound;
+    a_play(quark, &quark->audio, sound, position, random(0.85f, 1.15f));
 
     if (player->water_level == 0.0f) {
         vec3 position;
-        player_get_bottom_position(sbox, player, position);
-        r_add_partfx_hit_ground(sbox, &sbox->renderer, position, trace.material);
+        player_get_bottom_position(quark, player, position);
+        r_add_partfx_hit_ground(quark, &quark->renderer, position, trace.material);
     }
 
-    player->last_step_time = sbox->time;
+    player->last_step_time = quark->time;
     player->fall_distance = 0.0f;
     player->is_jumping = false;
     player->height -= 0.5f;
@@ -266,104 +266,104 @@ static void hit_ground(sbox_t* sbox, player_t* player, trace_result_t trace) {
 
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
         float fall_damage = powf(-player->velocity[1], 1.25f);
-        player_add_damage(sbox, player, fall_damage);
+        player_add_damage(quark, player, fall_damage);
 
-        a_play(sbox, &sbox->audio, sbox->audio.fall_damage_sound,
+        a_play(quark, &quark->audio, quark->audio.fall_damage_sound,
             player->position, random(0.85f, 1.15f));
     }
 
     player->velocity[1] = 0.0f;
 }
 
-static void leave_ground(sbox_t* sbox, player_t* player) {
+static void leave_ground(quark_t* quark, player_t* player) {
     if (player->buttons & PLAYER_BUTTON_JUMP) {
         vec3 position;
-        player_get_bottom_position(sbox, player, position);
-        a_play(sbox, &sbox->audio, sbox->audio.jump_sound, position, random(0.85f, 1.15f));
+        player_get_bottom_position(quark, player, position);
+        a_play(quark, &quark->audio, quark->audio.jump_sound, position, random(0.85f, 1.15f));
     }
 }
 
-static void enter_water(sbox_t* sbox, player_t* player) {
+static void enter_water(quark_t* quark, player_t* player) {
     vec3 position;
-    player_get_bottom_position(sbox, player, position);
-    position[1] += get_height(sbox, player) / 2.0f * player->water_level;
-    a_play(sbox, &sbox->audio, sbox->audio.enter_water_sound, position, random(0.9f, 1.1f));
-    r_add_partfx_enter_water(sbox, &sbox->renderer, position, player->velocity);
+    player_get_bottom_position(quark, player, position);
+    position[1] += get_height(quark, player) / 2.0f * player->water_level;
+    a_play(quark, &quark->audio, quark->audio.enter_water_sound, position, random(0.9f, 1.1f));
+    r_add_partfx_enter_water(quark, &quark->renderer, position, player->velocity);
 }
 
-static void exit_water(sbox_t* sbox, player_t* player) {
+static void exit_water(quark_t* quark, player_t* player) {
     vec3 position;
-    player_get_bottom_position(sbox, player, position);
-    a_play(sbox, &sbox->audio, sbox->audio.exit_water_sound, position, random(0.9f, 1.1f));
+    player_get_bottom_position(quark, player, position);
+    a_play(quark, &quark->audio, quark->audio.exit_water_sound, position, random(0.9f, 1.1f));
 }
 
-static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
+static void trace_ground(quark_t* quark, player_t* player, entlist_t* entlist, bool was_grounded) {
     if (player->move_mode == MOVE_FLIGHT) return;
 
     vec3 start;
-    player_get_top_position(sbox, player, start);
+    player_get_top_position(quark, player, start);
     vec3 dir = {0.0f, -1.0f, 0.0f};
-    float max_distance = get_height(sbox, player);
+    float max_distance = get_height(quark, player);
     trace_result_t trace;
     
     bool was_in_water = player->water_level > 0.0f;
 
-    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
-        player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
+    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
+        player->position[1] = trace.point[1] + get_height(quark, player) / 2.0f;
         player->ground_mat = trace.phys_mat;
         player->water_level = trace.water_level;
 
         player->is_grounded = true;
         if (!was_grounded)
-            hit_ground(sbox, player, trace);
+            hit_ground(quark, player, trace);
 
         if (player->water_level > 0.0f && !was_in_water)
-            enter_water(sbox, player);
+            enter_water(quark, player);
         
     } else {
         player->is_grounded = false;
         if (was_grounded)
-            leave_ground(sbox, player);
+            leave_ground(quark, player);
 
         player->water_level = 0.0f;
         if (was_in_water)
-            exit_water(sbox, player);
+            exit_water(quark, player);
     }
 }
 
-static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
+static void trace_downforce(quark_t* quark, player_t* player, entlist_t* entlist, bool was_grounded) {
     if (player->is_jumping ||
         player->fall_distance > MAX_STEDOWN ||
         player->move_mode == MOVE_FLIGHT)
         return;
     
     vec3 start;
-    player_get_bottom_position(sbox, player, start);
+    player_get_bottom_position(quark, player, start);
     vec3 dir = {0.0f, -1.0f, 0.0f};
     float max_distance = MAX_STEDOWN;
     trace_result_t trace;
     
-    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace))
-        player->position[1] = trace.point[1] + trace.distance;
+    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace))
+        player->position[1] = trace.point[1] + get_height(quark, player) / 2.0f;
 }
 
-static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+static void trace_head(quark_t* quark, player_t* player, entlist_t* entlist) {
     if (player->move_mode == MOVE_FLIGHT) return;
 
     vec3 start;
-    player_get_top_position(sbox, player, start);
+    player_get_top_position(quark, player, start);
     vec3 dir = {0.0f, 1.0f, 0.0f};
-    float max_distance = player->velocity[1] * sbox->dt;
+    float max_distance = player->velocity[1] * quark->dt;
     trace_result_t trace;
     
     player->head_blocked = false;
-    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
+    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
         player->head_blocked = true;
         player->velocity[1] = 0.0f;
     }
 }
 
-static void trace_walls(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+static void trace_walls(quark_t* quark, player_t* player, entlist_t* entlist) {
     return;
 
     vec3 start;
@@ -377,10 +377,10 @@ static void trace_walls(sbox_t* sbox, player_t* player, entlist_t* entlist) {
         glm_vec3_norm(dir);
     }
     
-    float max_distance = speed * sbox->dt;
+    float max_distance = speed * quark->dt;
     trace_result_t trace;
 
-    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
+    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
         float vel_dot_normal = glm_vec3_dot(player->velocity, trace.normal);
 
         vec3 slide;
@@ -395,44 +395,44 @@ static void trace_walls(sbox_t* sbox, player_t* player, entlist_t* entlist) {
     }
 }
 
-static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist) {
+static void move_and_collide(quark_t* quark, player_t* player, entlist_t* entlist) {
     for (int i = 0; i < 3; i++)
-        player->position[i] += player->velocity[i] * sbox->dt;
+        player->position[i] += player->velocity[i] * quark->dt;
     
     if (!player->is_grounded && player->velocity[1] < 0.0f)
-        player->fall_distance += player->velocity[1] * sbox->dt;
+        player->fall_distance += player->velocity[1] * quark->dt;
 
     bool was_grounded = player->is_grounded;
-    trace_ground(sbox, player, entlist, was_grounded);
-    trace_downforce(sbox, player, entlist, was_grounded);
-    trace_head(sbox, player, entlist);
-    trace_walls(sbox, player, entlist);
+    trace_ground(quark, player, entlist, was_grounded);
+    trace_downforce(quark, player, entlist, was_grounded);
+    trace_head(quark, player, entlist);
+    trace_walls(quark, player, entlist);
 }
 
-static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
+static void tick_camera(quark_t* quark, player_t* player, camera_t* camera) {
     if (!player->is_me) return;
 
     if (player->vehicle) {
 
     }
 
-    camera_tick(sbox, camera);
+    camera_tick(quark, camera);
 
     if (player->buttons & PLAYER_BUTTON_AIM)
-        camera->fov = interp_to(camera->fov, r_fov.value * 0.75f, 12.0f, sbox->dt);
+        camera->fov = interp_to(camera->fov, r_fov.value * 0.75f, 12.0f, quark->dt);
     else
-        camera->fov = interp_to(camera->fov, r_fov.value, 12.0f, sbox->dt);
+        camera->fov = interp_to(camera->fov, r_fov.value, 12.0f, quark->dt);
 
-    float target_height = get_height(sbox, player) / 2.0f;
+    float target_height = get_height(quark, player) / 2.0f;
 
-    if (player_get_xz_speed(sbox, player) > 0.0f && player->is_grounded && !player->vehicle) {
+    if (player_get_xz_speed(quark, player) > 0.0f && player->is_grounded && !player->vehicle) {
         float speed = 1.0f;
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
         target_height += sin(player->walk_timer * speed * 5.0f) * 0.15f;
     }
 
-    player->height = interp_to(player->height, target_height, INTERP_HEIGHT_SPEED, sbox->dt);
+    player->height = interp_to(player->height, target_height, INTERP_HEIGHT_SPEED, quark->dt);
 
     camera->position[0] = player->position[0];
     camera->position[1] = player->position[1] + player->height - 0.1f;
@@ -440,14 +440,14 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
 
     if (player->move_input[0]) {
         float roll = -player->move_input[0] * 3.0f;
-        camera->angles[2] = interp_to(camera->angles[2], roll, 4.0f, sbox->dt);
+        camera->angles[2] = interp_to(camera->angles[2], roll, 4.0f, quark->dt);
     } else {
-        camera->angles[2] = interp_to(camera->angles[2], 0.0f, 8.0f, sbox->dt);
+        camera->angles[2] = interp_to(camera->angles[2], 0.0f, 8.0f, quark->dt);
     }
 
-    camera->shake[0] = interp_to(camera->shake[0], 0.0f, 4.0f, sbox->dt);
-    camera->shake[1] = interp_to(camera->shake[1], 0.0f, 4.0f, sbox->dt);
-    camera->shake[2] = interp_to(camera->shake[2], 0.0f, 4.0f, sbox->dt);
+    camera->shake[0] = interp_to(camera->shake[0], 0.0f, 4.0f, quark->dt);
+    camera->shake[1] = interp_to(camera->shake[1], 0.0f, 4.0f, quark->dt);
+    camera->shake[2] = interp_to(camera->shake[2], 0.0f, 4.0f, quark->dt);
 
     if (player->is_thirdperson) {
         vec3 y_offset;
@@ -465,12 +465,14 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
         float camera_distance = PLAYER_THIRDPERSON_CAMERA_LENGTH;
         trace_result_t trace;
 
-        if (phys_line_trace(sbox,
+        if (phys_line_trace(quark,
             position,
             dir,
             camera_distance,
-            &sbox->map.entlist,
+            &quark->map.entlist,
             player->id,
+            NULL,
+            0,
             &trace))
             camera_distance = trace.distance - 0.1f;
 
@@ -481,7 +483,7 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     }
 }
 
-static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
+static void trace_look_ray(quark_t* quark, player_t* player, camera_t* camera, entlist_t* entlist) {
     vec3 start;
     glm_vec3_copy(camera->position, start);
     
@@ -492,7 +494,9 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     player->looked_at_vehicle = NULL;
     player->head_in_water = false;
 
-    if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &player->look_trace)) {
+    if (phys_line_trace(quark, start, dir, max_distance, entlist,
+        player->id, NULL, 0, &player->look_trace))
+    {
         player->editor.trace = player->look_trace;
 
         if (player->look_trace.entity->type == ENTITY_VEHICLE) {
@@ -509,9 +513,9 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
             if (edit_mode.value) {
                 player->buttons &= ~PLAYER_BUTTON_FIRE;
                  if (player->editor.selection) {
-                    edit_deselect(sbox, &player->editor);
+                    edit_deselect(quark, &player->editor);
                 } else {
-                    edit_select(sbox, &player->editor, player->look_trace.entity);
+                    edit_select(quark, &player->editor, player->look_trace.entity);
                 }
                 return;
             }
@@ -525,46 +529,46 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     }
 }
 
-static void tick_step_sounds(sbox_t* sbox, player_t* player) {
+static void tick_step_sounds(quark_t* quark, player_t* player) {
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);
     velocity[1] = 0.0f;
     float xz_speed = glm_vec3_dot(velocity, velocity);
 
     bool play_sound = player->is_grounded &&
-        sbox->time - player->last_step_time >= player_get_step_rate(sbox, player) &&
+        quark->time - player->last_step_time >= player_get_step_rate(quark, player) &&
         xz_speed > 1.0f;
     
     if (play_sound) {
         vec3 position;
-        player_get_bottom_position(sbox, player, position);
+        player_get_bottom_position(quark, player, position);
         
-        sound_t* sound = sbox->audio.step_sounds[player->ground_mat];
-        a_play(sbox, &sbox->audio, sound, position, random(0.85f, 1.15f));
+        sound_t* sound = quark->audio.step_sounds[player->ground_mat];
+        a_play(quark, &quark->audio, sound, position, random(0.85f, 1.15f));
 
         if (player->water_level > 0.0f) {
             vec3 water_surface;
-            player_get_bottom_position(sbox, player, water_surface);
-            water_surface[1] += 0.75f * get_height(sbox, player);
+            player_get_bottom_position(quark, player, water_surface);
+            water_surface[1] += 0.75f * get_height(quark, player);
 
-            sound = sbox->audio.step_sounds[PHYS_MAT_WATER];
-            a_play(sbox, &sbox->audio, sound, water_surface, random(0.85f, 1.15f));
+            sound = quark->audio.step_sounds[PHYS_MAT_WATER];
+            a_play(quark, &quark->audio, sound, water_surface, random(0.85f, 1.15f));
 
-            r_add_partfx_step_water(sbox, &sbox->renderer, water_surface, player->velocity);
+            r_add_partfx_step_water(quark, &quark->renderer, water_surface, player->velocity);
         }
 
-        player->last_step_time = sbox->time;
+        player->last_step_time = quark->time;
     }
 }
 
-void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist) {
-    prof_start(sbox, &sbox->prof);
+void player_tick(quark_t* quark, player_t* player, camera_t* camera, entlist_t* entlist) {
+    prof_start(quark, &quark->prof);
 
     if (player->buttons & PLAYER_BUTTON_CROUCH) set_move_mode(player, MOVE_CROUCH);
     else if (player->buttons & PLAYER_BUTTON_SPRINT) set_move_mode(player, MOVE_SPRINT);
     else set_move_mode(player, MOVE_WALK);
 
-    update_bbox(sbox, player);
+    update_bbox(quark, player);
 
     vec3 forward;
     glm_vec3_copy(camera->forward, forward);
@@ -586,13 +590,13 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
     if (glm_vec3_dot(player->target_dir, player->target_dir) != 0.0f) {
         glm_vec3_normalize(player->target_dir);
         float dot = glm_vec3_dot(player->target_dir, player->target_dir);
-        player->target_speed = dot * get_max_speed(sbox, player);
-        player->walk_timer += sbox->dt;
+        player->target_speed = dot * get_max_speed(quark, player);
+        player->walk_timer += quark->dt;
     } else {
         player->walk_timer = 0.0f;
     }
 
-    move_and_collide(sbox, player, entlist);
+    move_and_collide(quark, player, entlist);
 
     if (player->buttons & PLAYER_BUTTON_INTERACT && player->vehicle) {
         player->buttons &= ~PLAYER_BUTTON_INTERACT;
@@ -604,51 +608,51 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     } else if (noclip.value) {
         set_move_mode(player, MOVE_FLIGHT);
-        move_flight(sbox, player);
+        move_flight(quark, player);
     } else if (player->water_level > 0.0f)
-        move_water(sbox, player);
+        move_water(quark, player);
     else if (player->is_grounded)
-        move_ground(sbox, player);
+        move_ground(quark, player);
     else
-        move_air(sbox, player);
+        move_air(quark, player);
     
-    tick_camera(sbox, player, camera);
-    trace_look_ray(sbox, player, camera, entlist);
-    player_tick_item(sbox, player);
-    player_tick_body(sbox, player);
-    tick_step_sounds(sbox, player);
-    edit_tick(sbox, &player->editor, player);
+    tick_camera(quark, player, camera);
+    trace_look_ray(quark, player, camera, entlist);
+    player_tick_item(quark, player);
+    player_tick_body(quark, player);
+    tick_step_sounds(quark, player);
+    edit_tick(quark, &player->editor, player);
 
     if (player->is_bot)
-        bot_tick(sbox, player);
+        bot_tick(quark, player);
 
-    prof_end(sbox, &sbox->prof);
+    prof_end(quark, &quark->prof);
 }
 
-void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
+void player_render(quark_t* quark, player_t* player, renderer_t* renderer) {
     if (player->looked_at_vehicle && !player->vehicle) {
-        r_add_line_box(sbox, &sbox->renderer,
+        r_add_line_box(quark, &quark->renderer,
             &player->looked_at_vehicle->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
     }
     
-    player_render_body(sbox, player, renderer);
-    player_render_item(sbox, player, renderer);
+    player_render_body(quark, player, renderer);
+    player_render_item(quark, player, renderer);
 }
 
-void player_add_damage(sbox_t* sbox, player_t* player, float damage) {
+void player_add_damage(quark_t* quark, player_t* player, float damage) {
     if (player_is_dead(player) || damage < 0.0f) return;
 
     player->health -= damage;
     player->health = clamp(player->health, 0.0f, 100.0f);
 
-    a_play(sbox, &sbox->audio, sbox->audio.hurt_sound, player->position, random(0.95f, 1.05f    ));
+    a_play(quark, &quark->audio, quark->audio.hurt_sound, player->position, random(0.95f, 1.05f    ));
 
     if (player_is_dead(player)) {
-        player->death_time = sbox->time;
+        player->death_time = quark->time;
         
         if (player->is_me) {
             player->is_thirdperson = true;
-            sbox->ui_state = UI_STATE_DEAD;
+            quark->ui_state = UI_STATE_DEAD;
         }
     }
 }
@@ -657,45 +661,45 @@ bool player_is_dead(player_t* player) {
     return player->health == 0.0f;
 }
 
-void player_respawn(sbox_t* sbox, player_t* player) {
+void player_respawn(quark_t* quark, player_t* player) {
     glm_vec3_zero(player->velocity);
-    glm_vec3_copy((vec3){0.0f, 90.0f, 0.0f}, sbox->renderer.camera.angles);
+    glm_vec3_copy((vec3){0.0f, 90.0f, 0.0f}, quark->renderer.camera.angles);
     player->is_thirdperson = r_third_person.value;
     player->health = 100.0f;
-    sbox->ui_state = UI_STATE_IN_GAME;
-    player_teleport(sbox, player, (vec3){0.0f, 2.0f, -4.5f});
+    quark->ui_state = UI_STATE_IN_GAME;
+    player_teleport(quark, player, (vec3){0.0f, 2.0f, -4.5f});
 }
 
-void player_teleport(sbox_t* sbox, player_t* player, vec3 destination) {
+void player_teleport(quark_t* quark, player_t* player, vec3 destination) {
     glm_vec3_copy(destination, player->position);
 }
 
-void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position) {
+void player_get_top_position(quark_t* quark, player_t* player, vec3 position) {
     if (!position) return;
     position[0] = player->position[0];
-    position[1] = player->position[1] + get_height(sbox, player) / 2.0f;
+    position[1] = player->position[1] + get_height(quark, player) / 2.0f;
     position[2] = player->position[2];
 }
 
-void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position) {
+void player_get_bottom_position(quark_t* quark, player_t* player, vec3 position) {
     if (!position) return;
     position[0] = player->position[0];
-    position[1] = player->position[1] - get_height(sbox, player) / 2.0f;
+    position[1] = player->position[1] - get_height(quark, player) / 2.0f;
     position[2] = player->position[2];
 }
 
-float player_get_speed(sbox_t* sbox, player_t* player) {
+float player_get_speed(quark_t* quark, player_t* player) {
     return glm_vec3_dot(player->velocity, player->velocity);
 }
 
-float player_get_step_rate(sbox_t* sbox, player_t* player) {
+float player_get_step_rate(quark_t* quark, player_t* player) {
     float speed;
     switch (player->move_mode) {
     case MOVE_WALK: speed = 0.55f; break;
     case MOVE_CROUCH: speed = 0.8f; break;
     case MOVE_SPRINT: speed = 0.3f; break;
     case MOVE_FLIGHT: speed = 0.0f; break;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     if (player->buttons & PLAYER_BUTTON_AIM) {
@@ -705,8 +709,8 @@ float player_get_step_rate(sbox_t* sbox, player_t* player) {
     return speed;
 }
 
-float player_get_accuracy(sbox_t* sbox, player_t* player) {
-    float accuracy = clamp(1.0f - (player_get_speed(sbox, player) / 50.0f), 0.0f, 1.0f);
+float player_get_accuracy(quark_t* quark, player_t* player) {
+    float accuracy = clamp(1.0f - (player_get_speed(quark, player) / 50.0f), 0.0f, 1.0f);
     if (player->buttons & PLAYER_BUTTON_AIM)
         accuracy = max(accuracy, 0.85f);
     if (!player->is_grounded)
@@ -714,7 +718,7 @@ float player_get_accuracy(sbox_t* sbox, player_t* player) {
     return accuracy;
 }
 
-float player_get_xz_speed(sbox_t* sbox, player_t* player) {
+float player_get_xz_speed(quark_t* quark, player_t* player) {
     vec3 velocity;
     glm_vec3_copy(player->velocity, velocity);
     velocity[1] = 0.0f;

@@ -1,36 +1,36 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 
 #include "../include/gl.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../include/stb_image.h"
 
-static uint32_t get_internal_format(sbox_t* sbox, texture_format_t format) {
+static uint32_t get_internal_format(quark_t* quark, texture_format_t format) {
     switch (format) {
     case TEX_FORMAT_RGB: return GL_RGB;
     case TEX_FORMAT_RGBA: return GL_RGBA;
     case TEX_FORMAT_RGBA_F16: return GL_RGBA16F;
     case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     return 0;
 }
 
-static uint32_t get_gl_format(sbox_t* sbox, texture_format_t format) {
+static uint32_t get_gl_format(quark_t* quark, texture_format_t format) {
     switch (format) {
     case TEX_FORMAT_RGB: return GL_RGB;
     case TEX_FORMAT_RGBA: return GL_RGBA;
     case TEX_FORMAT_RGBA_F16: return GL_RGBA;
     case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     return 0;
 }
 
-texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
+texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
     texture_format_t format, texture_filter_t filter)
 {
     uint32_t id;
@@ -38,8 +38,8 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
 
     glBindTexture(GL_TEXTURE_2D, id);
 
-    uint32_t gl_internal_format = get_internal_format(sbox, format);
-    uint32_t gl_format = get_gl_format(sbox, format);
+    uint32_t gl_internal_format = get_internal_format(quark, format);
+    uint32_t gl_format = get_gl_format(quark, format);
     uint32_t gl_type = (format == TEX_FORMAT_RGBA_F16 ||
         format == TEX_FORMAT_DEPTH) ? GL_FLOAT : GL_UNSIGNED_BYTE;
     
@@ -59,7 +59,7 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
     switch (filter) {
     case TEX_FILTER_NEAREST: gl_filter = GL_NEAREST; break;
     case TEX_FILTER_LINEAR: gl_filter = GL_LINEAR; break;
-    default: unreachable(sbox);
+    default: unreachable(quark);
     }
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter);
@@ -75,27 +75,27 @@ texture_t* texture_new(sbox_t* sbox, int width, int height, uint8_t* data,
     texture->format = format;
     texture->filter = filter;
 
-    texture->next = sbox->textures;
-    sbox->textures = texture;
+    texture->next = quark->textures;
+    quark->textures = texture;
     return texture;
 }
 
-texture_t* texture_load(sbox_t* sbox, const char* path, texture_filter_t filter) {
-    info(sbox, "loading texture %s", path);
+texture_t* texture_load(quark_t* quark, const char* path, texture_filter_t filter) {
+    info(quark, "loading texture %s", path);
 
     int width, height, channels;
     unsigned char* data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
     if (!data) {
-        error(sbox, "failed to load texture %s", path);
+        error(quark, "failed to load texture %s", path);
         return NULL;
     }
 
-    texture_t* texture = texture_new(sbox, width, height, data, TEX_FORMAT_RGBA, filter);
+    texture_t* texture = texture_new(quark, width, height, data, TEX_FORMAT_RGBA, filter);
     stbi_image_free(data);
     return texture;
 }
 
-texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]) {
+texture_t* texture_load_cubemap(quark_t* quark, const char* paths[6]) {
     unsigned int id;
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_CUBE_MAP, id);
@@ -106,7 +106,7 @@ texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]) {
         const char* path = paths[i];
         data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);
         if (!data) {
-            error(sbox, "failed to load texture %s", path);
+            error(quark, "failed to load texture %s", path);
             return NULL;
         }
 
@@ -128,12 +128,12 @@ texture_t* texture_load_cubemap(sbox_t* sbox, const char* paths[6]) {
     texture->width = width;
     texture->height = height;
 
-    texture->next = sbox->textures;
-    sbox->textures = texture;
+    texture->next = quark->textures;
+    quark->textures = texture;
     return texture;
 }
 
-void texture_free(sbox_t* sbox, texture_t* texture) {
+void texture_free(quark_t* quark, texture_t* texture) {
     if (!texture) return;
     glDeleteTextures(1, &texture->id);
     free(texture);

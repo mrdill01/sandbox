@@ -1,11 +1,11 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 
 #include "../include/gl.h"
 
 #define MAX_ATTACHMENTS 4
 
-framebuffer_t* framebuffer_new(sbox_t* sbox) {
+framebuffer_t* framebuffer_new(quark_t* quark) {
     framebuffer_t* framebuffer = malloc(sizeof(framebuffer_t));
     glGenFramebuffers(1, &framebuffer->id);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
@@ -19,17 +19,17 @@ framebuffer_t* framebuffer_new(sbox_t* sbox) {
 }
 
 void framebuffer_add_texture(
-    sbox_t* sbox, framebuffer_t* framebuffer, int width, int height, texture_format_t format)
+    quark_t* quark, framebuffer_t* framebuffer, int width, int height, texture_format_t format)
 {
     if (framebuffer->ntextures >= MAX_ATTACHMENTS) {
-        error(sbox, "too many framebuffer attachments (max is %d)", MAX_ATTACHMENTS);
+        error(quark, "too many framebuffer attachments (max is %d)", MAX_ATTACHMENTS);
         return;
     }
 
     framebuffer->textures = realloc(framebuffer->textures,
         sizeof(texture_t*) * (framebuffer->ntextures + 1));
 
-    texture_t* texture = texture_new(sbox, width, height, NULL, format, TEX_FILTER_NEAREST);
+    texture_t* texture = texture_new(quark, width, height, NULL, format, TEX_FILTER_NEAREST);
     framebuffer->textures[framebuffer->ntextures++] = texture;
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
@@ -49,7 +49,7 @@ void framebuffer_add_texture(
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int width, int height) {
+void framebuffer_add_depth_buffer(quark_t* quark, framebuffer_t* framebuffer, int width, int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
     glGenRenderbuffers(1, &framebuffer->depth_buffer);
     glBindRenderbuffer(GL_RENDERBUFFER, framebuffer->depth_buffer);
@@ -59,7 +59,7 @@ void framebuffer_add_depth_buffer(sbox_t* sbox, framebuffer_t* framebuffer, int 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer) {
+void framebuffer_finish(quark_t* quark, framebuffer_t* framebuffer) {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
 
     uint32_t* attachments = malloc(sizeof(uint32_t) * framebuffer->ntextures);
@@ -73,7 +73,7 @@ void framebuffer_finish(sbox_t* sbox, framebuffer_t* framebuffer) {
     glDrawBuffers(framebuffer->ntextures, attachments);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        error(sbox, "framebuffer incomplete");
+        error(quark, "framebuffer incomplete");
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     free(attachments);

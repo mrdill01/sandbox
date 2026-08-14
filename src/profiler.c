@@ -1,7 +1,7 @@
 #include "profiler.h"
-#include "sbox.h"
+#include "quark.h"
 
-void prof_init(sbox_t* sbox, profiler_t* prof) {
+void prof_init(quark_t* quark, profiler_t* prof) {
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
         profiler_entry_t* entry = &prof->entries[i];
         entry->name = NULL;
@@ -10,7 +10,7 @@ void prof_init(sbox_t* sbox, profiler_t* prof) {
     }
 }
 
-void prof_free(sbox_t* sbox, profiler_t* prof) {
+void prof_free(quark_t* quark, profiler_t* prof) {
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
         profiler_entry_t* entry = &prof->entries[i];
         if (!entry->name) continue;
@@ -18,7 +18,7 @@ void prof_free(sbox_t* sbox, profiler_t* prof) {
     }
 }
 
-void prof_tick(sbox_t* sbox, profiler_t* prof) {
+void prof_tick(quark_t* quark, profiler_t* prof) {
     prof->total = 0.0;
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
         profiler_entry_t* entry = &prof->entries[i];
@@ -33,7 +33,7 @@ void prof_tick(sbox_t* sbox, profiler_t* prof) {
     }
 }
 
-void prof_start_impl(sbox_t* sbox, profiler_t* prof, const char* name) {
+void prof_start_impl(quark_t* quark, profiler_t* prof, const char* name) {
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
         profiler_entry_t* entry = &prof->entries[i];
 
@@ -51,7 +51,7 @@ void prof_start_impl(sbox_t* sbox, profiler_t* prof, const char* name) {
     }
 }
 
-void prof_end_impl(sbox_t* sbox, profiler_t* prof, const char* name) {
+void prof_end_impl(quark_t* quark, profiler_t* prof, const char* name) {
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
         profiler_entry_t* entry = &prof->entries[i];
         if (!entry->name) continue;

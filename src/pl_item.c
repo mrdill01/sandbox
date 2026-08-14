@@ -1,29 +1,29 @@
 #include "player.h"
-#include "sbox.h"
+#include "quark.h"
 
 #define VIEWMODEL_POS_X -0.05f
 #define VIEWMODEL_POS_Y -0.1f
 #define VIEWMODEL_POS_Z 0.35f
 
-static void tick_item(sbox_t* sbox, player_t* player, entlist_t* entlist) {
-    item_t* item = inventory_get_item(sbox, &player->inventory);
+static void tick_item(quark_t* quark, player_t* player, entlist_t* entlist) {
+    item_t* item = inventory_get_item(quark, &player->inventory);
     if (!item)
         return;
     
     weapon_t* weapon = &item->data.weapon;
     if (player->buttons & PLAYER_BUTTON_FIRE) {
-        weapon_fire(sbox, weapon, player);
+        weapon_fire(quark, weapon, player);
     }
 
-    if (weapon->is_reloading && sbox->time - weapon->reload_start >= weapon->reload_time) {
-        weapon_finish_reload(sbox, weapon, player);
+    if (weapon->is_reloading && quark->time - weapon->reload_start >= weapon->reload_time) {
+        weapon_finish_reload(quark, weapon, player);
     }
 }
 
-static void tick_item_position(sbox_t* sbox, player_t* player) {
+static void tick_item_position(quark_t* quark, player_t* player) {
     vec3 target;
 
-    item_t* item = inventory_get_item(sbox, &sbox->player->inventory);
+    item_t* item = inventory_get_item(quark, &quark->player->inventory);
     if (item->data.weapon.is_reloading) {
         target[1] = -1.0f;
     } else if (player->buttons & PLAYER_BUTTON_AIM) {
@@ -37,22 +37,22 @@ static void tick_item_position(sbox_t* sbox, player_t* player) {
     }
 
     float aim_speed = 18.0f;
-    player->item_position[0] = interp_to(player->item_position[0], target[0], aim_speed, sbox->dt);
-    player->item_position[1] = interp_to(player->item_position[1], target[1], aim_speed, sbox->dt);
-    player->item_position[2] = interp_to(player->item_position[2], target[2], aim_speed, sbox->dt);
+    player->item_position[0] = interp_to(player->item_position[0], target[0], aim_speed, quark->dt);
+    player->item_position[1] = interp_to(player->item_position[1], target[1], aim_speed, quark->dt);
+    player->item_position[2] = interp_to(player->item_position[2], target[2], aim_speed, quark->dt);
 }
 
-static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
+static void tick_item_anim(quark_t* quark, player_t* player, item_t* item) {
     if (!item) return;
 
-    if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY - 0.2f) {
+    if (quark->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY - 0.2f) {
         player->item_anim[1] = -0.65f;
         player->item_anim_angles[0] = -90.0f;
         player->item_anim_angles[1] = 35.0f;
         return;
     }
 
-    if (item->type == ITEM_WEAPON && sbox->time - item->data.weapon.last_fire <
+    if (item->type == ITEM_WEAPON && quark->time - item->data.weapon.last_fire <
         min(item->data.weapon.fire_rate - 0.05f, 0.1f))
     {
         player->item_anim_angles[0] = (player->buttons & PLAYER_BUTTON_AIM) ?
@@ -62,34 +62,34 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
     if (player->move_mode == MOVE_SPRINT) {
         float anim_speed = 7.0f;
         player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 35.0f, anim_speed,
-            sbox->dt);
+            quark->dt);
         player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 10.0f, anim_speed,
-            sbox->dt);
+            quark->dt);
         player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, anim_speed,
-            sbox->dt);
+            quark->dt);
 
         player->item_anim[1] = -0.2f;
         
     } else {
         float reset_speed = 7.0f;
         player->item_anim_angles[0] = interp_to(player->item_anim_angles[0], 0.0f, reset_speed,
-            sbox->dt);
+            quark->dt);
         player->item_anim_angles[1] = interp_to(player->item_anim_angles[1], 0.0f, reset_speed,
-            sbox->dt);
+            quark->dt);
         player->item_anim_angles[2] = interp_to(player->item_anim_angles[2], 0.0f, reset_speed,
-            sbox->dt);
+            quark->dt);
     }
 
 
 
     if (player->target_speed < 1.0f || !player->is_grounded) {
         float reset_speed = 5.0f;
-        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
-        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, sbox->dt);
+        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, quark->dt);
+        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, quark->dt);
 
         float y = clamp(-player->velocity[1], -0.024f, 0.024f);
         float y_speed = 7.0f;
-        player->item_anim[1] = interp_to(player->item_anim[1], y, y_speed, sbox->dt);
+        player->item_anim[1] = interp_to(player->item_anim[1], y, y_speed, quark->dt);
         return;
     }
 
@@ -98,7 +98,7 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         anim[0] = 0.0f;
         anim[1] = 0.0f;
         anim[2] = 0.0f;
-    } else if (player_get_xz_speed(sbox, player) > 0.0f && player->is_grounded) {
+    } else if (player_get_xz_speed(quark, player) > 0.0f && player->is_grounded) {
         float speed = 1.0f;
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
@@ -109,24 +109,24 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
     }
 
     float set_speed = 6.5f;
-    player->item_anim[0] = interp_to(player->item_anim[0], anim[0], set_speed, sbox->dt);
-    player->item_anim[1] = interp_to(player->item_anim[1], anim[1], set_speed, sbox->dt);
-    player->item_anim[2] = interp_to(player->item_anim[2], anim[2], set_speed, sbox->dt);
+    player->item_anim[0] = interp_to(player->item_anim[0], anim[0], set_speed, quark->dt);
+    player->item_anim[1] = interp_to(player->item_anim[1], anim[1], set_speed, quark->dt);
+    player->item_anim[2] = interp_to(player->item_anim[2], anim[2], set_speed, quark->dt);
 }
 
-void player_tick_item(sbox_t* sbox, player_t* player) {
-    tick_item(sbox, player, &sbox->map.entlist);
-    tick_item_position(sbox, player);
-    tick_item_anim(sbox, player, inventory_get_item(sbox, &player->inventory));
+void player_tick_item(quark_t* quark, player_t* player) {
+    tick_item(quark, player, &quark->map.entlist);
+    tick_item_position(quark, player);
+    tick_item_anim(quark, player, inventory_get_item(quark, &player->inventory));
 }
 
-void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
+void player_render_item(quark_t* quark, player_t* player, renderer_t* renderer) {
     if (player->is_thirdperson ||
         player->vehicle ||
         edit_mode.value ||
         !r_viewmodel.value ||
         !player->is_me) return;
-    item_t* item = inventory_get_item(sbox, &player->inventory);
+    item_t* item = inventory_get_item(quark, &player->inventory);
     if (!item) return;
 
     drawcall_t drawcall;

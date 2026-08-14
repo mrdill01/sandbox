@@ -23,14 +23,14 @@
 
 #include <SDL2/SDL.h>
 
-#define SBOX_VERSION "quark alpha 1.0"
-#define SBOX_DEBUG
+#define QUARK_VERSION "quark alpha 1.0"
+#define QUARK_DEBUG
 //#define SBOX_NO_AUDIO
 
-#ifdef SBOX_DEBUG
-#define unreachable(sbox) error(sbox, "unreachable code entered in %s:%d", __FILE__, __LINE__);
+#ifdef QUARK_DEBUG
+#define unreachable(quark) error(quark, "unreachable code entered in %s:%d", __FILE__, __LINE__);
 #else
-#define unreachable(sbox) (void)sbox
+#define unreachable(quark) (void)quark
 #endif
 
 #define MAX_PLAYERS 32
@@ -47,7 +47,7 @@ typedef enum {
 #define NUM_KEYS 512
 #define NUM_BUTTONS 3
 
-typedef struct sbox_t {
+typedef struct quark_t {
     console_t console;
     cvar_t* cvars;
     cmd_t* cmds;
@@ -87,7 +87,7 @@ typedef struct sbox_t {
     map_t map;
     player_t* players[MAX_PLAYERS];
     player_t* player;
-} sbox_t;
+} quark_t;
 
 extern cvar_t sv_cheats;
 extern cvar_t sv_round_time;
@@ -121,14 +121,14 @@ extern cvar_t noclip;
 extern cvar_t edit_mode;
 extern cvar_t edit_snap_size;
 
-void sbox_init(sbox_t* sbox);
-void sbox_free(sbox_t* sbox);
-void sbox_tick(sbox_t* sbox);
-void sbox_reload_resources(sbox_t* sbox);
+void quark_init(quark_t* quark);
+void quark_free(quark_t* quark);
+void quark_tick(quark_t* quark);
+void quark_reload_resources(quark_t* quark);
 
-void info(sbox_t* sbox, const char* msg, ...);
-void error(sbox_t* sbox, const char* msg, ...);
-char* load_file(sbox_t* sbox, const char* path);
-void clear_file(sbox_t* sbox, const char* path);
+void info(quark_t* quark, const char* msg, ...);
+void error(quark_t* quark, const char* msg, ...);
+char* load_file(quark_t* quark, const char* path);
+void clear_file(quark_t* quark, const char* path);
 
 #endif

@@ -1,25 +1,25 @@
 #include "client.h"
-#include "sbox.h"
+#include "quark.h"
 #include "net.h"
 
-void cl_init(sbox_t* sbox, client_t* client) {
-    info(sbox, "cl_init()...");
+void cl_init(quark_t* quark, client_t* client) {
+    info(quark, "cl_init()...");
     client->host = NULL;
     client->peer = NULL;
     client->out_buffer = NULL;
     client->out_buffer_len = 0;
     client->out_buffer_cap = 0;
-    info(sbox, "client initialized!");
+    info(quark, "client initialized!");
 }
 
-void cl_connect(sbox_t* sbox, client_t* client, const char* ip, int port) {
-    if (cl_is_connected(sbox, client)) {
-        cl_disconnect(sbox, client);
+void cl_connect(quark_t* quark, client_t* client, const char* ip, int port) {
+    if (cl_is_connected(quark, client)) {
+        cl_disconnect(quark, client);
     }
 
     client->host = enet_host_create(NULL, 1, NET_CHANNELS, 0, 0);
     if (!client->host) {
-        error(sbox, "[client] failed to create host (enet_host_create failed)");
+        error(quark, "[client] failed to create host (enet_host_create failed)");
         return;
     }
 
@@ -27,39 +27,39 @@ void cl_connect(sbox_t* sbox, client_t* client, const char* ip, int port) {
     enet_address_set_host(&address, ip);
     address.port = NET_PORT;
 
-    info(sbox, "[client] connecting to %s:%d...", ip, port);
+    info(quark, "[client] connecting to %s:%d...", ip, port);
 
     client->peer = enet_host_connect(client->host, &address, NET_CHANNELS, 0);
     if (!client->peer) {
-        error(sbox, "[client] failed to connect! (enet_host_connect failed)");
+        error(quark, "[client] failed to connect! (enet_host_connect failed)");
         return;
     }
 
     int len = strlen(cl_name.string);
     if (len > NET_MAX_PLAYER_NAME) {
         len = NET_MAX_PLAYER_NAME;
-        error(sbox, "name too long (max %d characters)", NET_MAX_PLAYER_NAME);
+        error(quark, "name too long (max %d characters)", NET_MAX_PLAYER_NAME);
     }
 
-    cl_write_byte(sbox, client, CL_CMD_SET_NAME);
-    cl_write_byte(sbox, client, len);
-    cl_write_bytes(sbox, client, (uint8_t*)cl_name.string, len);
+    cl_write_byte(quark, client, CL_CMD_SET_NAME);
+    cl_write_byte(quark, client, len);
+    cl_write_bytes(quark, client, (uint8_t*)cl_name.string, len);
 
-    info(sbox, "[client] connected!");
+    info(quark, "[client] connected!");
 }
 
-void cl_disconnect(sbox_t* sbox, client_t* client) {
-    if (!cl_is_connected(sbox, client)) return;
+void cl_disconnect(quark_t* quark, client_t* client) {
+    if (!cl_is_connected(quark, client)) return;
 
-    info(sbox, "[client] disconnecting...");
+    info(quark, "[client] disconnecting...");
     enet_peer_reset(client->peer);
     enet_host_destroy(client->host);
     client->peer = NULL;
     client->host = NULL;
-    info(sbox, "[client] disconnected!");
+    info(quark, "[client] disconnected!");
 }
 
-void cl_tick(sbox_t* sbox, client_t* client) {
+void cl_tick(quark_t* quark, client_t* client) {
     if (!client->host || !client->peer) return;
     
     if (client->out_buffer_len > 0) {
@@ -76,7 +76,7 @@ void cl_tick(sbox_t* sbox, client_t* client) {
         switch (event.type) {
         case ENET_EVENT_TYPE_CONNECT: break;
         case ENET_EVENT_TYPE_RECEIVE: {
-            info(sbox, "[client] recv: '%s'", event.packet->data);
+            info(quark, "[client] recv: '%s'", event.packet->data);
             enet_packet_destroy(event.packet);
             break;
         }
@@ -87,7 +87,7 @@ void cl_tick(sbox_t* sbox, client_t* client) {
     }
 }
 
-void cl_write_byte(sbox_t* sbox, client_t* client, uint8_t byte) {
+void cl_write_byte(quark_t* quark, client_t* client, uint8_t byte) {
     if (client->out_buffer_len + 1 > client->out_buffer_cap) {
         if (client->out_buffer_cap == 0)
             client->out_buffer_cap = 8;
@@ -99,17 +99,17 @@ void cl_write_byte(sbox_t* sbox, client_t* client, uint8_t byte) {
     client->out_buffer[client->out_buffer_len++] = byte;
 }
 
-void cl_write_bytes(sbox_t* sbox, client_t* client, uint8_t* bytes, size_t len) {
+void cl_write_bytes(quark_t* quark, client_t* client, uint8_t* bytes, size_t len) {
     for (size_t i = 0; i < len; i++)
-        cl_write_byte(sbox, client, bytes[i]);
+        cl_write_byte(quark, client, bytes[i]);
 }
 
-bool cl_is_connected(sbox_t* sbox, client_t* client) {
+bool cl_is_connected(quark_t* quark, client_t* client) {
     if (!client || !client->peer) return false;
     return client->peer->state == ENET_PEER_STATE_CONNECTED;
 }
 
-int cl_get_ping(sbox_t* sbox, client_t* client) {
+int cl_get_ping(quark_t* quark, client_t* client) {
     if (!client || !client->peer) return -1;
     return client->peer->roundTripTime;
 }

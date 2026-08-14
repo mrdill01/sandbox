@@ -6,13 +6,13 @@
 #define NET_TIMEOUT_MSEC 0
 #define NET_MAX_PLAYER_NAME 32
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 
 typedef enum {
     CL_CMD_SET_NAME,
 } client_cmd_t;
 
-void net_init(sbox_t* sbox);
-void net_free(sbox_t* sbox);
+void net_init(quark_t* quark);
+void net_free(quark_t* quark);
 
 #endif

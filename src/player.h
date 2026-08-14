@@ -6,7 +6,7 @@
 #include "editor.h"
 #include "item.h"
 
-typedef struct sbox_t sbox_t;
+typedef struct quark_t quark_t;
 typedef struct camera_t camera_t;
 typedef struct entlist_t entlist_t;
 
@@ -109,34 +109,34 @@ typedef struct player_t {
     bot_t bot;
 } player_t;
 
-player_t* player_new(sbox_t* sbox, int id, bool is_bot);
-void player_free(sbox_t* sbox, player_t* player);
+player_t* player_new(quark_t* quark, int id, bool is_bot);
+void player_free(quark_t* quark, player_t* player);
 
-void player_input(sbox_t* sbox, player_t* player);
+void player_input(quark_t* quark, player_t* player);
 
-void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* entlist);
-void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer);
+void player_tick(quark_t* quark, player_t* player, camera_t* camera, entlist_t* entlist);
+void player_render(quark_t* quark, player_t* player, renderer_t* renderer);
 
-void player_add_damage(sbox_t* sbox, player_t* player, float damage);
+void player_add_damage(quark_t* quark, player_t* player, float damage);
 bool player_is_dead(player_t* player);
-void player_respawn(sbox_t* sbox, player_t* player);
-void player_teleport(sbox_t* sbox, player_t* player, vec3 destination);
+void player_respawn(quark_t* quark, player_t* player);
+void player_teleport(quark_t* quark, player_t* player, vec3 destination);
 
-void player_get_top_position(sbox_t* sbox, player_t* player, vec3 position);
-void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
-float player_get_speed(sbox_t* sbox, player_t* player);
-float player_get_step_rate(sbox_t* sbox, player_t* player);
-float player_get_accuracy(sbox_t* sbox, player_t* player);
-float player_get_xz_speed(sbox_t* sbox, player_t* player);
+void player_get_top_position(quark_t* quark, player_t* player, vec3 position);
+void player_get_bottom_position(quark_t* quark, player_t* player, vec3 position);
+float player_get_speed(quark_t* quark, player_t* player);
+float player_get_step_rate(quark_t* quark, player_t* player);
+float player_get_accuracy(quark_t* quark, player_t* player);
+float player_get_xz_speed(quark_t* quark, player_t* player);
 
-void player_tick_item(sbox_t* sbox, player_t* player);
-void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer);
+void player_tick_item(quark_t* quark, player_t* player);
+void player_render_item(quark_t* quark, player_t* player, renderer_t* renderer);
 
-void player_init_body(sbox_t* sbox, player_t* player);
-void player_tick_body(sbox_t* sbox, player_t* player);
-void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer);
+void player_init_body(quark_t* quark, player_t* player);
+void player_tick_body(quark_t* quark, player_t* player);
+void player_render_body(quark_t* quark, player_t* player, renderer_t* renderer);
 
-void bot_init(sbox_t* sbox, player_t* bot);
-void bot_tick(sbox_t* sbox, player_t* player);
+void bot_init(quark_t* quark, player_t* bot);
+void bot_tick(quark_t* quark, player_t* player);
 
 #endif

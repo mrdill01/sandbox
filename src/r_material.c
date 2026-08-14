@@ -1,9 +1,9 @@
 #include "render.h"
-#include "sbox.h"
+#include "quark.h"
 
 #include <string.h>
 
-material_t* material_load(sbox_t* sbox,
+material_t* material_load(quark_t* quark,
     const char* name,
     const char* albedo_path,
     const char* roughness_path,
@@ -19,9 +19,9 @@ material_t* material_load(sbox_t* sbox,
     strcpy(material->name, name);
     material->name[len] = '\0';
 
-    material->albedo = texture_load(sbox, albedo_path, TEX_FILTER_NEAREST);
-    material->roughness = texture_load(sbox, roughness_path, TEX_FILTER_NEAREST);
-    material->normal = texture_load(sbox, normal_path, TEX_FILTER_NEAREST);
+    material->albedo = texture_load(quark, albedo_path, TEX_FILTER_NEAREST);
+    material->roughness = texture_load(quark, roughness_path, TEX_FILTER_NEAREST);
+    material->normal = texture_load(quark, normal_path, TEX_FILTER_NEAREST);
     material->wind_factor = 0.0f;
     material->tilex = tilex;
     material->tiley = tiley;
@@ -32,12 +32,12 @@ material_t* material_load(sbox_t* sbox,
     material->is_water = false;
     material->phys_mat = phys_mat;
     
-    material->next = sbox->materials;
-    sbox->materials = material;
+    material->next = quark->materials;
+    quark->materials = material;
     return material;
 }
 
-void material_free(sbox_t* sbox, material_t* material) {
+void material_free(quark_t* quark, material_t* material) {
     if (!material) return;
     free(material->name);
     free(material);
