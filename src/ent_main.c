@@ -22,19 +22,6 @@ void entity_init_common(
 	*out = entity;
 }
 
-void entity_init_vehicle(sbox_t* sbox,
-	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)
-{
-    entity_t* entity = NULL;
-	entity_init_common(sbox, name, ENTITY_VEHICLE, (vec3){x, y, z}, &entity);
-    entity->data.vehicle.mesh = mesh;
-    for (int i = 0; i < MAX_MATERIALS; i++) {
-        entity->data.vehicle.materials[i] = NULL;
-	}
-
-    *out = entity;
-}
-
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,
@@ -76,6 +63,7 @@ mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity) {
 	case ENTITY_MESH: return entity->data.mesh.mesh;
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
 	case ENTITY_PICKUP: return entity->data.pickup.mesh;
+	case ENTITY_VEHICLE: return entity->data.vehicle.mesh;
 	default: return NULL;
 	}
 }
@@ -87,24 +75,27 @@ void entity_get_materials(sbox_t* sbox,
 {
 	switch (entity->type) {
 	case ENTITY_MESH: {
-		memcpy(materials, entity->data.mesh.materials,
-			sizeof(material_t*) * MAX_MATERIALS);
+		memcpy(materials, entity->data.mesh.materials, sizeof(material_t*) * MAX_MATERIALS);
 		if (nmaterials)
 			*nmaterials = entity->data.mesh.mesh->nmaterials;
 		break;
 	}
 	case ENTITY_PROJECTILE: {
-		memcpy(materials, entity->data.projectile.materials,
-			sizeof(material_t*) * MAX_MATERIALS);
+		memcpy(materials, entity->data.projectile.materials, sizeof(material_t*) * MAX_MATERIALS);
 		if (nmaterials)
 			*nmaterials = entity->data.projectile.mesh->nmaterials;
 		break;
 	}
 	case ENTITY_PICKUP: {
-		memcpy(materials, entity->data.pickup.materials,
-			sizeof(material_t*) * MAX_MATERIALS);
+		memcpy(materials, entity->data.pickup.materials, sizeof(material_t*) * MAX_MATERIALS);
 		if (nmaterials)
 			*nmaterials = entity->data.pickup.mesh->nmaterials;
+		break;
+	}
+	case ENTITY_VEHICLE: {
+		memcpy(materials, entity->data.vehicle.materials, sizeof(material_t*) * MAX_MATERIALS);
+		if (nmaterials)
+			*nmaterials = entity->data.vehicle.mesh->nmaterials;
 		break;
 	}
 	default: break;
@@ -117,7 +108,8 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall) {
 	
 	if (entity->type != ENTITY_MESH &&
 		entity->type != ENTITY_PROJECTILE &&
-		entity->type != ENTITY_PICKUP)
+		entity->type != ENTITY_PICKUP &&
+		entity->type != ENTITY_VEHICLE)
 		return false;
 
 	if (entity->type == ENTITY_MESH && !entity->data.mesh.is_visible)
@@ -220,6 +212,10 @@ void entlist_tick(sbox_t* sbox, entlist_t* entlist) {
 		}
 		case ENTITY_PICKUP: {
 			entity_tick_pickup(sbox, entity, &entity->data.pickup);
+			break;
+		}
+		case ENTITY_VEHICLE: {
+			entity_tick_vehicle(sbox, entity, &entity->data.vehicle);
 			break;
 		}
 		default: break;

@@ -97,6 +97,11 @@ void player_input(sbox_t* sbox, player_t* player) {
     if (sbox->keys[SDL_SCANCODE_LALT])
         player->buttons |= PLAYER_BUTTON_AIM;
 
+    if (sbox->keys[SDL_SCANCODE_F]) {
+        sbox->keys[SDL_SCANCODE_F] = false;
+        player->buttons |= PLAYER_BUTTON_INTERACT;
+    }
+
     if (sbox->keys[SDL_SCANCODE_B]) {
         sbox->keys[SDL_SCANCODE_B] = false;
         cvar_toggle(sbox, "edit_mode");

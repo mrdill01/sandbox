@@ -62,7 +62,7 @@ void cmd_run(sbox_t* sbox, const char* name, const char** args, int argc) {
         if (argc == 1) {
             cvar_t* cvar = cvar_find(sbox, args[0]);
             if (cvar) {
-                info(sbox, cvar->desc);
+                info(sbox, "%s\n(default value: %s)", cvar->desc, cvar->init);
                 return;
             }
 

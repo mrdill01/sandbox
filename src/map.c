@@ -905,17 +905,18 @@ void map_load(sbox_t* sbox, map_t* map) {
     entity_mesh_set_material(sbox, entity, wood, 0);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_mesh(sbox, "car", 9.0f, -0.5f, 0.0f, car_mesh, &entity);
+    entity_init_vehicle(sbox, "car", (vec3){9.0f, -0.5f, 0.0f}, car_mesh, VEHICLE_CAR, &entity);
     glm_quat(entity->rotation, rad(0.0f), 0.0f, 1.0f, 0.0f);
-    entity_mesh_set_material(sbox, entity, wood, 0);
-    entity_mesh_set_material(sbox, entity, tire, 1);
-    entity_mesh_set_material(sbox, entity, glass, 2);
+    entity_vehicle_set_material(sbox, entity, wood, 0);
+    entity_vehicle_set_material(sbox, entity, tire, 1);
+    entity_vehicle_set_material(sbox, entity, glass, 2);
     entlist_add(sbox, &map->entlist, entity);
 
-    entity_init_mesh(sbox, "helicopter", 8.0f, -0.5f, 16.0f, helicopter_mesh, &entity);
+    entity_init_vehicle(sbox, "helicopter", (vec3){8.0f, -0.5f, 16.0f}, helicopter_mesh,
+        VEHICLE_HELICOPTER, &entity);
     glm_quat(entity->rotation, rad(45.0f), 0.0f, 1.0f, 0.0f);
-    entity_mesh_set_material(sbox, entity, metal, 0);
-    entity_mesh_set_material(sbox, entity, glass, 1);
+    entity_vehicle_set_material(sbox, entity, metal, 0);
+    entity_vehicle_set_material(sbox, entity, glass, 1);
     entlist_add(sbox, &map->entlist, entity);
 
     entity_init_mesh(sbox, "water", 0.0f, -1.0f, 0.0f, water_mesh, &entity);

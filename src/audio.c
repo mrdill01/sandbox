@@ -116,6 +116,7 @@ void a_init(sbox_t* sbox, audio_t* audio) {
     audio->enter_water_sound = sound_load(sbox, audio, "res/sounds/enter_water.wav");
     audio->exit_water_sound = sound_load(sbox, audio, "res/sounds/exit_water.wav");
     audio->explosion_sound = sound_load(sbox, audio, "res/sounds/weapons/explosion.wav");
+    audio->gun_click_sound = sound_load(sbox, audio, "res/sounds/weapons/gun_click.wav");
     audio->pickup_coin_sound = sound_load(sbox, audio, "res/sounds/pickup_coin.wav");
     audio->hurt_sound = sound_load(sbox, audio, "res/sounds/hurt.wav");
     audio->fall_damage_sound = sound_load(sbox, audio, "res/sounds/fall_damage.wav");
@@ -309,8 +310,10 @@ sound_t* sound_load(sbox_t* sbox, audio_t* audio, const char* path) {
     sound_t* sound = malloc(sizeof(sound_t));
     sound->buffer = buffer;
     sound->source = source;
+    sound->duration = ((double)(cvt.len * cvt.len_mult) / spec.channels) / spec.freq;
     sound->next = audio->sounds;
     audio->sounds = sound;
+    info(sbox, "%s: %g", path, sound->duration);
     return sound;
 }
 

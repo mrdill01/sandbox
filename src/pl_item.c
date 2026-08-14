@@ -80,6 +80,8 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
             sbox->dt);
     }
 
+
+
     if (player->target_speed < 1.0f || !player->is_grounded) {
         float reset_speed = 5.0f;
         player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, sbox->dt);
@@ -96,7 +98,7 @@ static void tick_item_anim(sbox_t* sbox, player_t* player, item_t* item) {
         anim[0] = 0.0f;
         anim[1] = 0.0f;
         anim[2] = 0.0f;
-    } else {
+    } else if (player_get_xz_speed(sbox, player) > 0.0f && player->is_grounded) {
         float speed = 1.0f;
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
@@ -119,7 +121,11 @@ void player_tick_item(sbox_t* sbox, player_t* player) {
 }
 
 void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer) {
-    if (player->is_thirdperson || edit_mode.value || !r_viewmodel.value || !player->is_me) return;
+    if (player->is_thirdperson ||
+        player->vehicle ||
+        edit_mode.value ||
+        !r_viewmodel.value ||
+        !player->is_me) return;
     item_t* item = inventory_get_item(sbox, &player->inventory);
     if (!item) return;
 

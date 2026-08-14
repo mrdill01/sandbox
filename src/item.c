@@ -35,8 +35,14 @@ void weapon_fire(sbox_t* sbox, weapon_t* weapon, player_t* player) {
     if (sbox->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY)
         return;
     
-    if (weapon->ammo_loaded == 0 || weapon->is_reloading)
+    if (weapon->is_reloading)
         return;
+
+    if (weapon->ammo_loaded == 0 && weapon->ammo_unloaded == 0) {
+        a_play(sbox,
+            &sbox->audio, sbox->audio.gun_click_sound, player->position, random(0.85f, 1.15f));
+        return;
+    }
     
     weapon->ammo_loaded--;
 
@@ -161,8 +167,9 @@ void weapon_finish_reload(sbox_t* sbox, weapon_t* weapon, player_t* player) {
 
     weapon->is_reloading = false;
     int difference = weapon->mag_size - weapon->ammo_loaded;
-    weapon->ammo_loaded = weapon->mag_size;
+    weapon->ammo_loaded = min(weapon->mag_size, weapon->ammo_unloaded);
     weapon->ammo_unloaded -= difference;
+    weapon->ammo_unloaded = max(weapon->ammo_unloaded, 0);
 }
 
 void inventory_init(sbox_t* sbox, inventory_t* inventory) {
@@ -198,7 +205,7 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->mag_size = 30;
     weapon->ammo_loaded = weapon->mag_size;
     weapon->ammo_unloaded = weapon->mag_size * 3;
-    weapon->reload_time = 2.8f;
+    weapon->reload_time = 3.4f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
     weapon->is_projectile = false;
@@ -245,8 +252,8 @@ void inventory_init(sbox_t* sbox, inventory_t* inventory) {
     weapon->bullets = 1;
     weapon->mag_size = 1;
     weapon->ammo_loaded = weapon->mag_size;
-    weapon->ammo_unloaded = weapon->mag_size * 10;
-    weapon->reload_time = 3.2f;
+    weapon->ammo_unloaded = weapon->mag_size * 20;
+    weapon->reload_time = 2.7f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
     weapon->is_projectile = true;

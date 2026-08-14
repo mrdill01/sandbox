@@ -36,7 +36,7 @@ cvar_t r_debug_colliders = {"r_debug_colliders", "0", true, true,
 	"Draw colliders."};
 cvar_t r_debug_bullets = {"r_debug_bullets", "0", true, true,
 	"Draw bullet traces."};
-cvar_t r_debug_players = {"r_debug_players", "0", true, true,
+cvar_t r_debug_players = {"r_debug_players", "1", true, true,
 	"Draw player bounding boxes."};
 cvar_t r_debug_buffer = {"r_debug_buffer", "0", true, false,
 	"0 = Disabled, 1 = Position, 2 = Albedo, 3 = Roughness, 4 = Normals, 5 = Depth."};
@@ -44,7 +44,7 @@ cvar_t a_device = {"a_device", "(null)", true, false, "Audio output device (defa
 cvar_t a_volume = {"a_volume", "0.2f", true, false, "Audio volume."};
 cvar_t m_sens = {"m_sens", "10.0f", true, false, "Mouse sensitivity."};
 cvar_t console = {"console", "0", true, false, "Show the developer console."};
-cvar_t profiler = {"profiler", "1", true, false, "Shows the performance profiler."};
+cvar_t profiler = {"profiler", "0", true, false, "Shows the performance profiler."};
 cvar_t noclip = {"noclip", "0", true, true, "Enables flight / disables collision."};
 cvar_t cl_name = {"cl_name", "Player", true, false, "Display name."};
 cvar_t edit_mode = {"edit_mode", "0", true, true, "Enable edit mode."};

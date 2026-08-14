@@ -47,8 +47,7 @@ bool phys_line_trace(
         for (size_t j = 0; j < entlist->len; j++) {
             entity_t* entity = entlist->ents[j];
             if (!entity) continue;
-            if (entity->type != ENTITY_MESH || !entity->data.mesh.mesh) continue;
-            if (!entity->data.mesh.enable_collision) continue;
+            if (entity->type == ENTITY_MESH && !entity->data.mesh.enable_collision) continue;
             
             if (bbox_point_intersects(&entity->world_bbox, trace.point)) {
                 float t = 0.0f;
@@ -60,7 +59,7 @@ bool phys_line_trace(
 
                     vec3 scaled_dir;
                     glm_vec3_copy(dir, scaled_dir);
-                    glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
+                    glm_vec3_scale(scaled_dir, t * max_distance, scaled_dir);
 
                     vec3 end;
                     glm_vec3_add(start, scaled_dir, end);

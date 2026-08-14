@@ -169,6 +169,8 @@ void r_free(sbox_t* sbox, renderer_t* renderer) {
 static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
+    if (!a || !b) return 0;
+    
     return strcmp(a->materials[0]->name, b->materials[0]->name);
 	if (a->distance_to_camera > b->distance_to_camera) return 1;
 	return -1;
@@ -177,6 +179,8 @@ static int sort_front_to_back(const void* a_ptr, const void* b_ptr) {
 static int sort_back_to_front(const void* a_ptr, const void* b_ptr) {
 	drawcall_t* a = (drawcall_t*)a_ptr;
 	drawcall_t* b = (drawcall_t*)b_ptr;
+    if (!a || !b) return 0;
+
 	if (a->distance_to_camera < b->distance_to_camera) return 1;
 	return -1;
 }

@@ -57,9 +57,22 @@ typedef struct {
     bool is_coin;
 } entity_pickup_t;
 
+typedef enum {
+    VEHICLE_CAR,
+    VEHICLE_HELICOPTER,
+} vehicle_type_t;
+
+typedef struct {
+    vec3 velocity;
+} veh_helicopter;
+
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    vehicle_type_t type;
+    union {
+        veh_helicopter heli;
+    } data;
 } entity_vehicle_t;
 
 typedef struct {
@@ -121,7 +134,7 @@ void entity_init_explosion(sbox_t* sbox,
 void entity_init_pickup(sbox_t* sbox,
     const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out);
 void entity_init_vehicle(sbox_t* sbox,
-    const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out);
+    const char* name, vec3 position, mesh_t* mesh, vehicle_type_t type, entity_t** out);
 void entity_init_sun_light(sbox_t* sbox,
     const char* name,
     float x, float y, float z,
@@ -133,6 +146,8 @@ void entity_free(sbox_t* sbox, entity_t* entity);
 void entity_tick_projectile(sbox_t* sbox, entity_t* entity, entity_projectile_t* projectile);
 void entity_tick_explosion(sbox_t* sbox, entity_t* entity, entity_explosion_t* explosion);
 void entity_tick_pickup(sbox_t* sbox, entity_t* entity, entity_pickup_t* pickup);
+void entity_tick_vehicle(sbox_t* sbox, entity_t* entity, entity_vehicle_t* vehicle);
+void entity_tick_vehicle_helicopter(sbox_t* sbox, entity_t* entity, veh_helicopter* heli);
 
 mesh_t* entity_get_mesh(sbox_t* sbox, entity_t* entity);
 void entity_get_materials(sbox_t* sbox, entity_t* entity, material_t** materials, size_t* nmaterials);
@@ -140,6 +155,7 @@ bool entity_get_drawcall(sbox_t* sbox, entity_t* entity, drawcall_t* drawcall);
 
 void entity_mesh_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
 void entity_pickup_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
+void entity_vehicle_set_material(sbox_t* sbox, entity_t* entity, material_t* material, int slot);
 
 void entlist_init(sbox_t* sbox, entlist_t* entlist);
 void entlist_free(sbox_t* sbox, entlist_t* entlist);

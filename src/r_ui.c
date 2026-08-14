@@ -300,7 +300,7 @@ static void draw_debug_menu(sbox_t* sbox, renderer_t* renderer, ui_t* ui) {
 }
 
 static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
-    if (edit_mode.value) return;
+    if (sbox->player->vehicle || edit_mode.value) return;
 
     const inventory_t* inventory = &sbox->player->inventory;
     vec2 size = {48.0f, 48.0f};
@@ -352,8 +352,10 @@ static void draw_hotbar(sbox_t* sbox, ui_t* ui) {
 }
 
 static void draw_inventory(sbox_t* sbox, ui_t* ui) {
+    if (sbox->player->vehicle || edit_mode.value) return;
+
     const inventory_t* inventory = &sbox->player->inventory;
-    if (!inventory->is_open || edit_mode.value) return;
+    if (!inventory->is_open) return;
 
     vec2 size = {48.0f, 48.0f};
     vec2 start = {size[0], r_height.value - (size[1] * 4.0f)};
@@ -383,46 +385,47 @@ static void draw_hud(sbox_t* sbox, ui_t* ui, player_t* player) {
     item_t* item = inventory_get_item(sbox, &sbox->player->inventory);
     if (item) {
         weapon_t* weapon = &item->data.weapon;
-        if (weapon) {
+        if (weapon && !sbox->player->vehicle) {
             char text[32];
             sprintf(text, "Ammo: %d/%d", weapon->ammo_loaded, weapon->ammo_unloaded);
             float font_size = 64.0f;
-            float width = ui_measure_text(text, font_size);
             ui_draw_text_thick(sbox, ui, text,
                 (vec2){64.0f + 10.0f, r_height.value - font_size},
                 font_size, 5, COLOR_WHITE);
 
             if (weapon->is_reloading) {
                 sprintf(text, "RELOADING");
-                float font_size = 40.0f;
+                float font_size = 42.0f;
                 float width = ui_measure_text(text, font_size);
                 ui_draw_text_thick(sbox, ui, text,
                     (vec2){r_width.value / 2.0f - width / 2.0f, r_height.value / 2.0f + 100.0f},
-                    font_size, 5, COLOR_GREEN);
+                    font_size, 2, COLOR_GREEN);
             }
         }
     }
     
+    if (!sbox->player->vehicle) {
+        char text[32];
+        sprintf(text, "Health: %d", (int)ceilf(sbox->player->health));
+        float font_size = 64.0f;
+        float width = ui_measure_text(text, font_size);
+        ui_draw_text_thick(sbox, ui, text,
+            (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
+            font_size, 5, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
+    }
+    
     char text[32];
-    sprintf(text, "Health: %d", (int)ceilf(sbox->player->health));
-    float font_size = 64.0f;
-    float width = ui_measure_text(text, font_size);
-    ui_draw_text_thick(sbox, ui, text,
-        (vec2){r_width.value - width - 32.0f, r_height.value - font_size},
-        font_size, 5, (sbox->player->health <= 30.0f) ? COLOR_RED : COLOR_WHITE);
-
+    float font_size = 32.0f;
     if (sbox->player->inventory.coins >= sbox->map.coins) {
         sprintf(text, "ALL COINS COLLECTED!");
-        font_size = 32.0f;
-        width = ui_measure_text(text, font_size);
+        int width = ui_measure_text(text, font_size);
         ui_draw_text_shadow(sbox, ui, text,
             (vec2){r_width.value - width - 5.0f, 0.0f},
             font_size, COLOR_YELLOW);
         
     } else {
         sprintf(text, "COINS: %d/%d", sbox->player->inventory.coins, sbox->map.coins);
-        font_size = 32.0f;
-        width = ui_measure_text(text, font_size);
+        int width = ui_measure_text(text, font_size);
         ui_draw_text_shadow(sbox, ui, text,
             (vec2){r_width.value - width - 5.0f, 0.0f},
             font_size, COLOR_YELLOW);
@@ -561,7 +564,7 @@ static void draw_console(sbox_t* sbox, ui_t* ui, console_t* con) {
 
     for (int i = 0; i < CON_LINES_PER_PAGE; i++) {
         ui_draw_text_shadow(sbox, ui,
-            con->history[i + con->history_len - con->scroll - CON_LINES_PER_PAGE],
+            con->history[i + con->history_len + con->scroll - CON_LINES_PER_PAGE],
             (vec2){r_width.value / 2.0f - width / 2.0f, title_height + spacing * i},
             font_size, COLOR_WHITE);
     }

@@ -56,7 +56,7 @@ bool init(sbox_t* sbox) {
 
     info(sbox, "creating window...");
 
-    sbox->window = SDL_CreateWindow("sbox",
+    sbox->window = SDL_CreateWindow("quark",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         r_width.value,
@@ -174,7 +174,7 @@ void tick(sbox_t* sbox) {
 
         if (sbox->keys[SDL_SCANCODE_UP]) {
             sbox->keys[SDL_SCANCODE_UP] = false;
-            if (sbox->console.scroll > 0)
+            if (sbox->console.scroll > -353)
                 sbox->console.scroll -= 1;
         }
 

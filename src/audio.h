@@ -18,6 +18,7 @@ typedef struct camera_t camera_t;
 typedef struct sound_t {
     ALuint buffer;
     ALuint source;
+    float duration;
     struct sound_t* next;
 } sound_t;
 
@@ -37,6 +38,7 @@ typedef struct {
     sound_t* enter_water_sound;
     sound_t* exit_water_sound;
     sound_t* explosion_sound;
+    sound_t* gun_click_sound;
     sound_t* pickup_coin_sound;
     sound_t* hurt_sound;
     sound_t* fall_damage_sound;

@@ -17,6 +17,7 @@ typedef struct entlist_t entlist_t;
 #define PLAYER_BUTTON_SPRINT 4
 #define PLAYER_BUTTON_FIRE 8
 #define PLAYER_BUTTON_AIM 16
+#define PLAYER_BUTTON_INTERACT 32
 
 typedef enum {
     MOVE_WALK,
@@ -66,6 +67,8 @@ typedef struct {
 
 typedef struct {
     float last_speech;
+    float last_speech_word;
+    int num_speech_words;
 } bot_t;
 
 typedef struct player_t {
@@ -84,6 +87,8 @@ typedef struct player_t {
     bool is_grounded;
     bool is_jumping;
     trace_result_t look_trace;
+    entity_t* looked_at_vehicle;
+    entity_t* vehicle;
     phys_material_t ground_mat;
     float fall_distance;
     float water_level;
@@ -122,6 +127,7 @@ void player_get_bottom_position(sbox_t* sbox, player_t* player, vec3 position);
 float player_get_speed(sbox_t* sbox, player_t* player);
 float player_get_step_rate(sbox_t* sbox, player_t* player);
 float player_get_accuracy(sbox_t* sbox, player_t* player);
+float player_get_xz_speed(sbox_t* sbox, player_t* player);
 
 void player_tick_item(sbox_t* sbox, player_t* player);
 void player_render_item(sbox_t* sbox, player_t* player, renderer_t* renderer);
@@ -130,6 +136,7 @@ void player_init_body(sbox_t* sbox, player_t* player);
 void player_tick_body(sbox_t* sbox, player_t* player);
 void player_render_body(sbox_t* sbox, player_t* player, renderer_t* renderer);
 
+void bot_init(sbox_t* sbox, player_t* bot);
 void bot_tick(sbox_t* sbox, player_t* player);
 
 #endif

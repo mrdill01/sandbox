@@ -48,6 +48,8 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->target_speed = get_max_speed(sbox, player);
     player->is_grounded = false;
     player->is_jumping = false;
+    player->looked_at_vehicle = NULL;
+    player->vehicle = NULL;
     player->ground_mat = PHYS_MAT_NONE;
     player->fall_distance = 0.0f;
     player->water_level = 0.0f;
@@ -65,7 +67,8 @@ player_t* player_new(sbox_t* sbox, int id, bool is_bot) {
     player->death_time = 0.0f;
     player_init_body(sbox, player);
     edit_init(sbox, &player->editor);
-    player->bot.last_speech = sbox->time;
+    if (is_bot)
+        bot_init(sbox, player);
     return player;
 }
 
@@ -304,7 +307,6 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
     trace_result_t trace;
     
     bool was_in_water = player->water_level > 0.0f;
-    player->is_grounded = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace)) {
         player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
@@ -319,6 +321,7 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
             enter_water(sbox, player);
         
     } else {
+        player->is_grounded = false;
         if (was_grounded)
             leave_ground(sbox, player);
 
@@ -329,8 +332,7 @@ static void trace_ground(sbox_t* sbox, player_t* player, entlist_t* entlist, boo
 }
 
 static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, bool was_grounded) {
-    if (player->is_grounded ||
-        player->is_jumping ||
+    if (player->is_jumping ||
         player->fall_distance > MAX_STEDOWN ||
         player->move_mode == MOVE_FLIGHT)
         return;
@@ -342,7 +344,7 @@ static void trace_downforce(sbox_t* sbox, player_t* player, entlist_t* entlist, 
     trace_result_t trace;
     
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &trace))
-        player->position[1] = trace.point[1] + get_height(sbox, player) / 2.0f;
+        player->position[1] = trace.point[1] + trace.distance;
 }
 
 static void trace_head(sbox_t* sbox, player_t* player, entlist_t* entlist) {
@@ -410,6 +412,10 @@ static void move_and_collide(sbox_t* sbox, player_t* player, entlist_t* entlist)
 static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
     if (!player->is_me) return;
 
+    if (player->vehicle) {
+
+    }
+
     camera_tick(sbox, camera);
 
     if (player->buttons & PLAYER_BUTTON_AIM)
@@ -418,7 +424,8 @@ static void tick_camera(sbox_t* sbox, player_t* player, camera_t* camera) {
         camera->fov = interp_to(camera->fov, r_fov.value, 12.0f, sbox->dt);
 
     float target_height = get_height(sbox, player) / 2.0f;
-    if (player->target_speed > 0.0f && player->is_grounded) {
+
+    if (player_get_xz_speed(sbox, player) > 0.0f && player->is_grounded && !player->vehicle) {
         float speed = 1.0f;
         if (player->move_mode == MOVE_SPRINT)
             speed *= 2.0f;
@@ -482,10 +489,21 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
     glm_vec3_copy(camera->forward, dir);
     float max_distance = 50.0f;
 
+    player->looked_at_vehicle = NULL;
     player->head_in_water = false;
 
     if (phys_line_trace(sbox, start, dir, max_distance, entlist, player->id, &player->look_trace)) {
         player->editor.trace = player->look_trace;
+
+        if (player->look_trace.entity->type == ENTITY_VEHICLE) {
+            player->looked_at_vehicle = player->look_trace.entity;
+        }
+
+        if (player->buttons & PLAYER_BUTTON_INTERACT) {
+            if (player->looked_at_vehicle) {
+                player->vehicle = player->looked_at_vehicle;
+            }
+        }
 
         if (player->buttons & PLAYER_BUTTON_FIRE) {
             if (edit_mode.value) {
@@ -495,7 +513,10 @@ static void trace_look_ray(sbox_t* sbox, player_t* player, camera_t* camera, ent
                 } else {
                     edit_select(sbox, &player->editor, player->look_trace.entity);
                 }
+                return;
             }
+
+            
         }
     }
 
@@ -573,7 +594,15 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 
     move_and_collide(sbox, player, entlist);
 
-    if (noclip.value) {
+    if (player->buttons & PLAYER_BUTTON_INTERACT && player->vehicle) {
+        player->buttons &= ~PLAYER_BUTTON_INTERACT;
+        player->vehicle = NULL;
+    }
+
+    if (player->vehicle) {
+        glm_vec3_copy(player->vehicle->position, player->position);
+
+    } else if (noclip.value) {
         set_move_mode(player, MOVE_FLIGHT);
         move_flight(sbox, player);
     } else if (player->water_level > 0.0f)
@@ -597,6 +626,11 @@ void player_tick(sbox_t* sbox, player_t* player, camera_t* camera, entlist_t* en
 }
 
 void player_render(sbox_t* sbox, player_t* player, renderer_t* renderer) {
+    if (player->looked_at_vehicle && !player->vehicle) {
+        r_add_line_box(sbox, &sbox->renderer,
+            &player->looked_at_vehicle->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
+    }
+    
     player_render_body(sbox, player, renderer);
     player_render_item(sbox, player, renderer);
 }
@@ -678,4 +712,11 @@ float player_get_accuracy(sbox_t* sbox, player_t* player) {
     if (!player->is_grounded)
         accuracy = 0.0f;
     return accuracy;
+}
+
+float player_get_xz_speed(sbox_t* sbox, player_t* player) {
+    vec3 velocity;
+    glm_vec3_copy(player->velocity, velocity);
+    velocity[1] = 0.0f;
+    return glm_vec3_dot(velocity, velocity);
 }
