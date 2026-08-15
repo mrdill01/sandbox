@@ -24,9 +24,21 @@ typedef struct sv_client_t {
 void sv_init(quark_t* quark, server_t* server);
 void sv_start(quark_t* quark, server_t* server, int port);
 void sv_stop(quark_t* quark, server_t* server);
+
 void sv_tick(quark_t* quark, server_t* server);
+void sv_send(quark_t* quark, server_t* server);
+void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* packet);
+
+void sv_write_byte(quark_t* quark, server_t* server, sv_client_t* client, uint8_t byte);
+void sv_write_bytes(
+    quark_t* quark,
+    server_t* server,
+    sv_client_t* client,
+    uint8_t* bytes,
+    size_t len);
 
 int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer);
 void sv_disconnect_client(quark_t* quark, server_t* server, ENetPeer* peer, const char* reason);
+sv_client_t* sv_get_client(quark_t* quark, server_t* server, ENetPeer* peer);
 
 #endif

@@ -7,11 +7,16 @@
 
 #include "../../include/enet.h"
 
+#define CLIENT_MAX_BUFFER 1024
+
 typedef struct quark_t quark_t;
 
 typedef struct {
     ENetHost* host;
     ENetPeer* peer;
+
+    uint8_t buffer[CLIENT_MAX_BUFFER];
+    size_t nbuffer;
 
     bool has_sent_name;
 } client_t;
@@ -22,10 +27,10 @@ void cl_disconnect(quark_t* quark, client_t* client);
 
 void cl_tick(quark_t* quark, client_t* client);
 void cl_send(quark_t* quark, client_t* client);
-void cl_recv(quark_t* quark, client_t* client);
+void cl_recv(quark_t* quark, client_t* client, ENetPacket* packet);
 
-void cl_send_byte(quark_t* quark, client_t* client, uint8_t byte);
-void cl_send_bytes(quark_t* quark, client_t* client, uint8_t* bytes, size_t len);
+void cl_write_byte(quark_t* quark, client_t* client, uint8_t byte);
+void cl_write_bytes(quark_t* quark, client_t* client, uint8_t* bytes, size_t len);
 
 bool cl_is_connected(quark_t* quark, client_t* client);
 int cl_get_ping(quark_t* quark, client_t* client);

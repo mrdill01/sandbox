@@ -200,7 +200,7 @@ void a_play(quark_t* quark, audio_t* audio, sound_t* sound, vec3 position, float
     if ((err = alGetError()) != AL_NO_ERROR)
         error(quark, "failed to set AL_GAIN: %d", err);
 
-    alSourcef(sound->source, AL_PITCH, pitch);
+    alSourcef(sound->source, AL_PITCH, pitch * sv_timescale.value);
     if ((err = alGetError()) != AL_NO_ERROR)
         error(quark, "failed to set AL_PITCH: %d", err);
     

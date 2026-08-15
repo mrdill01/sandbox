@@ -1,4 +1,4 @@
-#include "math.h"
+#include "mathlib.h"
 #include "render.h"
 
 float sign(float num) {
@@ -152,23 +152,46 @@ bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius) {
     return squared_distance <= radius * radius;
 }
 
-typedef struct {
-    float distance;
-    float t;
-} ray_mesh_intersection_t;
-
-static int sort(const void* a_ptr, const void* b_ptr) {
-    ray_mesh_intersection_t* a = (ray_mesh_intersection_t*)a_ptr;
-    ray_mesh_intersection_t* b = (ray_mesh_intersection_t*)b_ptr;
-    return (a->distance > b->distance) - (a->distance < b->distance);
+void point_on_ray(ray_t ray, float t, vec3 end) {
+    vec3 scaled_dir;
+    glm_vec3_copy(ray.dir, scaled_dir);
+    glm_vec3_scale(scaled_dir, t, scaled_dir);
+    glm_vec3_add(ray.origin, scaled_dir, end);
 }
 
-bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 r0, vec3 rd,
-    mesh_t* mesh, float* t, float max_t)
-{
-    ray_mesh_intersection_t intersections[10];
-    size_t nintersections = 0;
+bool raycast_bbox(ray_t ray, const bbox_t* box, float* t, float tmax) {
+    float tmin = -INFINITY;
 
+    float inv_dir_x = 1.0f / ray.dir[0];
+    float t1 = (box->min[0] - ray.origin[0]) * inv_dir_x;
+    float t2 = (box->max[0] - ray.origin[0]) * inv_dir_x;
+    if (inv_dir_x < 0.0f) { float tmp = t1; t1 = t2; t2 = tmp; }
+    tmin = t1 > tmin ? t1 : tmin;
+    tmax = t2 < tmax ? t2 : tmax;
+    if (tmin > tmax) return false;
+
+    float inv_dir_y = 1.0f / ray.dir[1];
+    float t3 = (box->min[1] - ray.origin[1]) * inv_dir_y;
+    float t4 = (box->max[1] - ray.origin[1]) * inv_dir_y;
+    if (inv_dir_y < 0.0f) { float tmp = t3; t3 = t4; t4 = tmp; }
+    tmin = t3 > tmin ? t3 : tmin;
+    tmax = t4 < tmax ? t4 : tmax;
+    if (tmin > tmax) return false;
+
+    float inv_dir_z = 1.0f / ray.dir[2];
+    float t5 = (box->min[2] - ray.origin[2]) * inv_dir_z;
+    float t6 = (box->max[2] - ray.origin[2]) * inv_dir_z;
+    if (inv_dir_z < 0.0f) { float tmp = t5; t5 = t6; t6 = tmp; }
+    tmin = t5 > tmin ? t5 : tmin;
+    tmax = t6 < tmax ? t6 : tmax;
+    if (tmin > tmax) return false;
+
+    if (tmax < 0.0f) return false;
+    *t = (tmin >= 0.0f) ? tmin : tmax;
+    return true;
+}
+
+bool raycast_mesh(ray_t ray, vec3 position, quat rotation, mesh_t* mesh, float* t, float tmax) {
     for (int i = 0; i < mesh->nbuffers; i++) {
         mesh_buffer_t* buffer = mesh->buffers[i];
         if (!buffer) continue;
@@ -176,15 +199,15 @@ bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 r0, vec3 rd,
         const int stride = 9;
         for (int i = 0; i < buffer->nvertices; i += stride * 3) {
             vec3 v0 = {
-                -buffer->vertices[i + 0],
+                buffer->vertices[i + 0],
                 buffer->vertices[i + 1],
                 buffer->vertices[i + 2]};
             vec3 v1 = {
-                -buffer->vertices[i + stride + 0],
+                buffer->vertices[i + stride + 0],
                 buffer->vertices[i + stride + 1],
                 buffer->vertices[i + stride + 2]};
             vec3 v2 = {
-                -buffer->vertices[i + (stride * 2) + 0],
+                buffer->vertices[i + (stride * 2) + 0],
                 buffer->vertices[i + (stride * 2) + 1],
                 buffer->vertices[i + (stride * 2) + 2]};
 
@@ -192,40 +215,22 @@ bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 r0, vec3 rd,
             glm_quat_rotatev(rotation, v1, v1);
             glm_quat_rotatev(rotation, v2, v2);
 
-            glm_vec3_add(ws, v0, v0);
-            glm_vec3_add(ws, v1, v1);
-            glm_vec3_add(ws, v2, v2);
+            glm_vec3_add(position, v0, v0);
+            glm_vec3_add(position, v1, v1);
+            glm_vec3_add(position, v2, v2);
 
             float u = 0.0f;
             float v = 0.0f;
-            if (ray_intersects_triangle(r0, rd, v0, v1, v2, t, &u, &v, max_t)) {
-                vec3 scaled_dir;
-                glm_vec3_copy(rd, scaled_dir);
-                glm_vec3_scale(scaled_dir, *t, scaled_dir);
-
-                vec3 end;
-                glm_vec3_add(r0, scaled_dir, end);
-
-                ray_mesh_intersection_t inter;
-                inter.distance = glm_vec3_distance(v0, r0) +
-                    glm_vec3_distance(v1, r0) +
-                    glm_vec3_distance(v2, r0);
-                inter.t = *t;
-                intersections[nintersections++] = inter;
-            }
+            if (raycast_triangle(ray, v0, v1, v2, t, &u, &v, tmax))
+                return true;
         }
     }
 
-	qsort(intersections, nintersections, sizeof(ray_mesh_intersection_t), sort);
-    t = &intersections[0].t;
-
-    return nintersections > 0;
+    return false;
 }
 
-bool ray_intersects_triangle(vec3 r0, vec3 rd,
-    vec3 v0, vec3 v1, vec3 v2,
-    float* t, float* u, float* v,
-    float max_t)
+bool raycast_triangle(
+    ray_t ray, vec3 v0, vec3 v1, vec3 v2, float* t, float* u, float* v, float tmax)
 {
     const float EPSILON = 0.01f;
     
@@ -236,22 +241,26 @@ bool ray_intersects_triangle(vec3 r0, vec3 rd,
     glm_vec3_sub(v2, v0, edge2);
     
     vec3 h;
-    glm_vec3_cross(rd, edge2, h);
+    glm_vec3_cross(ray.dir, edge2, h);
     
     float a = glm_vec3_dot(edge1, h);
     if (a > -EPSILON && a < EPSILON) return false;
     
     float f = 1.0f / a;
     vec3 s;
-    glm_vec3_sub(r0, v0, s);
+    glm_vec3_sub(ray.origin, v0, s);
     *u = f * glm_vec3_dot(s, h);
     if (*u < 0.0f || *u > 1.0f) return false;
     
     vec3 q;
     glm_vec3_cross(s, edge1, q);
-    *v = f * glm_vec3_dot(rd, q);
+    *v = f * glm_vec3_dot(ray.dir, q);
     if (*v < 0.0f || *u + *v > 1.0f) return false;
     
     *t = f * glm_vec3_dot(edge2, q);
-    return *t > EPSILON && *t <= max_t;
+    if (*t < EPSILON) {
+        *t = tmax;
+        return true;
+    }
+    return *t > EPSILON && *t <= tmax;
 }

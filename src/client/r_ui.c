@@ -10,6 +10,9 @@
 
 void ui_init(quark_t* quark, ui_t* ui) {
     info(quark, "ui_init()...");
+    ui->show_msgbox = false;
+    ui->msgbox_message = NULL;
+    
     ui->shader = shader_load(quark, "ui", "res/shaders/ui.vs", "res/shaders/ui.fs");
     ui->font = texture_load(quark, "res/textures/ui/font.png", TEX_FILTER_NEAREST);
     ui->button = texture_load(quark, "res/textures/ui/button.png", TEX_FILTER_NEAREST);
@@ -196,18 +199,15 @@ static void draw_main_menu(quark_t* quark, ui_t* ui) {
 
 static void draw_loading_screen(quark_t* quark, ui_t* ui) {
     ui_draw_texture(quark,
-        ui,
-        ui->pixel,
-        (vec2){0.0f, 0.0f},
-        (vec2){r_width.value, r_height.value},
-        COLOR_LIGHT_BLUE);
+        ui, ui->pixel,
+        (vec2){0.0f, 0.0f}, (vec2){r_width.value, r_height.value}, COLOR_LIGHT_BLUE);
 
     float font_size = 64.0f;
     const char* text = "LOADING...";
     vec2 position = {
         r_width.value / 2.0f - ui_measure_text(text, font_size) / 2.0f,
         r_height.value / 2.0f - font_size / 2.0f};
-    ui_draw_text_thick(quark, ui, text, position, font_size, 12, COLOR_WHITE);
+    ui_draw_text_thick(quark, ui, text, position, font_size, 4, COLOR_WHITE);
 }
 
 static void draw_debug_menu(quark_t* quark, renderer_t* renderer, ui_t* ui) {
@@ -385,7 +385,7 @@ static void draw_hud(quark_t* quark, ui_t* ui, player_t* player) {
             float font_size = 64.0f;
             ui_draw_text_thick(quark, ui, text,
                 (vec2){64.0f + 10.0f, r_height.value - font_size},
-                font_size, 5, COLOR_WHITE);
+                font_size, 5, (weapon->ammo_loaded == 0) ? COLOR_RED : COLOR_WHITE);
 
             if (weapon->is_reloading) {
                 sprintf(text, "RELOADING");
@@ -598,6 +598,34 @@ static void draw_profiler(quark_t* quark, ui_t* ui, profiler_t* prof) {
     }
 }
 
+static void draw_msgbox(quark_t* quark, ui_t* ui) {
+    int width = 400.0f;
+    int height = 200.0f;
+
+    ui_draw_texture(quark,
+        ui,
+        ui->pixel,
+        (vec2){r_width.value / 2.0f - width / 2.0f, r_height.value / 2.0f - height / 2.0f},
+        (vec2){width, height},
+        (vec4){0.0f, 0.0f, 0.0f, 0.4f});
+
+    float font_size = 40.0f;
+    float text_width = ui_measure_text(ui->msgbox_message, font_size);
+    ui_draw_text_shadow(quark, ui,
+        ui->msgbox_message,
+        (vec2){r_width.value / 2.0f - text_width / 2.0f, r_height.value / 2.0f - font_size / 2.0f},
+        font_size, COLOR_WHITE);
+
+    vec2 button_size = {width, 48.0f};
+    vec2 position = {
+        r_width.value / 2.0f - button_size[0] / 2.0f,
+        r_height.value / 2.0f + height / 2.0f};
+
+    if (ui_draw_button(quark, ui, "OKAY", position, button_size)) {
+        ui->show_msgbox = false;
+    }
+}
+
 void ui_render(quark_t* quark, ui_t* ui, renderer_t* renderer) {
     prof_start(quark, &quark->prof);
 
@@ -642,5 +670,8 @@ void ui_render(quark_t* quark, ui_t* ui, renderer_t* renderer) {
     if (profiler.value)
         draw_profiler(quark, ui, &quark->prof);
     
+    if (ui->show_msgbox)
+        draw_msgbox(quark, ui);
+
     glDisable(GL_BLEND);
 }

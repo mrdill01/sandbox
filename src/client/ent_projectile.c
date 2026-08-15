@@ -38,9 +38,10 @@ void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_
     if (quark->time - entity->spawn_time >= PROJECTILE_MAX_LIFETIME)
         entlist_remove(quark, &quark->map.entlist, entity);
 
-    vec3 direction;
-    glm_vec3_copy(projectile->velocity, direction);
-    glm_normalize(direction);
+    ray_t ray;
+    glm_vec3_copy(entity->position, ray.origin);
+    glm_vec3_copy(projectile->velocity, ray.dir);
+    glm_normalize(ray.dir);
 
     float max_distance = projectile->speed * quark->dt;
 
@@ -50,11 +51,10 @@ void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_
     size_t nignore = 1;
 
     if (phys_line_trace(
-        quark, entity->position, direction, max_distance, entlist,
-            projectile->owner_id, ignore, nignore, &trace))
+        quark, ray, max_distance, entlist, projectile->owner_id, ignore, nignore, &trace))
     {
         entity_t* explosion = NULL;
-        entity_init_explosion(quark, "explosion", entity->position, 2.0f, direction,
+        entity_init_explosion(quark, "explosion", entity->position, 2.0f, ray.dir,
             2.0f, 12.0f, &explosion);
         entlist_add(quark, &quark->map.entlist, explosion);
         entlist_remove(quark, &quark->map.entlist, entity);

@@ -401,6 +401,7 @@ void map_load(quark_t* quark, map_t* map) {
 
         glm_quat(entity->rotation, rad(random(-180.0f, 180.0f)), 0.0f, 1.0f, 0.0f);
         glm_vec3_scale(entity->scale, random(0.75f, 1.5f), entity->scale);
+        entity->data.mesh.enable_collision = false;
         entlist_add(quark, &map->entlist, entity);
     }
 

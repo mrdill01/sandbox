@@ -1,7 +1,7 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "math.h"
+#include "mathlib.h"
 
 #include <stdint.h>
 #include <stddef.h>
@@ -122,6 +122,9 @@ typedef struct {
 } framebuffer_t;
 
 typedef struct {
+    bool show_msgbox;
+    char* msgbox_message;
+    
     shader_t* shader;
     texture_t* font;
     texture_t* button;

@@ -75,7 +75,7 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
     float ndf = distribution_ggx(sample.normal, h, sample.roughness);   
     float g = geometry_smith(sample.normal, view_dir, l, sample.roughness);      
     vec3 f = fresnel_schlick(max(dot(h, view_dir), 0.0f), f0);
-        
+    
     vec3 numerator = ndf * g * f; 
     float denominator = 4.0f * max(dot(sample.normal, view_dir), 0.0f) *
         max(dot(sample.normal, l), 0.0f) + 0.0001f;

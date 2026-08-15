@@ -1,11 +1,13 @@
 #include "../server/server.h"
 #include "../client/quark.h"
 #include "../shared/net.h"
-#include "../client/math.h"
+#include "../client/mathlib.h"
 
 void sv_init(quark_t* quark, server_t* server) {
     server->is_running = false;
     server->host = NULL;
+    for (size_t i = 0; i < NET_MAX_PLAYERS; i++)
+        server->clients[i] = NULL;
 }
 
 void sv_start(quark_t* quark, server_t* server, int port) {
@@ -31,43 +33,35 @@ void sv_stop(quark_t* quark, server_t* server) {
     if (!server->is_running) return;
 
     info(quark, "sv_stop()...");
+
     enet_host_destroy(server->host);
     server->host = NULL;
     server->is_running = false;
+    for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
+        sv_client_t* client = server->clients[i];
+        if (client) free(client);
+    }
+
     info(quark, "server stopped!");
 }
 
 void sv_tick(quark_t* quark, server_t* server) {
     if (!server->is_running) return;
 
+    sv_send(quark, server);
+
     ENetEvent event;
     while (enet_host_service(server->host, &event, NET_TIMEOUT_MSEC) > 0) {
         switch (event.type) {
+        case ENET_EVENT_TYPE_NONE: break;
         case ENET_EVENT_TYPE_CONNECT: {
             char ip[32];
             enet_address_get_host_ip(&event.peer->address, ip, 32);
             info(quark, "[server] client connected from %s", ip);
 
             sv_create_client(quark, server, event.peer);
-            sv_disconnect_client(quark, server, event.peer, "no reason");
+            //sv_disconnect_client(quark, server, event.peer, "no reason");
             
-            break;
-        }
-        case ENET_EVENT_TYPE_RECEIVE: {
-            info(quark, "[server] recv: '%s'", event.packet->data);
-            uint8_t op = event.packet->data[0];
-            
-            switch (op) {
-            case CSV_NOTHING: break;
-            case CSV_SET_NAME: {
-                uint8_t* name = event.packet->data + 1;
-
-                info(quark, "[server] client set name to '%s'", name);
-                break;
-            }
-            }
-
-            enet_packet_destroy(event.packet);
             break;
         }
         case ENET_EVENT_TYPE_DISCONNECT:
@@ -75,9 +69,59 @@ void sv_tick(quark_t* quark, server_t* server) {
             info(quark, "[server] client disconnected");
             break;
         }
-        case ENET_EVENT_TYPE_NONE: break;
+        case ENET_EVENT_TYPE_RECEIVE: {
+            sv_client_t* client = sv_get_client(quark, server, event.peer);
+            sv_recv(quark, server, client, event.packet);
+            break;
+        }
         }
     }
+}
+
+void sv_send(quark_t* quark, server_t* server) {
+    for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
+        sv_client_t* client = server->clients[i];
+        if (!client) continue;
+
+        sv_write_byte(quark, server, client, SVC_NOTHING);
+    }
+}
+
+void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* packet) {
+    uint8_t op = packet->data[0] - '0';
+    
+    switch (op) {
+    case CSV_NOTHING: break;
+    case CSV_SET_NAME: {
+        uint8_t* name = packet->data + 1;
+        char ip[32];
+        enet_address_get_host_ip(&client->peer->address, ip, 32);
+
+        info(quark, "[server] %s set name to '%s'", ip, name);
+        break;
+    }
+    }
+
+    enet_packet_destroy(packet);
+}
+
+void sv_write_byte(quark_t* quark, server_t* server, sv_client_t* client, uint8_t byte) {
+    /*if (!client->peer || !server->host) return;
+    
+    ENetPacket* packet = enet_packet_create(&byte, sizeof(uint8_t), ENET_PACKET_FLAG_RELIABLE);
+    enet_peer_send(client->peer, 0, packet);
+    enet_host_service(server->host, NULL, 0);*/
+}
+
+void sv_write_bytes(
+    quark_t* quark,
+    server_t* server,
+    sv_client_t* client,
+    uint8_t* bytes,
+    size_t len)
+{
+    for (size_t i = 0; i < len; i++)
+        sv_write_byte(quark, server, client, bytes[i]);
 }
 
 int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer) {
@@ -114,4 +158,15 @@ void sv_disconnect_client(quark_t* quark, server_t* server, ENetPeer* peer, cons
 
     enet_peer_disconnect_later(peer, 0);
     enet_host_service(server->host, NULL, 0);
+}
+
+sv_client_t* sv_get_client(quark_t* quark, server_t* server, ENetPeer* peer) {
+    for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
+        sv_client_t* client = server->clients[i];
+        if (!client) continue;
+        if (client->peer == peer)
+            return client;
+    }
+
+    return NULL;
 }

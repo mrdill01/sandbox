@@ -1,6 +1,6 @@
 #include "render.h"
 #include "quark.h"
-#include "math.h"
+#include "mathlib.h"
 
 #include "../../include/gl.h"
 
@@ -227,13 +227,13 @@ void mesh_deform(
             buffer->vertices[v + 1] += direction[1] * distance * falloff;
             buffer->vertices[v + 2] += direction[2] * distance * falloff;
 
-            mesh->bbox.min[0] = min(mesh->bbox.min[0], buffer->vertices[v + 0]);
-            mesh->bbox.min[1] = min(mesh->bbox.min[1], buffer->vertices[v + 1]);
-            mesh->bbox.min[2] = min(mesh->bbox.min[2], buffer->vertices[v + 2]);
+            mesh->bbox.min[0] = max(mesh->bbox.min[0], buffer->vertices[v + 0]);
+            mesh->bbox.min[1] = max(mesh->bbox.min[1], buffer->vertices[v + 1]);
+            mesh->bbox.min[2] = max(mesh->bbox.min[2], buffer->vertices[v + 2]);
 
-            mesh->bbox.max[0] = max(mesh->bbox.max[0], buffer->vertices[v + 0]);
-            mesh->bbox.max[1] = max(mesh->bbox.max[1], buffer->vertices[v + 1]);
-            mesh->bbox.max[2] = max(mesh->bbox.max[2], buffer->vertices[v + 2]);
+            mesh->bbox.max[0] = min(mesh->bbox.max[0], buffer->vertices[v + 0]);
+            mesh->bbox.max[1] = min(mesh->bbox.max[1], buffer->vertices[v + 1]);
+            mesh->bbox.max[2] = min(mesh->bbox.max[2], buffer->vertices[v + 2]);
         }
 
         mesh_buffer_upload(quark, buffer);

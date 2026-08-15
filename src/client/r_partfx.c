@@ -106,7 +106,7 @@ void r_add_partfx_projectile_trail(
     texture_t* texture = renderer->p_steam[(int)random(0, NUM_STEAM_PARTICLES)];
     r_add_particle(quark, &quark->renderer,
         position, velocity, texture, GLM_VEC3_ONE,
-        0.3f, random(0.125f, 0.175f), random(1.3f, 1.5f), PARTICLE_FADE_OUT);
+        0.5f, random(0.2f, 0.25f), random(3.0f, 3.5f), PARTICLE_FADE_OUT);
 
     r_add_particle(quark, &quark->renderer,
         position, velocity, quark->renderer.p_corona, GLM_VEC3_ONE,

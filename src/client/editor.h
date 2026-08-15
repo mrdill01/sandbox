@@ -1,7 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include "math.h"
+#include "mathlib.h"
 #include "entity.h"
 #include "physics.h"
 

@@ -46,14 +46,14 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
     
     weapon->ammo_loaded--;
 
-    vec3 start;
-    glm_vec3_copy(quark->renderer.camera.position, start);
+    ray_t ray;
+    glm_vec3_copy(quark->renderer.camera.position, ray.origin);
     
     if (player->is_thirdperson) {
         vec3 forward;
         glm_vec3_copy(quark->renderer.camera.forward, forward);
         glm_vec3_scale(forward, PLAYER_THIRDPERSON_CAMERA_LENGTH, forward);
-        glm_vec3_add(start, forward, start);
+        glm_vec3_add(ray.origin, forward, ray.origin);
     }
     
     weapon->last_fire = quark->time;
@@ -68,28 +68,27 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
 
     for (int i = 0; i < weapon->bullets; i++) {
         camera_t* camera = &quark->renderer.camera;
-        vec3 direction;
-        glm_vec3_copy(camera->forward, direction);
+        glm_vec3_copy(camera->forward, ray.dir);
 
         float spread = lerp(
             weapon->min_spread,
             weapon->max_spread,
             1.0f - player_get_accuracy(quark, player));
         
-        direction[0] += random(-spread, spread);
-        direction[1] += random(-spread, spread);
-        direction[2] += random(-spread, spread);
-        glm_normalize(direction);
+        ray.dir[0] += random(-spread, spread);
+        ray.dir[1] += random(-spread, spread);
+        ray.dir[2] += random(-spread, spread);
+        glm_normalize(ray.dir);
 
         if (weapon->is_projectile) {
             vec3 velocity;
-            glm_vec3_copy(direction, velocity);
+            glm_vec3_copy(ray.dir, velocity);
             glm_vec3_scale(velocity, weapon->projectile_speed, velocity);
 
             entity_t* projectile = NULL;
             entity_init_projectile(quark,
                 "rocket",
-                start,
+                ray.origin,
                 player->id,
                 weapon->projectile_mesh,
                 velocity,
@@ -106,7 +105,7 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
             float max_distance = 50.0f;
             trace_result_t trace;
 
-            bool hit = phys_line_trace(quark, start, direction, max_distance,
+            bool hit = phys_line_trace(quark, ray, max_distance,
                 &quark->map.entlist, player->id, NULL, 0, &trace);
             if (hit) {
                 sound_t* bullet_hit_sound = quark->audio.bullet_hit_sounds[trace.phys_mat];
@@ -123,22 +122,18 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
             }
 
             if (r_debug_bullets.value) {
-                vec3 end;
-                glm_vec3_copy(start, end);
-
                 float distance = max_distance;
                 if (hit)
                     distance = trace.distance;
                 
-                end[0] += direction[0] * distance;
-                end[1] += direction[1] * distance;
-                end[2] += direction[2] * distance;
+                vec3 end;
+                point_on_ray(ray, distance, end);
 
-                r_add_line(quark, &quark->renderer, start, end, COLOR_LIGHT_BLUE, 2.5f);
+                r_add_line(quark, &quark->renderer, ray.origin, end, COLOR_LIGHT_BLUE, 2.5f);
             }
 
             vec3 beam_start;
-            glm_vec3_copy(start, beam_start);
+            glm_vec3_copy(ray.origin, beam_start);
             
             vec3 forward;
             glm_vec3_copy(camera->forward, forward);
@@ -146,7 +141,7 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
 
             glm_vec3_add(beam_start, forward, beam_start);
 
-            r_add_partfx_shoot_beam(quark, &quark->renderer, beam_start, direction,
+            r_add_partfx_shoot_beam(quark, &quark->renderer, beam_start, ray.dir,
                 (hit) ? trace.distance : max_distance);
         }
     }

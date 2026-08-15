@@ -1,11 +1,11 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
-#include "math.h"
+#include "mathlib.h"
 #include "entity.h"
 
 #define PHYS_GRAVITY 9.81f
-#define PHYS_TRACE_STEP 0.01f
+#define PHYS_REST_VELOCITY 0.5f
 #define PHYS_MAX_IGNORE_ENTITES 1
 
 typedef enum phys_material_t {
@@ -24,9 +24,10 @@ typedef struct trace_result_t {
     vec3 point;
     vec3 normal;
     float distance;
-    float water_level;
+    bool starts_solid;
     vec3 enter_water_point;
-    bool start_in_water;
+    bool starts_in_water;
+    float water_level;
     entity_t* entity;
     int player_id;
     material_t* material;
@@ -35,9 +36,8 @@ typedef struct trace_result_t {
 
 bool phys_line_trace(
     quark_t* quark,
-    vec3 start,
-    vec3 dir,
-    double max_distance,
+    ray_t ray,
+    float max_distance,
     entlist_t* entlist,
     int ignore_player_id,
     int ignore_entities[PHYS_MAX_IGNORE_ENTITES],

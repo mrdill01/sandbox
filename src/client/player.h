@@ -1,7 +1,7 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "math.h"
+#include "mathlib.h"
 #include "physics.h"
 #include "editor.h"
 #include "item.h"

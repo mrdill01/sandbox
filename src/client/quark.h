@@ -8,7 +8,7 @@
 #include "client.h"
 #include "render.h"
 #include "audio.h"
-#include "math.h"
+#include "mathlib.h"
 #include "entity.h"
 #include "player.h"
 #include "map.h"

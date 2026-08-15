@@ -23,6 +23,11 @@ typedef struct {
     vec3 max;
 } bbox_t;
 
+typedef struct {
+    vec3 origin;
+    vec3 dir;
+} ray_t;
+
 float sign(float);
 float rad(float degrees);
 float deg(float radians);
@@ -44,10 +49,10 @@ bbox_t bbox_scale(bbox_t* bbox, vec3 scale);
 bool bbox_point_intersects(const bbox_t* bbox, vec3 point);
 bool bbox_sphere_intersects(const bbox_t* bbox, vec3 center, float radius);
 
-bool ray_intersects_mesh(vec3 ws, quat rotation, vec3 start, vec3 dir,
-    mesh_t* mesh, float* t, float max_t);
-bool ray_intersects_triangle(vec3 start, vec3 dir,
-    vec3 v0, vec3 v1, vec3 v2,
-    float* t, float* u, float* v, float max_t);
+void point_on_ray(ray_t ray, float t, vec3 end);
+bool raycast_bbox(ray_t ray, const bbox_t* box, float* t, float tmax);
+bool raycast_mesh(ray_t ray, vec3 position, quat rotation, mesh_t* mesh, float* t, float tmax);
+bool raycast_triangle(
+    ray_t ray, vec3 v0, vec3 v1, vec3 v2, float* t, float* u, float* v, float tmax);
 
 #endif

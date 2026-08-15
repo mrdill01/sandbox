@@ -7,6 +7,8 @@ void cl_init(quark_t* quark, client_t* client) {
     client->host = NULL;
     client->peer = NULL;
 
+    client->nbuffer = 0;
+
     client->has_sent_name = false;
     info(quark, "client initialized!");
 }
@@ -52,59 +54,82 @@ void cl_tick(quark_t* quark, client_t* client) {
     if (!client->host || !client->peer) return;
 
     cl_send(quark, client);
-    cl_recv(quark, client);    
-}
 
-void cl_send(quark_t* quark, client_t* client) {
-    if (!client->has_sent_name) {
-        uint8_t name[NET_MAX_PLAYER_NAME + 1];
-        sprintf((char*)name, cl_name.string);
-
-        cl_send_byte(quark, client, CSV_SET_NAME);
-        cl_send_bytes(quark, client, name);
-        client->has_sent_name = true;
-
-    } else {
-        cl_send_byte(quark, client, CSV_NOTHING);
-    }
-}
-
-void cl_recv(quark_t* quark, client_t* client) {
     ENetEvent event;
     while (enet_host_service(client->host, &event, NET_TIMEOUT_MSEC) > 0) {
         switch (event.type) {
+        case ENET_EVENT_TYPE_NONE: break;
         case ENET_EVENT_TYPE_CONNECT: break;
-        case ENET_EVENT_TYPE_RECEIVE: {
-            info(quark, "[client] recv: '%s'", event.packet->data);
-            uint8_t op = event.packet->data[0];
-            printf("%d\n", op);
-            switch (op) {
-            case SVC_NOTHING: break;
-            case SVC_DISCONNECT: {
-                uint8_t* reason = event.packet->data + 1;
-                info(quark, "[client] disconnected because '%s'", reason);
-                break;
-            }
-            }
-
-            enet_packet_destroy(event.packet);
+        case ENET_EVENT_TYPE_DISCONNECT:
+        case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
+            info(quark, "[client] lost connection");
+            quark->ui_state = UI_STATE_MAIN_MENU;
+            quark->renderer.ui.show_msgbox = true;
+            quark->renderer.ui.msgbox_message = "lost connection";
             break;
         }
-        case ENET_EVENT_TYPE_DISCONNECT:
-        case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT:
-        case ENET_EVENT_TYPE_NONE: break;
+        case ENET_EVENT_TYPE_RECEIVE: {
+            cl_recv(quark, client, event.packet);    
+            break;
+        }
         }
     }
 }
 
-void cl_send_byte(quark_t* quark, client_t* client, uint8_t byte) {
-    ENetPacket* packet = enet_packet_create(&byte, sizeof(uint8_t), ENET_PACKET_FLAG_RELIABLE);
+void cl_send(quark_t* quark, client_t* client) {
+    if (!cl_is_connected(quark, client)) return;
+
+    if (!client->has_sent_name) {
+        uint8_t msg[NET_MAX_PLAYER_NAME + 1];
+        sprintf((char*)msg, "%d%s", CSV_SET_NAME, cl_name.string);
+        cl_write_bytes(quark, client, msg, strlen((char*)msg) + 1);
+        client->has_sent_name = true;
+        info(quark, "[client] sending name...");
+    }
+
+    if (client->nbuffer == 0) {
+        cl_write_byte(quark, client, CSV_NOTHING);
+        cl_write_byte(quark, client, '\0');
+    }
+
+    ENetPacket* packet = enet_packet_create(
+        client->buffer, client->nbuffer, ENET_PACKET_FLAG_RELIABLE);
     enet_peer_send(client->peer, 0, packet);
+    enet_host_service(client->host, NULL, 0);
+    client->nbuffer = 0;
 }
 
-void cl_send_bytes(quark_t* quark, client_t* client, uint8_t* bytes, size_t len) {
+void cl_recv(quark_t* quark, client_t* client, ENetPacket* packet) {
+    info(quark, "[client] recv: '%s'", packet->data);
+    for (int i = 0; i < strlen((char*)packet->data); i++)
+        printf("  %d '%c'\n", packet->data[i], packet->data[i]);
+
+    uint8_t op = packet->data[0] - '0';
+    printf("%d\n", op);
+    switch (op) {
+    case SVC_NOTHING: break;
+    case SVC_DISCONNECT: {
+        uint8_t* reason = packet->data + 1;
+        info(quark, "[client] disconnected because '%s'", reason);
+        break;
+    }
+    }
+
+    enet_packet_destroy(packet);
+}
+
+void cl_write_byte(quark_t* quark, client_t* client, uint8_t byte) {
+    if (client->nbuffer == CLIENT_MAX_BUFFER) {
+        error(quark, "client->nbuffer reached %d", CLIENT_MAX_BUFFER);
+        return;
+    }
+
+    client->buffer[client->nbuffer++] = byte;
+}
+
+void cl_write_bytes(quark_t* quark, client_t* client, uint8_t* bytes, size_t len) {
     for (size_t i = 0; i < len; i++)
-        cl_send_byte(quark, client, bytes[i]);
+        cl_write_byte(quark, client, bytes[i]);
 }
 
 bool cl_is_connected(quark_t* quark, client_t* client) {

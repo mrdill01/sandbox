@@ -1,7 +1,7 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "math.h"
+#include "mathlib.h"
 #include "render.h"
 
 #include <stddef.h>

@@ -301,15 +301,15 @@ static void exit_water(quark_t* quark, player_t* player) {
 static void trace_ground(quark_t* quark, player_t* player, entlist_t* entlist, bool was_grounded) {
     if (player->move_mode == MOVE_FLIGHT) return;
 
-    vec3 start;
-    player_get_top_position(quark, player, start);
-    vec3 dir = {0.0f, -1.0f, 0.0f};
+    ray_t ray;
+    player_get_top_position(quark, player, ray.origin);
+    glm_vec3_copy((vec3){0.0f, -1.0f, 0.0f}, ray.dir);
     float max_distance = get_height(quark, player);
     trace_result_t trace;
     
     bool was_in_water = player->water_level > 0.0f;
 
-    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
+    if (phys_line_trace(quark, ray, max_distance, entlist, player->id, NULL, 0, &trace)) {
         player->position[1] = trace.point[1] + get_height(quark, player) / 2.0f;
         player->ground_mat = trace.phys_mat;
         player->water_level = trace.water_level;
@@ -338,27 +338,27 @@ static void trace_downforce(quark_t* quark, player_t* player, entlist_t* entlist
         player->move_mode == MOVE_FLIGHT)
         return;
     
-    vec3 start;
-    player_get_bottom_position(quark, player, start);
-    vec3 dir = {0.0f, -1.0f, 0.0f};
+    ray_t ray;
+    player_get_bottom_position(quark, player, ray.origin);
+    glm_vec3_copy((vec3){0.0f, -1.0f, 0.0f}, ray.dir);
     float max_distance = MAX_STEDOWN;
     trace_result_t trace;
     
-    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace))
+    if (phys_line_trace(quark, ray, max_distance, entlist, player->id, NULL, 0, &trace))
         player->position[1] = trace.point[1] + get_height(quark, player) / 2.0f;
 }
 
 static void trace_head(quark_t* quark, player_t* player, entlist_t* entlist) {
     if (player->move_mode == MOVE_FLIGHT) return;
 
-    vec3 start;
-    player_get_top_position(quark, player, start);
-    vec3 dir = {0.0f, 1.0f, 0.0f};
+    ray_t ray;
+    player_get_top_position(quark, player, ray.origin);
+    glm_vec3_copy((vec3){0.0f, 1.0f, 0.0f}, ray.dir);
     float max_distance = player->velocity[1] * quark->dt;
     trace_result_t trace;
     
     player->head_blocked = false;
-    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
+    if (phys_line_trace(quark, ray, max_distance, entlist, player->id, NULL, 0, &trace)) {
         player->head_blocked = true;
         player->velocity[1] = 0.0f;
     }
@@ -367,21 +367,19 @@ static void trace_head(quark_t* quark, player_t* player, entlist_t* entlist) {
 static void trace_walls(quark_t* quark, player_t* player, entlist_t* entlist) {
     return;
 
-    vec3 start;
-    glm_vec3_copy(player->position, start);
-    
-    vec3 dir;
-    glm_vec3_zero(dir);
+    ray_t ray;
+    glm_vec3_copy(player->position, ray.origin);
+    glm_vec3_zero(ray.dir);
     float speed = glm_vec3_dot(player->velocity, player->velocity);
     if (speed != 0.0f) {
-        glm_vec3_copy(player->velocity, dir);
-        glm_vec3_norm(dir);
+        glm_vec3_copy(player->velocity, ray.dir);
+        glm_vec3_norm(ray.dir);
     }
     
     float max_distance = speed * quark->dt;
     trace_result_t trace;
 
-    if (phys_line_trace(quark, start, dir, max_distance, entlist, player->id, NULL, 0, &trace)) {
+    if (phys_line_trace(quark, ray, max_distance, entlist, player->id, NULL, 0, &trace)) {
         float vel_dot_normal = glm_vec3_dot(player->velocity, trace.normal);
 
         vec3 slide;
@@ -390,9 +388,9 @@ static void trace_walls(quark_t* quark, player_t* player, entlist_t* entlist) {
 
         glm_vec3_copy(slide, player->velocity);
 
-        player->position[0] = trace.point[0] - dir[0] * 0.1f;
-        player->position[1] = trace.point[1] - dir[1] * 0.1f;
-        player->position[2] = trace.point[2] - dir[2] * 0.1f;
+        player->position[0] = trace.point[0] - ray.dir[0] * 0.1f;
+        player->position[1] = trace.point[1] - ray.dir[1] * 0.1f;
+        player->position[2] = trace.point[2] - ray.dir[2] * 0.1f;
     }
 }
 
@@ -452,9 +450,10 @@ static void tick_camera(quark_t* quark, player_t* player, camera_t* camera) {
         glm_vec3_scale(y_offset, 0.3f, y_offset);
         glm_vec3_add(camera->position, y_offset, camera->position);
 
-        vec3 dir;
-        glm_vec3_copy(camera->forward, dir);
-        glm_vec3_inv(dir);
+        ray_t ray;
+        glm_vec3_copy(camera->position, ray.origin);
+        glm_vec3_copy(camera->forward, ray.dir);
+        glm_vec3_inv(ray.dir);
 
         vec3 position;
         glm_vec3_copy(camera->position, position);
@@ -464,8 +463,7 @@ static void tick_camera(quark_t* quark, player_t* player, camera_t* camera) {
 
         if (player->vehicle != -1) {
             if (phys_line_trace(quark,
-                position,
-                dir,
+                ray,
                 camera_distance,
                 &quark->map.entlist,
                 player->id,
@@ -475,8 +473,7 @@ static void tick_camera(quark_t* quark, player_t* player, camera_t* camera) {
                 camera_distance = trace.distance - 0.1f;
         } else {
             if (phys_line_trace(quark,
-                position,
-                dir,
+                ray,
                 camera_distance,
                 &quark->map.entlist,
                 player->id,
@@ -494,17 +491,15 @@ static void tick_camera(quark_t* quark, player_t* player, camera_t* camera) {
 }
 
 static void trace_look_ray(quark_t* quark, player_t* player, camera_t* camera, entlist_t* entlist) {
-    vec3 start;
-    glm_vec3_copy(camera->position, start);
-    
-    vec3 dir;
-    glm_vec3_copy(camera->forward, dir);
-    float max_distance = 50.0f;
+    ray_t ray;
+    glm_vec3_copy(camera->position, ray.origin);
+    glm_vec3_copy(camera->forward, ray.dir);
+    float max_distance = 10.0f;
 
     player->look_entity = -1;
     player->head_in_water = false;
 
-    if (phys_line_trace(quark, start, dir, max_distance, entlist,
+    if (phys_line_trace(quark, ray, max_distance, entlist,
         player->id, NULL, 0, &player->look_trace))
     {
         player->editor.trace = player->look_trace;
@@ -553,7 +548,7 @@ static void trace_look_ray(quark_t* quark, player_t* player, camera_t* camera, e
         }
     }
 
-    if (player->look_trace.start_in_water) {
+    if (player->look_trace.starts_in_water) {
         player->head_in_water = true;
     }
 }
@@ -594,7 +589,7 @@ static void tick_grabbed_mesh(quark_t* quark, player_t* player) {
     if (player->grabbed_mesh == -1) return;
     entity_t* entity = quark->map.entlist.ents[player->grabbed_mesh];
 
-    float distance = glm_vec3_distance(quark->player->position, entity->position);
+    float distance = glm_vec3_distance(player->position, entity->position);
     float radius = bbox_get_enclosing_sphere(&entity->local_bbox);
     if (distance > radius) {
         vec3 direction;
@@ -603,7 +598,7 @@ static void tick_grabbed_mesh(quark_t* quark, player_t* player) {
 
         vec3 velocity;
         glm_vec3_copy(direction, velocity);
-        glm_vec3_scale(velocity, 1.0f * quark->dt, velocity);
+        glm_vec3_scale(velocity, 40.0f * quark->dt, velocity);
 
         glm_vec3_add(entity->velocity, velocity, entity->velocity);
     }
@@ -674,13 +669,20 @@ void player_tick(quark_t* quark, player_t* player, camera_t* camera, entlist_t* 
     prof_end(quark, &quark->prof);
 }
 
-void player_render(quark_t* quark, player_t* player, renderer_t* renderer) {
+static void render_look_entity_outline(quark_t* quark, player_t* player, renderer_t* renderer) {
     if (player->look_entity != -1 && player->vehicle == -1 && player->grabbed_mesh == -1) {
+        if (player->look_trace.entity->type == ENTITY_MESH &&
+            !quark->map.entlist.ents[player->look_entity]->data.mesh.enable_physics)
+            return;
+
         entity_t* vehicle = quark->map.entlist.ents[player->look_entity];
         r_add_line_box(quark, &quark->renderer,
             &vehicle->world_bbox, COLOR_LIGHT_BLUE, 0.0f);
     }
-    
+}
+
+void player_render(quark_t* quark, player_t* player, renderer_t* renderer) {
+    render_look_entity_outline(quark, player, renderer);
     player_render_body(quark, player, renderer);
     player_render_item(quark, player, renderer);
 }

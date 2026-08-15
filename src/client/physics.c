@@ -25,27 +25,73 @@ static void compute_trace_normal(trace_result_t* trace, const bbox_t* bbox) {
 
 bool phys_line_trace(
     quark_t* quark,
-    vec3 start,
-    vec3 dir,
-    double max_distance,
+    ray_t ray,
+    float max_distance,
     entlist_t* entlist,
     int ignore_player_id,
     int ignore_entities[PHYS_MAX_IGNORE_ENTITES],
     size_t nignore_entities,
     trace_result_t* out)
 {
+    if (nignore_entities > PHYS_MAX_IGNORE_ENTITES) {
+        error(quark, "nignore_entities > PHYS_MAX_IGNORE_ENTITES");
+        return false;
+    }
+
     trace_result_t trace;
-    glm_vec3_copy(start, trace.point);
+    glm_vec3_copy(ray.origin, trace.point);
     glm_vec3_zero(trace.normal);
-    trace.water_level = 0.0f;
+    trace.distance = 0.0f;
+    trace.starts_solid = false;
     glm_vec3_zero(trace.enter_water_point);
-    trace.start_in_water = false;
+    trace.starts_in_water = false;
+    trace.water_level = 0.0f;
     trace.entity = NULL;
     trace.player_id = -1;
     trace.material = NULL;
     trace.phys_mat = PHYS_MAT_NONE;
 
-    for (trace.distance = 0.0f; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
+    for (size_t i = 0; i < entlist->len; i++) {
+        entity_t* entity = entlist->ents[i];
+        if (!entity) continue;
+
+        bool skip_entity = false;
+        for (size_t j = 0; j < nignore_entities; j++)
+            if (ignore_entities[j] == entity->id)
+                skip_entity = true;
+
+        if (skip_entity)
+            continue;
+        
+        if (entity->type == ENTITY_MESH && !entity->data.mesh.enable_collision) continue;
+        if (entity->type == ENTITY_PROJECTILE) continue;
+
+        if (raycast_bbox(ray, &entity->world_bbox, &trace.distance, max_distance)) {
+            point_on_ray(ray, trace.distance, trace.point);
+            float distance_to_start = glm_vec3_distance(trace.point, ray.origin);
+
+            if (entity->data.mesh.materials[0]->is_water) {
+                if (trace.water_level == 0.0f)
+                    glm_vec3_copy(trace.point, trace.enter_water_point);
+
+                if (distance_to_start == 0.0f) trace.starts_in_water = true;
+                trace.water_level = (max_distance - trace.distance) / max_distance;
+                continue;
+            }
+
+            compute_trace_normal(&trace, &entity->world_bbox);
+            if (distance_to_start == 0.0f) trace.starts_solid = true;
+            trace.entity = entity;
+            trace.material = entity->data.mesh.materials[0];
+            trace.phys_mat = entity->data.mesh.materials[0]->phys_mat;
+
+            if (out)
+                *out = trace;
+            return true;
+        }
+    }
+    
+    /*for (trace.distance = 0.0f; trace.distance < max_distance; trace.distance += PHYS_TRACE_STEP) {
         for (size_t i = 0; i < entlist->len; i++) {
             entity_t* entity = entlist->ents[i];
             if (!entity) continue;
@@ -64,19 +110,12 @@ bool phys_line_trace(
             if (!bbox_point_intersects(&entity->world_bbox, trace.point))
                 continue;
             
-            /*if (ray_intersects_mesh(
-                entity->position, entity->rotation, start, dir,
-                entity->data.mesh.mesh, &trace.distance, max_distance))
-                continue;*/
+            //if (ray_intersects_mesh(
+            //   entity->position, entity->rotation, start, dir,
+            //    entity->data.mesh.mesh, &trace.distance, max_distance))
+            //    continue;
 
-            vec3 scaled_dir;
-            glm_vec3_copy(dir, scaled_dir);
-            glm_vec3_scale(scaled_dir, trace.distance, scaled_dir);
-
-            vec3 end;
-            glm_vec3_add(start, scaled_dir, end);
-
-            glm_vec3_copy(end, trace.point);
+            point_on_ray(ray, trace.distance, trace.point);
             
             if (entity->data.mesh.materials[0]->is_water) {
                 if (trace.enter_water_point[0] == 0.0f &&
@@ -128,9 +167,9 @@ bool phys_line_trace(
         }
 
         vec3 step;
-        glm_vec3_scale(dir, PHYS_TRACE_STEP, step);
+        glm_vec3_scale(ray.dir, PHYS_TRACE_STEP, step);
         glm_vec3_add(trace.point, step, trace.point);
-    }
+    }*/
 
     if (out)
         *out = trace;
