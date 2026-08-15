@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #define PROJECTILE_MAX_LIFETIME 3.0f
 #define PROJECTILE_PARTICLE_RATE 0.00001f

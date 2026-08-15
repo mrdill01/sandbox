@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void entity_init_vehicle(quark_t* quark,
     const char* name, vec3 position, mesh_t* mesh, vehicle_type_t type, entity_t** out)
@@ -11,6 +11,17 @@ void entity_init_vehicle(quark_t* quark,
 		entity->data.vehicle.materials[i] = NULL;
 	}
 	entity->data.vehicle.type = type;
+
+    switch (type) {
+    case VEHICLE_CAR: {
+        veh_car_t* car = &entity->data.vehicle.data.car;
+        break;
+    }
+    case VEHICLE_HELICOPTER: {
+        veh_helicopter_t* heli = &entity->data.vehicle.data.heli;
+        break;
+    }
+    }
 
     *out = entity;
 }

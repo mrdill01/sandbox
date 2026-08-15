@@ -1,6 +1,6 @@
 #include "gm.h"
-#include "quark.h"
-#include "player.h"
+#include "../shared/quark.h"
+#include "../client/player.h"
 
 static const char* game_mode_names[] = {"Capture the Flag"};
 static const char* game_state_names[] = {"Waiting for players...", "Warmup", "Playing"};
@@ -22,22 +22,10 @@ void gm_set_state(quark_t* quark, game_mode_t* gm, game_state_t state) {
     info(quark, "[gm] set game state to %s", game_state_names[state]);
 }
 
-player_t* gm_spawn_player(quark_t* quark, bool is_bot) {
-    int id = -1;
-    for (int i = 0; i < NET_MAX_PLAYERS; i++) {
-        if (!quark->players[i]) {
-            quark->players[i] = player_new(quark, i, is_bot);
-            id = i;
-            break;
-        }
-    }
+player_t* gm_spawn_player(quark_t* quark, int id, bool is_bot) {
+    quark->players[id] = player_new(quark, id, is_bot);
     
-    if (id == -1) {
-        error(quark, "the server is full");
-        return NULL;
-    }
-
-    info(quark, "spawning player #%d", id);
+    info(quark, "spawning player id %d", id);
     return quark->players[id];
 }
 

@@ -1,10 +1,14 @@
 #include "render.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #include "../../include/gl.h"
 
-static void render_items(quark_t* quark, renderer_t* renderer, inventory_t* inventory) {
+static void render_items(quark_t* quark, renderer_t* renderer) {
     prof_start(quark, &quark->prof);
+    if (!quark->player) {
+        prof_end(quark, &quark->prof);
+        return;
+    }
 
     r_set_shader(renderer, renderer->item_shader);
 
@@ -13,6 +17,7 @@ static void render_items(quark_t* quark, renderer_t* renderer, inventory_t* inve
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
+    inventory_t* inventory = &quark->player->inventory;
     for (int i = 0; i < INVENTORY_SLOTS; i++) {
         item_t* item = inventory->items[i];
         if (!item) continue;
@@ -467,7 +472,7 @@ void r_render(quark_t* quark, renderer_t* renderer) {
         player_render(quark, quark->players[i], renderer);
     }
 
-    render_items(quark, renderer, &quark->player->inventory);
+    render_items(quark, renderer);
     render_shadows(quark, renderer);
     render_gbuffer(quark, renderer);
     render_skybox(quark, renderer);

@@ -1,5 +1,5 @@
 #include "player.h"
-#include "quark.h"
+#include "../shared/quark.h"
 #include "entity.h"
 
 #define HEIGHT 1.5f
@@ -36,8 +36,6 @@ player_t* player_new(quark_t* quark, int id, bool is_bot) {
     player->id = id;
     player->is_me = false;
     player->is_bot = is_bot;
-    player->name = malloc(NET_MAX_PLAYER_NAME);
-    strcpy(player->name, cl_name.string);
     player->move_mode = MOVE_WALK;
     update_bbox(quark, player);
     glm_vec3_copy((vec3){0.0f, 2.0f, -4.5f}, player->position);
@@ -75,7 +73,6 @@ player_t* player_new(quark_t* quark, int id, bool is_bot) {
 
 void player_free(quark_t* quark, player_t* player) {
     inventory_free(quark, &player->inventory);
-    free(player->name);
     free(player);
 }
 
@@ -606,6 +603,11 @@ static void tick_grabbed_mesh(quark_t* quark, player_t* player) {
 
 void player_tick(quark_t* quark, player_t* player, camera_t* camera, entlist_t* entlist) {
     prof_start(quark, &quark->prof);
+
+    if (!player) {
+        prof_end(quark, &quark->prof);
+        return;
+    }
 
     if (player->buttons & PLAYER_BUTTON_CROUCH) set_move_mode(player, MOVE_CROUCH);
     else if (player->buttons & PLAYER_BUTTON_SPRINT) set_move_mode(player, MOVE_SPRINT);

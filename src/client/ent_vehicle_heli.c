@@ -1,10 +1,10 @@
 #include "entity.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void entity_tick_vehicle_helicopter(
     quark_t* quark,
     entity_t* entity,
-    veh_helicopter* heli)
+    veh_helicopter_t* heli)
 {
     vec3 move;
     glm_vec3_copy(entity->velocity, move);

@@ -1,5 +1,5 @@
 #include "player.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 static void reset_input(quark_t* quark, player_t* player) {
     glm_vec3_zero(player->move_input);

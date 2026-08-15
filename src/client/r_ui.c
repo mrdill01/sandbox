@@ -1,5 +1,5 @@
 #include "render.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #include <malloc.h>
 
@@ -646,9 +646,11 @@ void ui_render(quark_t* quark, ui_t* ui, renderer_t* renderer) {
         break;
     }
     case UI_STATE_IN_GAME: {
-        draw_debug_menu(quark, renderer, ui);
-        draw_hud(quark, ui, quark->player);
-        draw_edit_mode(quark, ui);
+        if (quark->player) {
+            draw_debug_menu(quark, renderer, ui);
+            draw_hud(quark, ui, quark->player);
+            draw_edit_mode(quark, ui);
+        }
         break;
     }
     case UI_STATE_PAUSE_MENU: {

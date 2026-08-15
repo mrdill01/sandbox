@@ -64,15 +64,18 @@ typedef enum {
 } vehicle_type_t;
 
 typedef struct {
+} veh_car_t;
 
-} veh_helicopter;
+typedef struct {
+} veh_helicopter_t;
 
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
     vehicle_type_t type;
     union {
-        veh_helicopter heli;
+        veh_car_t car;
+        veh_helicopter_t heli;
     } data;
 } entity_vehicle_t;
 
@@ -149,7 +152,7 @@ void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_
 void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t* explosion);
 void entity_tick_pickup(quark_t* quark, entity_t* entity, entity_pickup_t* pickup);
 void entity_tick_vehicle(quark_t* quark, entity_t* entity, entity_vehicle_t* vehicle);
-void entity_tick_vehicle_helicopter(quark_t* quark, entity_t* entity, veh_helicopter* heli);
+void entity_tick_vehicle_helicopter(quark_t* quark, entity_t* entity, veh_helicopter_t* heli);
 
 mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity);
 void entity_get_materials(quark_t* quark, entity_t* entity, material_t** materials, size_t* nmaterials);

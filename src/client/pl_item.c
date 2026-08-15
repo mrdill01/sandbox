@@ -1,5 +1,5 @@
 #include "player.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #define VIEWMODEL_POS_X -0.05f
 #define VIEWMODEL_POS_Y -0.1f

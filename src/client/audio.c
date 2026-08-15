@@ -1,5 +1,5 @@
 #include "audio.h"
-#include "quark.h"
+#include "../shared/quark.h"
 #include "player.h"
 #include "render.h"
 

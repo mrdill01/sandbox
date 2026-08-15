@@ -1,5 +1,5 @@
 #include "../shared/net.h"
-#include "../client/quark.h"
+#include "../shared/quark.h"
 
 #define ENET_IMPLEMENTATION
 #define ENET_DLL

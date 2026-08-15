@@ -1,5 +1,5 @@
 #include "physics.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 static void compute_trace_normal(trace_result_t* trace, const bbox_t* bbox) {
     vec3 center;

@@ -1,5 +1,5 @@
 #include "command.h"
-#include "quark.h"
+#include "../shared/quark.h"
 #include "console.h"
 #include "../shared/net.h"
 
@@ -144,15 +144,15 @@ void cmd_run(quark_t* quark, const char* name, const char** args, int argc) {
         }
 
         if (strcmp(args[0], "spawn") == 0) {
-            player_t* bot = gm_spawn_player(quark, true);
+            player_t* bot = gm_spawn_player(quark, 1, true);
             player_teleport(quark, bot, quark->player->look_trace.point);
         
         } else if (strcmp(args[0], "kickall") == 0) {
             for (int i = 0; i < NET_MAX_PLAYERS; i++) {
-                player_t* player = quark->players[i];
-                if (!player) continue;
-                if (player->is_bot) {
-                    player_free(quark, player);
+                player_t* bot = quark->players[i];
+                if (!bot) continue;
+                if (bot->is_bot) {
+                    player_free(quark, bot);
                     quark->players[i] = NULL;
                 }
             }
@@ -177,10 +177,6 @@ void cmd_run(quark_t* quark, const char* name, const char** args, int argc) {
         SDL_GL_SwapWindow(quark->window);
 
         map_load(quark, &quark->map);
-
-        quark->players[0] = gm_spawn_player(quark, false);
-        quark->player = quark->players[0];
-        quark->player->is_me = true;
         return;
     }
 

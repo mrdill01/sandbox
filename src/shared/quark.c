@@ -1,5 +1,5 @@
 #include "quark.h"
-#include "../shared/net.h"
+#include "net.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -138,6 +138,7 @@ void quark_init(quark_t* quark) {
 
 	for (int i = 0; i < NET_MAX_PLAYERS; i++)
 		quark->players[i] = NULL;
+	quark->player = NULL;
 }
 
 void quark_free(quark_t* quark) {
@@ -164,7 +165,7 @@ void quark_tick(quark_t* quark) {
 		player_t* player = quark->players[i];
 		if (!player) continue;
 		player_input(quark, player);
-		player_tick(quark, quark->players[i], &quark->renderer.camera, &quark->map.entlist);
+		player_tick(quark, player, &quark->renderer.camera, &quark->map.entlist);
 	}
 
 	map_tick(quark, &quark->map);

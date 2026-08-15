@@ -2,10 +2,13 @@
 #define SERVER_H
 
 #include "../shared/net.h"
+#include "../client/player.h"
 
 #include <stdbool.h>
 
 #include "../../include/enet.h"
+
+#define SERVER_MAX_BUFFER 1024
 
 typedef struct quark_t quark_t;
 
@@ -19,6 +22,9 @@ typedef struct sv_client_t {
     ENetPeer* peer;
     int id;
     char* name;
+
+    uint8_t buffer[SERVER_MAX_BUFFER];
+    size_t nbuffer;
 } sv_client_t;
 
 void sv_init(quark_t* quark, server_t* server);

@@ -1,5 +1,5 @@
 #include "render.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #define PITCH_LIMIT 89.99
 

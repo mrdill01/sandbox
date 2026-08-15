@@ -1,5 +1,5 @@
 #include "map.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void map_init(quark_t* quark, map_t* map) {
     map->is_loaded = false;

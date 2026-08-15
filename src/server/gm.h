@@ -26,7 +26,7 @@ typedef struct {
 void gm_start(quark_t* quark, game_mode_t* gm, game_mode_type_t gm_type);
 void gm_tick(quark_t* quark, game_mode_t* gm);
 void gm_set_state(quark_t* quark, game_mode_t* gm, game_state_t state);
-player_t* gm_spawn_player(quark_t* quark, bool is_bot);
+player_t* gm_spawn_player(quark_t* quark, int id, bool is_bot);
 void gm_respawn_player(quark_t* quark, player_t* player);
 
 #endif

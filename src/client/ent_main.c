@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void entity_init_common(
 	quark_t* quark, const char* name, entity_type_t type, vec3 position, entity_t** out)

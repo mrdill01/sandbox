@@ -1,5 +1,5 @@
 #include "../server/server.h"
-#include "../client/quark.h"
+#include "../shared/quark.h"
 #include "../shared/net.h"
 #include "../client/mathlib.h"
 
@@ -81,14 +81,20 @@ void sv_tick(quark_t* quark, server_t* server) {
 void sv_send(quark_t* quark, server_t* server) {
     for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
         sv_client_t* client = server->clients[i];
-        if (!client) continue;
+        if (!client || !client->peer) continue;
 
         sv_write_byte(quark, server, client, SVC_NOTHING);
+
+        ENetPacket* packet = enet_packet_create(
+            client->buffer, client->nbuffer, ENET_PACKET_FLAG_RELIABLE);
+        enet_peer_send(client->peer, 0, packet);
+        enet_host_service(server->host, NULL, 0);
+        client->nbuffer = 0;
     }
 }
 
 void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* packet) {
-    uint8_t op = packet->data[0] - '0';
+    uint8_t op = packet->data[0];
     
     switch (op) {
     case CSV_NOTHING: break;
@@ -98,6 +104,9 @@ void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* 
         enet_address_get_host_ip(&client->peer->address, ip, 32);
 
         info(quark, "[server] %s set name to '%s'", ip, name);
+
+        sv_write_byte(quark, server, client, SVC_SPAWN_ID);
+        sv_write_byte(quark, server, client, 0);
         break;
     }
     }
@@ -106,11 +115,12 @@ void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* 
 }
 
 void sv_write_byte(quark_t* quark, server_t* server, sv_client_t* client, uint8_t byte) {
-    /*if (!client->peer || !server->host) return;
-    
-    ENetPacket* packet = enet_packet_create(&byte, sizeof(uint8_t), ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send(client->peer, 0, packet);
-    enet_host_service(server->host, NULL, 0);*/
+    if (client->nbuffer == SERVER_MAX_BUFFER) {
+        error(quark, "[server] client->nbuffer reached %d", SERVER_MAX_BUFFER);
+        return;
+    }
+
+    client->buffer[client->nbuffer++] = byte;
 }
 
 void sv_write_bytes(
@@ -125,16 +135,16 @@ void sv_write_bytes(
 }
 
 int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer) {
-    int slot = -1;
+    int id = -1;
     for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
         sv_client_t* client = server->clients[i];
         if (!client) {
-            slot = i;
+            id = i;
             break;
         }
     }
 
-    if (slot == -1) {
+    if (id == -1) {
         char reason[64];
         sprintf(reason, "the server is full (%d/%d players)", NET_MAX_PLAYERS, NET_MAX_PLAYERS);
         sv_disconnect_client(quark, server, peer, reason);
@@ -143,29 +153,33 @@ int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer) {
 
     sv_client_t* client = malloc(sizeof(sv_client_t));
     client->peer = peer;
-    client->id = 0;
+    client->id = id;
     client->name = NULL;
-    server->clients[slot] = client;
-    return slot;
+
+    client->nbuffer = 0;
+
+    quark->players[id] = gm_spawn_player(quark, id, false);
+    quark->player = quark->players[id];
+    quark->player->is_me = true;
+
+    server->clients[id] = client;
+    return id;
 }
 
 void sv_disconnect_client(quark_t* quark, server_t* server, ENetPeer* peer, const char* reason) {
     uint8_t msg[64];
-    sprintf((char*)msg, "%d%s", SVC_DISCONNECT, reason);
+    sprintf((char*)msg, "%s", reason);
 
-    ENetPacket* packet = enet_packet_create(msg, sizeof(msg), ENET_PACKET_FLAG_RELIABLE);
-    enet_peer_send(peer, 0, packet);
+    sv_client_t* client = sv_get_client(quark, server, peer);
+    sv_write_byte(quark, server, client, SVC_DISCONNECT);
 
     enet_peer_disconnect_later(peer, 0);
-    enet_host_service(server->host, NULL, 0);
 }
 
 sv_client_t* sv_get_client(quark_t* quark, server_t* server, ENetPeer* peer) {
     for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
         sv_client_t* client = server->clients[i];
-        if (!client) continue;
-        if (client->peer == peer)
-            return client;
+        if (client && client->peer == peer) return client;
     }
 
     return NULL;

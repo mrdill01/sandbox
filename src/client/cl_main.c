@@ -1,5 +1,5 @@
 #include "client.h"
-#include "quark.h"
+#include "../shared/quark.h"
 #include "../shared/net.h"
 
 void cl_init(quark_t* quark, client_t* client) {
@@ -80,8 +80,10 @@ void cl_send(quark_t* quark, client_t* client) {
     if (!cl_is_connected(quark, client)) return;
 
     if (!client->has_sent_name) {
-        uint8_t msg[NET_MAX_PLAYER_NAME + 1];
-        sprintf((char*)msg, "%d%s", CSV_SET_NAME, cl_name.string);
+        uint8_t msg[NET_MAX_PLAYER_NAME_LEN + 1];
+        sprintf((char*)msg, "%s", cl_name.string);
+
+        cl_write_byte(quark, client, CSV_SET_NAME);
         cl_write_bytes(quark, client, msg, strlen((char*)msg) + 1);
         client->has_sent_name = true;
         info(quark, "[client] sending name...");
@@ -100,17 +102,19 @@ void cl_send(quark_t* quark, client_t* client) {
 }
 
 void cl_recv(quark_t* quark, client_t* client, ENetPacket* packet) {
-    info(quark, "[client] recv: '%s'", packet->data);
-    for (int i = 0; i < strlen((char*)packet->data); i++)
-        printf("  %d '%c'\n", packet->data[i], packet->data[i]);
-
-    uint8_t op = packet->data[0] - '0';
-    printf("%d\n", op);
+    uint8_t op = packet->data[0];
     switch (op) {
     case SVC_NOTHING: break;
     case SVC_DISCONNECT: {
         uint8_t* reason = packet->data + 1;
         info(quark, "[client] disconnected because '%s'", reason);
+        break;
+    }
+    case SVC_SPAWN_ID: {
+        uint8_t id = packet->data[1];
+        info(quark, "[client] spawning with id %d", id);
+        quark->player = quark->players[id];
+        quark->player->is_me = true;
         break;
     }
     }
@@ -120,7 +124,7 @@ void cl_recv(quark_t* quark, client_t* client, ENetPacket* packet) {
 
 void cl_write_byte(quark_t* quark, client_t* client, uint8_t byte) {
     if (client->nbuffer == CLIENT_MAX_BUFFER) {
-        error(quark, "client->nbuffer reached %d", CLIENT_MAX_BUFFER);
+        error(quark, "[client] client->nbuffer reached %d", CLIENT_MAX_BUFFER);
         return;
     }
 

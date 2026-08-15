@@ -1,18 +1,18 @@
 #ifndef SBOX_H
 #define SBOX_H
 
-#include "config.h"
-#include "console.h"
-#include "profiler.h"
+#include "../client/config.h"
+#include "../client/console.h"
+#include "../client/profiler.h"
 #include "../server/server.h"
-#include "client.h"
-#include "render.h"
-#include "audio.h"
-#include "mathlib.h"
-#include "entity.h"
-#include "player.h"
-#include "map.h"
-#include "gm.h"
+#include "../client/client.h"
+#include "../client/render.h"
+#include "../client/audio.h"
+#include "../client/mathlib.h"
+#include "../client/entity.h"
+#include "../client/player.h"
+#include "../client/map.h"
+#include "../server/gm.h"
 
 #include <stdlib.h>
 #include <stdio.h>

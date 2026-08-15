@@ -1,5 +1,5 @@
 #include "item.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 item_t* item_new(quark_t* quark,
     item_type_t type,

@@ -1,5 +1,5 @@
 #include "console.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void con_init(quark_t* quark, console_t* con) {
     con->input[0] = '\0';

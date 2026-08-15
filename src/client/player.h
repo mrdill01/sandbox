@@ -75,7 +75,6 @@ typedef struct player_t {
     int id;
     bool is_me;
     bool is_bot;
-    char* name;
     move_mode_t move_mode;
     bbox_t bbox;
     vec3 position;

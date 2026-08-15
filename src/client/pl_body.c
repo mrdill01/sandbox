@@ -1,5 +1,5 @@
 #include "player.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 static body_part_t create_body_part(
     quark_t* quark, const char* path, vec3 offset, body_part_t* parent)

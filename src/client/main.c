@@ -1,4 +1,4 @@
-#include "quark.h"
+#include "../shared/quark.h"
 #include "render.h"
 
 #include <stdlib.h>

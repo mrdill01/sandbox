@@ -1,5 +1,5 @@
 #include "render.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 #include "../../include/gl.h"
 

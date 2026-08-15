@@ -1,5 +1,5 @@
 #include "profiler.h"
-#include "quark.h"
+#include "../shared/quark.h"
 
 void prof_init(quark_t* quark, profiler_t* prof) {
     for (int i = 0; i < MAX_PROFILER_FUNCS; i++) {
