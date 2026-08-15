@@ -9,6 +9,7 @@ cmd_t cvarlist = {"cvarlist", "", "Prints all cvars to the console.", false};
 cmd_t reset = {"reset", "", "Resets a cvar to its default value.", false};
 cmd_t clear = {"clear", "", "Clears the console history.", false};
 cmd_t teleport = {"teleport", "<x> <y> <z>", "Teleports to a position.", true};
+cmd_t hurt = {"hurt", "<damage>", "Hurts the player.", true};
 cmd_t bot = {"bot", "<spawn|kickall>", "Adds or removes bots from the game", true};
 cmd_t host = {"host", "", "Hosts a new game.", false};
 cmd_t connect_ = {"connect", "<ip> <port>", "Connects the client to a server.", false};
@@ -22,6 +23,7 @@ void cmd_init(quark_t* quark) {
     cmd_register(quark, &reset);
     cmd_register(quark, &clear);
     cmd_register(quark, &teleport);
+    cmd_register(quark, &hurt);
     cmd_register(quark, &bot);
     cmd_register(quark, &host);
     cmd_register(quark, &connect_);
@@ -134,6 +136,17 @@ void cmd_run(quark_t* quark, const char* name, const char** args, int argc) {
         float z = atof(args[2]);
 
         player_teleport(quark, quark->player, (vec3){x, y, z});
+        return;
+    }
+
+    if (strcmp(cmd->name, "hurt") == 0) {
+        if (argc != 1) {
+            cmd_show_usage(quark, cmd->name);
+            return;
+        }
+
+        float damage = atof(args[0]);
+        player_add_damage(quark, quark->player, damage);
         return;
     }
 

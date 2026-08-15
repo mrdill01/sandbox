@@ -19,6 +19,7 @@ extern cmd_t cvarlist;
 extern cmd_t reset;
 extern cmd_t clear;
 extern cmd_t teleport;
+extern cmd_t hurt;
 extern cmd_t bot;
 extern cmd_t host;
 extern cmd_t connect_;

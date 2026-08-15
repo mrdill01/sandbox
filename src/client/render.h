@@ -1,7 +1,7 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "mathlib.h"
+#include "../shared/mathlib.h"
 
 #include <stdint.h>
 #include <stddef.h>

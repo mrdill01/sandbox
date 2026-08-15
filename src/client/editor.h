@@ -1,9 +1,9 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-#include "mathlib.h"
-#include "entity.h"
-#include "physics.h"
+#include "../shared/mathlib.h"
+#include "../shared/entity.h"
+#include "../shared/physics.h"
 
 #include <stdbool.h>
 

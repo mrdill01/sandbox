@@ -1,6 +1,6 @@
 #include "audio.h"
 #include "../shared/quark.h"
-#include "player.h"
+#include "../shared/player.h"
 #include "render.h"
 
 #include <SDL2/SDL_audio.h>

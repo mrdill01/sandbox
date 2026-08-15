@@ -1,7 +1,7 @@
 #include "../server/server.h"
 #include "../shared/quark.h"
 #include "../shared/net.h"
-#include "../client/mathlib.h"
+#include "../shared/mathlib.h"
 
 void sv_init(quark_t* quark, server_t* server) {
     server->is_running = false;

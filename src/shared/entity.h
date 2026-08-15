@@ -1,8 +1,8 @@
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "mathlib.h"
-#include "render.h"
+#include "../shared/mathlib.h"
+#include "../client/render.h"
 
 #include <stddef.h>
 

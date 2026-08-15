@@ -1,5 +1,5 @@
 #include "player.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 static void reset_input(quark_t* quark, player_t* player) {
     glm_vec3_zero(player->move_input);
@@ -62,7 +62,7 @@ void player_input(quark_t* quark, player_t* player) {
 
     if (quark->keys[SDL_SCANCODE_V]) {
         quark->keys[SDL_SCANCODE_V] = false;
-        player_add_damage(quark, player, 10.0f);
+        cmd_run(quark, "hurt", (const char*[]){"10.0f"}, 1);
     }
 
     /*if (quark->mxdt != 0.0f)

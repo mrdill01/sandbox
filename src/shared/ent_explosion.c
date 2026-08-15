@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 void entity_init_explosion(quark_t* quark,
 	const char* name, vec3 position, float radius, vec3 direction,

@@ -1,6 +1,6 @@
 #include "gm.h"
 #include "../shared/quark.h"
-#include "../client/player.h"
+#include "../shared/player.h"
 
 static const char* game_mode_names[] = {"Capture the Flag"};
 static const char* game_state_names[] = {"Waiting for players...", "Warmup", "Playing"};

@@ -1,5 +1,5 @@
 #include "mathlib.h"
-#include "render.h"
+#include "../client/render.h"
 
 float sign(float num) {
     if (num < 0.0f) return -1.0f;

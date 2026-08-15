@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 void entity_tick_vehicle_helicopter(
     quark_t* quark,

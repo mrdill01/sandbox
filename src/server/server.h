@@ -2,7 +2,7 @@
 #define SERVER_H
 
 #include "../shared/net.h"
-#include "../client/player.h"
+#include "../shared/player.h"
 
 #include <stdbool.h>
 

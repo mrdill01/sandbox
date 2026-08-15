@@ -8,9 +8,9 @@
 #include "../client/client.h"
 #include "../client/render.h"
 #include "../client/audio.h"
-#include "../client/mathlib.h"
-#include "../client/entity.h"
-#include "../client/player.h"
+#include "../shared/mathlib.h"
+#include "../shared/entity.h"
+#include "../shared/player.h"
 #include "../client/map.h"
 #include "../server/gm.h"
 

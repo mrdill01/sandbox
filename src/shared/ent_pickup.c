@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 void entity_init_pickup(quark_t* quark,
     const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out)

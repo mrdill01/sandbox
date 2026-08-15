@@ -3,8 +3,8 @@
 
 #include "mathlib.h"
 #include "physics.h"
-#include "editor.h"
-#include "item.h"
+#include "../client/editor.h"
+#include "../client/item.h"
 
 typedef struct quark_t quark_t;
 typedef struct camera_t camera_t;

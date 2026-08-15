@@ -1,7 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "physics.h"
+#include "../shared/physics.h"
 
 #include <stdbool.h>
 

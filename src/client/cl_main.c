@@ -69,7 +69,7 @@ void cl_tick(quark_t* quark, client_t* client) {
             break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
-            cl_recv(quark, client, event.packet);    
+            cl_recv(quark, client, event.packet);
             break;
         }
         }

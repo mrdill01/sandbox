@@ -1,5 +1,5 @@
 #include "player.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 #define VIEWMODEL_POS_X -0.05f
 #define VIEWMODEL_POS_Y -0.1f
@@ -22,11 +22,8 @@ static void tick_item(quark_t* quark, player_t* player, entlist_t* entlist) {
 
 static void tick_item_position(quark_t* quark, player_t* player) {
     vec3 target;
-
     item_t* item = inventory_get_item(quark, &quark->player->inventory);
-    if (item->data.weapon.is_reloading) {
-        target[1] = -1.0f;
-    } else if (player->buttons & PLAYER_BUTTON_AIM) {
+    if (player->buttons & PLAYER_BUTTON_AIM) {
         target[0] = 0.0f;
         target[1] = 0.0f;
         target[2] = 0.2f;
@@ -46,7 +43,7 @@ static void tick_item_anim(quark_t* quark, player_t* player, item_t* item) {
     if (!item) return;
 
     if (quark->time - player->inventory.last_switch < WEAPON_SWITCH_DELAY - 0.2f) {
-        player->item_anim[1] = -0.65f;
+        player->item_anim[1] = -1.0f;
         player->item_anim_angles[0] = -90.0f;
         player->item_anim_angles[1] = 35.0f;
         return;
@@ -80,21 +77,12 @@ static void tick_item_anim(quark_t* quark, player_t* player, item_t* item) {
             quark->dt);
     }
 
-
-
-    if (player->target_speed < 1.0f || !player->is_grounded) {
-        float reset_speed = 5.0f;
-        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, quark->dt);
-        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, quark->dt);
-
-        float y = clamp(-player->velocity[1], -0.024f, 0.024f);
-        float y_speed = 7.0f;
-        player->item_anim[1] = interp_to(player->item_anim[1], y, y_speed, quark->dt);
-        return;
-    }
-
     vec3 anim;
-    if (player->buttons & PLAYER_BUTTON_AIM) {
+    glm_vec3_zero(anim);
+
+    if (item->type == ITEM_WEAPON && item->data.weapon.is_reloading) {
+        anim[1] = -1.0f;
+    } else if (player->buttons & PLAYER_BUTTON_AIM) {
         anim[0] = 0.0f;
         anim[1] = 0.0f;
         anim[2] = 0.0f;
@@ -106,6 +94,14 @@ static void tick_item_anim(quark_t* quark, player_t* player, item_t* item) {
         anim[0] = 0.0f;
         anim[1] = 0.0f;
         anim[2] = sin(player->walk_timer * 5.0f * speed) * 0.025f;
+    } else {
+        float reset_speed = 5.0f;
+        player->item_anim[0] = interp_to(player->item_anim[0], 0.0f, reset_speed, quark->dt);
+        player->item_anim[2] = interp_to(player->item_anim[2], 0.0f, reset_speed, quark->dt);
+
+        float y = clamp(-player->velocity[1], -0.024f, 0.024f);
+        float y_speed = 7.0f;
+        player->item_anim[1] = interp_to(player->item_anim[1], y, y_speed, quark->dt);
     }
 
     float set_speed = 6.5f;

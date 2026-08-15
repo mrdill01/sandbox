@@ -1,4 +1,4 @@
-#include "player.h"
+#include "../shared/player.h"
 #include "../shared/quark.h"
 
 void bot_init(quark_t* quark, player_t* bot) {

@@ -25,9 +25,9 @@ vec3 add_wind(vec3 vertex_position) {
     const float amount = 0.125f;
     float height_scaling = clamp(vertex_position.y / hitbox_height, 0.0f, 1.0f);
     
-    vertex_position.x += sin(time * speed) * cos(time * vertex_position.z * speed * 0.5f) *
+    vertex_position.x += sin(time + speed) * cos(time + vertex_position.z + speed * 0.5f) *
         amount * height_scaling * wind_factor;
-    vertex_position.z += sin(time * speed * 0.25f) * cos(time * vertex_position.x * speed * 0.125f) *
+    vertex_position.z += sin(time + speed * 0.25f) * cos(time + vertex_position.x + speed * 0.125f) *
         amount * height_scaling * wind_factor;
 
     return vertex_position;

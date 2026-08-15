@@ -1,7 +1,7 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "entity.h"
+#include "../shared/entity.h"
 #include "render.h"
 
 typedef struct quark_t quark_t;

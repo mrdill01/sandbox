@@ -1,6 +1,6 @@
 #include "editor.h"
 #include "../shared/quark.h"
-#include "player.h"
+#include "../shared/player.h"
 
 void edit_init(quark_t* quark, editor_t* editor) {
     editor->selection = NULL;

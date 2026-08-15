@@ -248,10 +248,6 @@ static void draw_debug_menu(quark_t* quark, renderer_t* renderer, ui_t* ui) {
     ui_draw_text_shadow(quark, ui, text, position, font_size, COLOR_WHITE);
 
     position[1] += spacing;
-    sprintf(text, "accuracy: %g", player_get_accuracy(quark, quark->player));
-    ui_draw_text_shadow(quark, ui, text, position, font_size, COLOR_WHITE);
-
-    position[1] += spacing;
     sprintf(text, "server: %s", (quark->server.is_running) ? "running" : "stopped");
     ui_draw_text_shadow(quark, ui, text, position, font_size, COLOR_WHITE);
 

@@ -1,5 +1,5 @@
 #include "entity.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 void entity_init_mesh(quark_t* quark,
 	const char* name, float x, float y, float z, mesh_t* mesh, entity_t** out)

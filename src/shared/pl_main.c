@@ -1,5 +1,5 @@
 #include "player.h"
-#include "../shared/quark.h"
+#include "quark.h"
 #include "entity.h"
 
 #define HEIGHT 1.5f
