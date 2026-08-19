@@ -16,8 +16,9 @@ cvar_t sv_round_time = {"sv_round_time", "600", true, false,
 cvar_t sv_timescale = {"sv_timescale", "1.0f", true, true,
 	"Set to values less than 1.0 for slow-motion."};
 cvar_t sv_respawn_time = {"sv_respawn_time", "3.0f", true, false, "How long for players to respawn."};
-cvar_t sv_destruction = {"sv_destruction", "1", false, true,
+cvar_t sv_destruction = {"sv_destruction", "1", true, true,
 	"Allow the map to be destroyed by explosions."};
+cvar_t sv_inf_ammo = {"sv_inf_ammo", "1", true, true, "Enables infinite ammo."};
 cvar_t sv_random_seed = {"sv_random_seed", "12345", true, false, "Random seed value."};
 cvar_t r_width = {"r_width", "960.0f", true, false, "Renderer width."};
 cvar_t r_height = {"r_height", "540.0f", true, false, "Renderer height."};
@@ -27,10 +28,13 @@ cvar_t r_vsync = {"r_vsync", "0", true, false, "Vertical sync."};
 cvar_t r_fov = {"r_fov", "100.0f", true, false, "Field-of-view."};
 cvar_t r_shadows = {"r_shadows", "1", true, false, "Enable shadows."};
 cvar_t r_shadow_res = {"r_shadow_res", "1024.0", true, false, "Shadow resolution."};
+cvar_t r_particles = {"r_particles", "1.0", true, false, "Particle amount multiplier."};
+cvar_t r_ssao = {"r_ssao", "0", true, false, "Enables Screen-Space Ambient Occlusion."};
 cvar_t r_third_person = {"r_third_person", "0", true, false, "Enable third-person camera."};
 cvar_t r_viewmodel = {"r_viewmodel", "1", true, false,
 	"Enables or disables rendering of the viewmodel."};
 cvar_t r_hud = {"r_hud", "1", true, true, "Enables or disables rendering of the heads-up-display."};
+cvar_t r_wireframe = {"r_wireframe", "0", true, true, "Render in wireframe mode."};
 cvar_t r_debug_menu = {"r_debug_menu", "1", true, false, "Debug menu."};
 cvar_t r_debug_colliders = {"r_debug_colliders", "0", true, true,
 	"Draw colliders."};
@@ -69,6 +73,7 @@ void quark_init(quark_t* quark) {
     cvar_register(quark, &sv_timescale, NULL);
     cvar_register(quark, &sv_respawn_time, NULL);
     cvar_register(quark, &sv_destruction, NULL);
+    cvar_register(quark, &sv_inf_ammo, NULL);
     cvar_register(quark, &sv_random_seed, NULL);
     cvar_register(quark, &cl_name, NULL);
     cvar_register(quark, &r_width, NULL);
@@ -79,9 +84,12 @@ void quark_init(quark_t* quark) {
     cvar_register(quark, &r_fov, NULL);
     cvar_register(quark, &r_shadows, NULL);
     cvar_register(quark, &r_shadow_res, NULL);
+    cvar_register(quark, &r_particles, NULL);
+    cvar_register(quark, &r_ssao, NULL);
     cvar_register(quark, &r_third_person, NULL);
     cvar_register(quark, &r_viewmodel, NULL);
     cvar_register(quark, &r_hud, NULL);
+    cvar_register(quark, &r_wireframe, NULL);
     cvar_register(quark, &r_debug_menu, NULL);
     cvar_register(quark, &r_debug_colliders, NULL);
     cvar_register(quark, &r_debug_bullets, NULL);
@@ -101,6 +109,8 @@ void quark_init(quark_t* quark) {
 
 	cfg_write(quark, DEFAULT_CFG_PATH);
 
+	quark->progress_text[0] = '\0';
+	
 	quark->running = true;
 	quark->now = SDL_GetPerformanceCounter();
 	quark->last = 0;
@@ -152,7 +162,8 @@ void quark_free(quark_t* quark) {
 void quark_tick(quark_t* quark) {
 	quark->last = quark->now;
 	quark->now = SDL_GetPerformanceCounter();
-   	quark->dt = (quark->now - quark->last) / (double)SDL_GetPerformanceFrequency() * sv_timescale.value;
+   	quark->dt = (quark->now - quark->last) / (double)SDL_GetPerformanceFrequency() *
+		sv_timescale.value;
 	quark->time += quark->dt;
 
 	sv_tick(quark, &quark->server);
@@ -180,6 +191,9 @@ void quark_reload_resources(quark_t* quark) {
 	quark->renderer.gbuffer_shader = shader_load(quark,
         "gbuffer", "res/shaders/gbuffer.vs", "res/shaders/gbuffer.fs");
 
+	quark->renderer.skybox_shader = shader_load(quark,
+        "ssao", "res/shaders/ssao.vs", "res/shaders/ssao.fs");
+
 	quark->renderer.screen_shader = shader_load(quark,
         "screen", "res/shaders/screen.vs", "res/shaders/screen.fs");
 
@@ -188,10 +202,30 @@ void quark_reload_resources(quark_t* quark) {
 
 	quark->renderer.skybox_shader = shader_load(quark,
         "skybox", "res/shaders/skybox.vs", "res/shaders/skybox.fs");
+
+	quark->renderer.ssao_shader = shader_load(quark,
+        "ssao", "res/shaders/ssao.vs", "res/shaders/ssao.fs");
 	
 	map_load(quark, &quark->map);
 
 	info(quark, "resources reloaded!");
+}
+
+void quark_set_progress(quark_t* quark, const char* msg, ...) {
+	char buffer[MAX_MSG_LEN];
+	va_list args;
+	va_start(args, msg);
+	size_t len = vsnprintf(buffer, MAX_MSG_LEN, msg, args);
+	va_end(args);
+
+	strcpy(quark->progress_text, buffer);
+	printf("%s\n", buffer);
+
+	if (quark->renderer.init) {
+		ui_render(quark, &quark->renderer.ui, &quark->renderer);
+		r_reset_stats(quark, &quark->renderer);
+		SDL_GL_SwapWindow(quark->window);
+	}
 }
 
 void info(quark_t* quark, const char* msg, ...) {
@@ -199,14 +233,10 @@ void info(quark_t* quark, const char* msg, ...) {
 	va_list args;
 	va_start(args, msg);
 	size_t len = vsnprintf(buffer, MAX_MSG_LEN, msg, args);
-	buffer[len] = '\0';
 	va_end(args);
 
-	char text[MAX_MSG_LEN + 32];
-	sprintf(text, "%s", buffer);
-
-	puts(text);
-	con_add_history(quark, &quark->console, text);
+	puts(buffer);
+	con_add_history(quark, &quark->console, buffer);
 }
 
 void error(quark_t* quark, const char* msg, ...) {
@@ -214,7 +244,6 @@ void error(quark_t* quark, const char* msg, ...) {
 	va_list args;
 	va_start(args, msg);
 	size_t len = vsnprintf(buffer, MAX_MSG_LEN, msg, args);
-	buffer[len] = '\0';
 	va_end(args);
 
 	char text[MAX_MSG_LEN + 32];

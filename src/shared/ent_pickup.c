@@ -2,16 +2,20 @@
 #include "quark.h"
 
 void entity_init_pickup(quark_t* quark,
-    const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out)
+    const char* name,
+    vec3 position,
+    mesh_t* mesh,
+    pickup_type_t type,
+    void* pickup_sound,
+    entity_t** out)
 {
     entity_t* entity = NULL;
 	entity_init_common(quark, name, ENTITY_PICKUP, position, &entity);
     entity->data.pickup.mesh = mesh;
-    for (int i = 0; i < MAX_MATERIALS; i++) {
+    for (int i = 0; i < MAX_MATERIALS; i++)
         entity->data.pickup.materials[i] = NULL;
-	}
+    entity->data.pickup.type = type;
     entity->data.pickup.pickup_sound = pickup_sound;
-    entity->data.pickup.is_coin = false;
 
     *out = entity;
 }
@@ -35,7 +39,7 @@ void entity_tick_pickup(quark_t* quark, entity_t* entity, entity_pickup_t* picku
         a_play(quark, &quark->audio, (sound_t*)pickup->pickup_sound,
             entity->position, random(0.85f, 1.15f));
         
-        if (pickup->is_coin) {
+        if (pickup->type == PICKUP_COIN) {
             quark->player->inventory.coins++;
             r_add_partfx_pickup_coin(quark, &quark->renderer, entity->position);
         }

@@ -55,7 +55,7 @@ void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_
     {
         entity_t* explosion = NULL;
         entity_init_explosion(quark, "explosion", entity->position, 2.0f, ray.dir,
-            2.0f, 12.0f, &explosion);
+            2.0f, 8.0f, &explosion);
         entlist_add(quark, &quark->map.entlist, explosion);
         entlist_remove(quark, &quark->map.entlist, entity);
 
@@ -77,7 +77,10 @@ void entity_tick_projectile(quark_t* quark, entity_t* entity, entity_projectile_
         projectile->velocity[1] -= PHYS_GRAVITY * quark->dt;
     }
 
-    if (projectile->particles && quark->time - projectile->last_particle >= PROJECTILE_PARTICLE_RATE) {
+    if (projectile->particles &&
+        quark->time - projectile->last_particle >= 
+            (r_particles.value == 0.0f) ? INFINITY : PROJECTILE_PARTICLE_RATE / r_particles.value)
+    {
         projectile->last_particle = quark->time;
         r_add_partfx_projectile_trail(quark, &quark->renderer, entity->position);
     }

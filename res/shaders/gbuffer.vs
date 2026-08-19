@@ -46,7 +46,7 @@ vec3 add_wind(vec3 vertex_position) {
 
 void main() {
     vec3 vertex_position = a_position;
-    vertex_position = add_wind(vertex_position);    
+    vertex_position = add_wind(vertex_position);
 
     gl_Position = projection * view * model * vec4(vertex_position, 1.0);
     vs_frag_position = vec3(model * vec4(vertex_position, 1.0));

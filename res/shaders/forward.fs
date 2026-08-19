@@ -39,9 +39,15 @@ struct SunLight {
     mat4 matrix;
 };
 
+struct Camera {
+    vec3 position;
+    float near;
+    float far;
+};
+
 uniform Material materials[MAX_MATERIALS];
 uniform SunLight sun_light;
-uniform vec3 view_position;
+uniform Camera camera;
 uniform vec2 screen_size;
 uniform sampler2D g_depth;
 uniform int is_water;
@@ -147,8 +153,8 @@ vec3 draw_light(vec3 view_dir, vec3 f0, MaterialSample sample) {
 
 float linearize_depth(float depth) {
     float ndc = depth * 2.0f - 1.0f;
-    float near = 0.01f;
-    float far = 100.0f;
+    float near = camera.near;
+    float far = camera.far;
     float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
     linear_depth /= far;
     return linear_depth;
@@ -158,7 +164,7 @@ void main() {
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
     uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
 
-    vec3 view_dir = normalize(view_position - vs_frag_position);
+    vec3 view_dir = normalize(camera.position - vs_frag_position);
 
     MaterialSample sample;
     sample.position = vs_frag_position;

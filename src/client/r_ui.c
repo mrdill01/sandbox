@@ -11,7 +11,7 @@
 void ui_init(quark_t* quark, ui_t* ui) {
     info(quark, "ui_init()...");
     ui->show_msgbox = false;
-    ui->msgbox_message = NULL;
+    ui->msgbox_message[0] = '\0';
     
     ui->shader = shader_load(quark, "ui", "res/shaders/ui.vs", "res/shaders/ui.fs");
     ui->font = texture_load(quark, "res/textures/ui/font.png", TEX_FILTER_NEAREST);
@@ -208,6 +208,22 @@ static void draw_loading_screen(quark_t* quark, ui_t* ui) {
         r_width.value / 2.0f - ui_measure_text(text, font_size) / 2.0f,
         r_height.value / 2.0f - font_size / 2.0f};
     ui_draw_text_thick(quark, ui, text, position, font_size, 4, COLOR_WHITE);
+
+    font_size = 32.0f;
+    text = quark->progress_text;
+    ui_draw_texture(quark,
+        ui, ui->pixel,
+        (vec2){
+            r_width.value / 2.0f - ui_measure_text(text, font_size) / 2.0f,
+            r_height.value / 2.0f + 64.0f + 4.0f},
+        (vec2){ui_measure_text(text, font_size), 24.0f},
+        (vec4){0.0f, 0.0f, 0.0f, 1.0f});
+
+    glm_vec2_copy((vec2){
+        r_width.value / 2.0f - ui_measure_text(text, font_size) / 2.0f,
+        r_height.value / 2.0f + 64.0f},
+        position);
+    ui_draw_text_thick(quark, ui, text, position, font_size, 4, COLOR_WHITE);
 }
 
 static void draw_debug_menu(quark_t* quark, renderer_t* renderer, ui_t* ui) {
@@ -377,7 +393,10 @@ static void draw_hud(quark_t* quark, ui_t* ui, player_t* player) {
         weapon_t* weapon = &item->data.weapon;
         if (weapon && quark->player->vehicle == -1) {
             char text[32];
-            sprintf(text, "Ammo %d/%d", weapon->ammo_loaded, weapon->ammo_unloaded);
+            if (sv_inf_ammo.value)
+                sprintf(text, "ammo %d/INF", weapon->ammo_loaded);
+            else
+                sprintf(text, "ammo %d/%d", weapon->ammo_loaded, weapon->ammo_unloaded);
             float font_size = 64.0f;
             ui_draw_text_thick(quark, ui, text,
                 (vec2){64.0f + 10.0f, r_height.value - font_size},
@@ -396,7 +415,7 @@ static void draw_hud(quark_t* quark, ui_t* ui, player_t* player) {
     
     if (quark->player->vehicle == -1 && !edit_mode.value) {
         char text[32];
-        sprintf(text, "Health %d", (int)ceilf(quark->player->health));
+        sprintf(text, "health %d", (int)ceilf(quark->player->health));
         float font_size = 64.0f;
         float width = ui_measure_text(text, font_size);
         ui_draw_text_thick(quark, ui, text,
@@ -531,11 +550,11 @@ static void draw_death_screen(quark_t* quark, ui_t* ui) {
 }
 
 static void draw_console(quark_t* quark, ui_t* ui, console_t* con) {
-    float font_size = 28.0f;
+    float font_size = 30.0f;
     float spacing = font_size * 0.65f;
 
     int width = 800.0f;
-    int height = CON_LINES_PER_PAGE * spacing;
+    int height = CON_LINES_PER_PAGE * spacing + 10.0f;
     int title_height = 40.0f;
 
     ui_draw_texture(quark,
@@ -543,17 +562,16 @@ static void draw_console(quark_t* quark, ui_t* ui, console_t* con) {
         ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f},
         (vec2){width, title_height},
-        (vec4){0.0f, 0.0f, 0.2f, 0.8f});
+        (vec4){0.0f, 0.0f, 0.35f, 0.8f});
 
-    ui_draw_text(quark, ui,
-        "CONSOLE", (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, 48.0f, COLOR_WHITE);
+    ui_draw_text_thick(quark, ui,
+        "Console", (vec2){r_width.value / 2.0f - width / 2.0f, 0.0f}, 48.0f, 4, COLOR_WHITE);
 
     ui_draw_texture(quark,
-        ui,
-        ui->pixel,
+        ui, ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, title_height},
         (vec2){width, height},
-        (vec4){0.0f, 0.0f, 0.2f, 0.6f});
+        (vec4){0.0f, 0.0f, 0.2f, 0.8f});
 
     for (int i = 0; i < CON_LINES_PER_PAGE; i++) {
         ui_draw_text_shadow(quark, ui,
@@ -563,11 +581,16 @@ static void draw_console(quark_t* quark, ui_t* ui, console_t* con) {
     }
 
     ui_draw_texture(quark,
-        ui,
-        ui->pixel,
+        ui, ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, title_height + height},
-        (vec2){width, title_height},
-        (vec4){0.0f, 0.0f, 0.2f, 0.8f});
+        (vec2){width, font_size},
+        (vec4){0.0f, 0.0f, 0.35f, 0.8f});
+
+    ui_draw_texture(quark,
+        ui, ui->pixel,
+        (vec2){r_width.value / 2.0f - width / 2.0f + 4.0f, title_height + height + 4.0f},
+        (vec2){width - 8.0f, font_size - 8.0f},
+        (vec4){0.0f, 0.0f, 0.0f, 1.0f});
 
     ui_draw_text_shadow(quark, ui,
         con->input,
@@ -599,8 +622,7 @@ static void draw_msgbox(quark_t* quark, ui_t* ui) {
     int height = 200.0f;
 
     ui_draw_texture(quark,
-        ui,
-        ui->pixel,
+        ui, ui->pixel,
         (vec2){r_width.value / 2.0f - width / 2.0f, r_height.value / 2.0f - height / 2.0f},
         (vec2){width, height},
         (vec4){0.0f, 0.0f, 0.0f, 0.4f});
@@ -619,6 +641,7 @@ static void draw_msgbox(quark_t* quark, ui_t* ui) {
 
     if (ui_draw_button(quark, ui, "OKAY", position, button_size)) {
         ui->show_msgbox = false;
+        ui->msgbox_message[0] = '\0';
     }
 }
 

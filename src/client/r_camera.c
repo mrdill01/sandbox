@@ -13,7 +13,7 @@ void camera_init(quark_t* quark, camera_t* camera) {
     glm_vec3_copy(Z_AXIS, camera->forward);
     camera->fov = r_fov.value;
     camera->near = 0.001f;
-    camera->far = 100.0f;
+    camera->far = 250.0f;
 }
 
 void camera_tick(quark_t* quark, camera_t* camera) {

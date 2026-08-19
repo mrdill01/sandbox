@@ -43,8 +43,14 @@ void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t*
     if (sv_destruction.value) {
         for (int i = 0; i < quark->map.entlist.len; i++) {
             entity_t* other = quark->map.entlist.ents[i];
-            if (!other || other->type != ENTITY_MESH) continue;
-            if (other->data.mesh.materials[0] && other->data.mesh.materials[0]->is_water)
+            if (!other) continue;
+            if (other->type != ENTITY_MESH && other->type != ENTITY_VEHICLE) continue;
+            
+            mesh_t* mesh = entity_get_mesh(quark, other);
+            material_t* materials[MAX_MATERIALS];
+            entity_get_materials(quark, other, materials, NULL);
+
+            if (materials[0] && materials[0]->is_water)
                 continue;
 
             if (bbox_sphere_intersects(&other->world_bbox, entity->position, explosion->radius)) {
@@ -52,10 +58,9 @@ void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t*
                 glm_vec3_sub(other->position, entity->position, direction);
                 glm_vec3_normalize(direction);
 
-                float amount = 0.5f;
+                float amount = 0.32f;
                 mesh_deform(quark,
-                    other->data.mesh.mesh, other->position, entity->position,
-                    direction, explosion->radius, amount);
+                    mesh, other->position, entity->position, direction, explosion->radius, amount);
             }
         }
     }

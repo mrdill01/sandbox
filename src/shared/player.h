@@ -131,6 +131,7 @@ float player_get_xz_speed(quark_t* quark, player_t* player);
 
 void player_tick_item(quark_t* quark, player_t* player);
 void player_render_item(quark_t* quark, player_t* player, renderer_t* renderer);
+void player_get_item_position_world_space(quark_t* quark, player_t* player, vec3 position);
 
 void player_init_body(quark_t* quark, player_t* player);
 void player_tick_body(quark_t* quark, player_t* player);

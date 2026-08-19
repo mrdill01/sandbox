@@ -12,13 +12,13 @@ typedef struct quark_t quark_t;
 
 typedef enum {
     CSV_NOTHING = 1,
-    CSV_SET_NAME,       /* null terminated name string */
+    CSV_SET_NAME,       /* [string name] */
 } client_to_server;
 
 typedef enum {
     SVC_NOTHING = 1,
-    SVC_DISCONNECT,     /* null terminated reason string */
-    SVC_SPAWN_ID,       /* byte id */
+    SVC_DISCONNECT,     /* [string reason] */
+    SVC_SPAWN_ID,       /* [u8 id] */
 } server_to_client;
 
 void net_init(quark_t* quark);

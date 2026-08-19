@@ -23,7 +23,7 @@ typedef struct sv_client_t {
     int id;
     char* name;
 
-    uint8_t buffer[SERVER_MAX_BUFFER];
+    uint8_t* buffer;
     size_t nbuffer;
 } sv_client_t;
 
@@ -33,6 +33,7 @@ void sv_stop(quark_t* quark, server_t* server);
 
 void sv_tick(quark_t* quark, server_t* server);
 void sv_send(quark_t* quark, server_t* server);
+void sv_flush(quark_t* quark, server_t* server);
 void sv_recv(quark_t* quark, server_t* server, sv_client_t* client, ENetPacket* packet);
 
 void sv_write_byte(quark_t* quark, server_t* server, sv_client_t* client, uint8_t byte);

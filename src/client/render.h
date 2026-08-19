@@ -15,6 +15,8 @@
 #define ITEM_PREVIEW_RES 256
 #define FPS_SAMPLE_RATE 45
 #define NUM_STEAM_PARTICLES 4
+#define MAX_MSGBOX_LEN 256
+#define SSAO_KERNEL_SIZE 64
 
 #define COLOR_WHITE (vec4){1.0f, 1.0f, 1.0f, 1.0f}
 #define COLOR_GRAY (vec4){0.5f, 0.5f, 0.5f, 1.0f}
@@ -79,6 +81,7 @@ typedef enum {
     TEX_FORMAT_RGB,
     TEX_FORMAT_RGBA,
     TEX_FORMAT_RGBA_F16,
+    TEX_FORMAT_RED,
     TEX_FORMAT_DEPTH,
 } texture_format_t;
 
@@ -94,6 +97,7 @@ typedef struct texture_t {
     int height;
     texture_format_t format;
     texture_filter_t filter;
+    uint8_t* data;
     struct texture_t* next;
 } texture_t;
 
@@ -123,7 +127,7 @@ typedef struct {
 
 typedef struct {
     bool show_msgbox;
-    char* msgbox_message;
+    char msgbox_message[MAX_MSGBOX_LEN];
     
     shader_t* shader;
     texture_t* font;
@@ -191,6 +195,7 @@ typedef struct {
 } render_stats_t;
 
 typedef struct {
+    bool init;
     camera_t camera;
 
     float fps;
@@ -204,7 +209,7 @@ typedef struct {
     drawcall_t* translucent_drawcalls;
 
     shader_t* gbuffer_shader;
-    shader_t* viewmodel_shader;
+    shader_t* ssao_shader;
     shader_t* ambient_light_shader;
     shader_t* sun_light_shader;
     shader_t* sun_shadow_shader;
@@ -248,6 +253,10 @@ typedef struct {
 
     particle_t particles[MAX_PARTICLES];
 
+    vec3 ssao_kernel[SSAO_KERNEL_SIZE];
+    texture_t* ssao_noise_texture;
+    framebuffer_t* ssao_framebuffer;
+
     render_stats_t stats;
 } renderer_t;
 
@@ -271,6 +280,7 @@ void mesh_buffer_upload(quark_t* quark, mesh_buffer_t* buffer);
 
 mesh_t* mesh_new(quark_t* quark,
     mesh_buffer_t** buffers, size_t nbuffers, uint8_t nmaterials, bbox_t bbox);
+mesh_buffer_t* mesh_buffer_new(quark_t* quark, size_t nvertices, size_t nindices);
 mesh_t* mesh_load(quark_t* quark, const char* path);
 mesh_t* mesh_copy(quark_t* quark, const mesh_t* original);
 void mesh_free(quark_t* quark, mesh_t* mesh);

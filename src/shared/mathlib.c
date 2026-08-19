@@ -166,24 +166,24 @@ bool raycast_bbox(ray_t ray, const bbox_t* box, float* t, float tmax) {
     float t1 = (box->min[0] - ray.origin[0]) * inv_dir_x;
     float t2 = (box->max[0] - ray.origin[0]) * inv_dir_x;
     if (inv_dir_x < 0.0f) { float tmp = t1; t1 = t2; t2 = tmp; }
-    tmin = t1 > tmin ? t1 : tmin;
-    tmax = t2 < tmax ? t2 : tmax;
+    tmin = max(t1, tmin);
+    tmax = min(t2, tmax);
     if (tmin > tmax) return false;
 
     float inv_dir_y = 1.0f / ray.dir[1];
     float t3 = (box->min[1] - ray.origin[1]) * inv_dir_y;
     float t4 = (box->max[1] - ray.origin[1]) * inv_dir_y;
     if (inv_dir_y < 0.0f) { float tmp = t3; t3 = t4; t4 = tmp; }
-    tmin = t3 > tmin ? t3 : tmin;
-    tmax = t4 < tmax ? t4 : tmax;
+    tmin = max(t3, tmin);
+    tmax = min(t4, tmax);
     if (tmin > tmax) return false;
 
     float inv_dir_z = 1.0f / ray.dir[2];
     float t5 = (box->min[2] - ray.origin[2]) * inv_dir_z;
     float t6 = (box->max[2] - ray.origin[2]) * inv_dir_z;
     if (inv_dir_z < 0.0f) { float tmp = t5; t5 = t6; t6 = tmp; }
-    tmin = t5 > tmin ? t5 : tmin;
-    tmax = t6 < tmax ? t6 : tmax;
+    tmin = max(t5, tmin);
+    tmax = min(t6, tmax);
     if (tmin > tmax) return false;
 
     if (tmax < 0.0f) return false;

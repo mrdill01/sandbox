@@ -68,6 +68,23 @@ bool phys_line_trace(
 
         if (raycast_bbox(ray, &entity->world_bbox, &trace.distance, max_distance)) {
             point_on_ray(ray, trace.distance, trace.point);
+
+            if (entity->type == ENTITY_TERRAIN) {
+                float u = (trace.point[0] - entity->world_bbox.min[0]) /
+                    (entity->world_bbox.max[0] - entity->world_bbox.min[0]);
+                float v = (trace.point[2] - entity->world_bbox.min[2]) /
+                    (entity->world_bbox.max[2] - entity->world_bbox.min[2]);
+
+                u /= entity->scale[0];
+                v /= entity->scale[2];
+                
+                float height = entity_terrain_get_height(quark, entity, u, v);
+
+                    printf("%g\n", height);
+                //trace.distance = height;
+                trace.point[1] = height * entity->scale[1];
+            }
+
             float distance_to_start = glm_vec3_distance(trace.point, ray.origin);
 
             if (entity->data.mesh.materials[0]->is_water) {

@@ -27,8 +27,14 @@ struct Material {
     float scrolly;
 };
 
+struct Camera {
+    vec3 position;
+    float near;
+    float far;
+};
+
 uniform Material materials[MAX_MATERIALS];
-uniform vec3 view_position;
+uniform Camera camera;
 
 mat3 cotangent_frame(vec3 normal, vec3 p, vec2 uv) {
     vec3 dp1 = dFdx(p);
@@ -54,8 +60,8 @@ vec3 perturb_normal(vec3 normal, vec3 view_dir, vec2 uv) {
 
 float linearize_depth(float depth) {
     float ndc = depth * 2.0f - 1.0f;
-    float near = 0.01f;
-    float far = 100.0f;
+    float near = camera.near;
+    float far = camera.far;
     float linear_depth = (2.0f * near * far) / (far + near - ndc * (far - near));	
     linear_depth /= far;
     return linear_depth;
@@ -64,7 +70,7 @@ float linearize_depth(float depth) {
 void main() {
     vec2 uv = vs_uv * vec2(materials[vs_mat].tilex, materials[vs_mat].tiley);
     uv += vec2(materials[vs_mat].scrollx, materials[vs_mat].scrolly);
-    vec3 view_dir = normalize(view_position - vs_frag_position);
+    vec3 view_dir = normalize(camera.position - vs_frag_position);
     g_position = vs_frag_position;
     g_normal = perturb_normal(vs_normal, view_dir, uv);
     g_albedo_roughness.rgb = texture(materials[vs_mat].albedo, uv).rgb;

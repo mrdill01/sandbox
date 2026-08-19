@@ -17,6 +17,7 @@ typedef enum {
     ENTITY_EXPLOSION,
     ENTITY_PICKUP,
     ENTITY_VEHICLE,
+    ENTITY_TERRAIN,
     ENTITY_SUN_LIGHT,
     ENTITY_POINT_LIGHT,
 } entity_type_t;
@@ -51,11 +52,16 @@ typedef struct {
     float max_force;
 } entity_explosion_t;
 
+typedef enum {
+    PICKUP_COIN,
+    PICKUP_AMMO,
+} pickup_type_t;
+
 typedef struct {
     mesh_t* mesh;
     material_t* materials[MAX_MATERIALS];
+    pickup_type_t type;
     void* pickup_sound;
-    bool is_coin;
 } entity_pickup_t;
 
 typedef enum {
@@ -80,6 +86,12 @@ typedef struct {
 } entity_vehicle_t;
 
 typedef struct {
+    texture_t* heightmap;
+    mesh_t* mesh;
+    material_t* materials[MAX_MATERIALS];
+} entity_terrain_t;
+
+typedef struct {
     vec3 direction;
     vec3 color;
     mat4 matrix;
@@ -87,6 +99,7 @@ typedef struct {
 
 typedef struct {
     vec3 color;
+    float extinguish;
 } entity_point_light_t;
 
 typedef struct {
@@ -97,6 +110,7 @@ typedef struct {
     quat rotation;
     vec3 scale;
     vec3 velocity;
+    int parent_id;
     bbox_t local_bbox;
     bbox_t world_bbox;
     float spawn_time;
@@ -107,6 +121,7 @@ typedef struct {
         entity_explosion_t explosion;
         entity_pickup_t pickup;
         entity_vehicle_t vehicle;
+        entity_terrain_t terrain;
         entity_sun_light_t sun_light;
         entity_point_light_t point_light;
     } data;
@@ -136,15 +151,22 @@ void entity_init_explosion(quark_t* quark,
     const char* name, vec3 position, float radius, vec3 direction,
     float min_force, float max_force, entity_t** out);
 void entity_init_pickup(quark_t* quark,
-    const char* name, vec3 position, mesh_t* mesh, void* pickup_sound, entity_t** out);
+    const char* name,
+    vec3 position,
+    mesh_t* mesh,
+    pickup_type_t type,
+    void* pickup_sound,
+    entity_t** out);
 void entity_init_vehicle(quark_t* quark,
     const char* name, vec3 position, mesh_t* mesh, vehicle_type_t type, entity_t** out);
+void entity_init_terrain(quark_t* quark,
+    const char* name, vec3 position, vec3 scale, texture_t* heightmap, entity_t** out);
 void entity_init_sun_light(quark_t* quark,
     const char* name,
     float x, float y, float z,
     vec3 dir, vec3 color, entity_t** out);
 void entity_init_point_light(quark_t* quark,
-    const char* name, float x, float y, float z, vec3 color, entity_t** out);
+    const char* name, vec3 position, vec3 color, float extinguish, entity_t** out);
 void entity_free(quark_t* quark, entity_t* entity);
 
 void entity_tick_mesh(quark_t* quark, entity_t* entity, entity_mesh_t* mesh);
@@ -153,14 +175,19 @@ void entity_tick_explosion(quark_t* quark, entity_t* entity, entity_explosion_t*
 void entity_tick_pickup(quark_t* quark, entity_t* entity, entity_pickup_t* pickup);
 void entity_tick_vehicle(quark_t* quark, entity_t* entity, entity_vehicle_t* vehicle);
 void entity_tick_vehicle_helicopter(quark_t* quark, entity_t* entity, veh_helicopter_t* heli);
-
-mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity);
-void entity_get_materials(quark_t* quark, entity_t* entity, material_t** materials, size_t* nmaterials);
-bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall);
+void entity_tick_point_light(quark_t* quark, entity_t* entity, entity_point_light_t* point_light);
 
 void entity_mesh_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
 void entity_pickup_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
 void entity_vehicle_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
+void entity_terrain_set_material(quark_t* quark, entity_t* entity, material_t* material, int slot);
+
+float entity_terrain_get_height(quark_t* quark, entity_t* entity, float x, float z);
+
+mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity);
+void entity_get_materials(quark_t* quark, entity_t* entity,
+    material_t** materials, size_t* nmaterials);
+bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall);
 
 void entlist_init(quark_t* quark, entlist_t* entlist);
 void entlist_free(quark_t* quark, entlist_t* entlist);

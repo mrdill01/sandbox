@@ -63,9 +63,12 @@ void cl_tick(quark_t* quark, client_t* client) {
         case ENET_EVENT_TYPE_DISCONNECT:
         case ENET_EVENT_TYPE_DISCONNECT_TIMEOUT: {
             info(quark, "[client] lost connection");
-            quark->ui_state = UI_STATE_MAIN_MENU;
-            quark->renderer.ui.show_msgbox = true;
-            quark->renderer.ui.msgbox_message = "lost connection";
+
+            if (quark->renderer.ui.msgbox_message[0] == '\0') {
+                quark->ui_state = UI_STATE_MAIN_MENU;
+                quark->renderer.ui.show_msgbox = true;
+                strcpy(quark->renderer.ui.msgbox_message, "Lost connection.");
+            }
             break;
         }
         case ENET_EVENT_TYPE_RECEIVE: {
@@ -108,6 +111,9 @@ void cl_recv(quark_t* quark, client_t* client, ENetPacket* packet) {
     case SVC_DISCONNECT: {
         uint8_t* reason = packet->data + 1;
         info(quark, "[client] disconnected because '%s'", reason);
+        quark->ui_state = UI_STATE_MAIN_MENU;
+        quark->renderer.ui.show_msgbox = true;
+        strcpy(quark->renderer.ui.msgbox_message, (const char*)reason);
         break;
     }
     case SVC_SPAWN_ID: {

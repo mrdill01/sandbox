@@ -8,10 +8,10 @@
 #include "../client/client.h"
 #include "../client/render.h"
 #include "../client/audio.h"
-#include "../shared/mathlib.h"
-#include "../shared/entity.h"
-#include "../shared/player.h"
-#include "../client/map.h"
+#include "mathlib.h"
+#include "entity.h"
+#include "player.h"
+#include "map.h"
 #include "../server/gm.h"
 
 #include <stdlib.h>
@@ -48,6 +48,7 @@ typedef struct quark_t {
     console_t console;
     cvar_t* cvars;
     cmd_t* cmds;
+    char progress_text[256];
     
     bool running;
     uint64_t now;
@@ -91,6 +92,7 @@ extern cvar_t sv_round_time;
 extern cvar_t sv_timescale;
 extern cvar_t sv_respawn_time;
 extern cvar_t sv_destruction;
+extern cvar_t sv_inf_ammo;
 extern cvar_t sv_random_seed;
 extern cvar_t cl_name;
 extern cvar_t r_width;
@@ -101,9 +103,12 @@ extern cvar_t r_vsync;
 extern cvar_t r_fov;
 extern cvar_t r_shadows;
 extern cvar_t r_shadow_res;
+extern cvar_t r_particles;
+extern cvar_t r_ssao;
 extern cvar_t r_third_person;
 extern cvar_t r_viewmodel;
 extern cvar_t r_hud;
+extern cvar_t r_wireframe;
 extern cvar_t r_debug_menu;
 extern cvar_t r_debug_colliders;
 extern cvar_t r_debug_bullets;
@@ -122,6 +127,7 @@ void quark_init(quark_t* quark);
 void quark_free(quark_t* quark);
 void quark_tick(quark_t* quark);
 void quark_reload_resources(quark_t* quark);
+void quark_set_progress(quark_t* quark, const char* msg, ...);
 
 void info(quark_t* quark, const char* msg, ...);
 void error(quark_t* quark, const char* msg, ...);

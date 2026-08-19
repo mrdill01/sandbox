@@ -9,11 +9,9 @@ framebuffer_t* framebuffer_new(quark_t* quark) {
     framebuffer_t* framebuffer = malloc(sizeof(framebuffer_t));
     glGenFramebuffers(1, &framebuffer->id);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
-
     framebuffer->ntextures = 0;
     framebuffer->textures = NULL;
     framebuffer->depth_buffer = 0;
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return framebuffer;
 }
@@ -73,7 +71,7 @@ void framebuffer_finish(quark_t* quark, framebuffer_t* framebuffer) {
     glDrawBuffers(framebuffer->ntextures, attachments);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        error(quark, "framebuffer incomplete");
+        error(quark, "framebuffer incomplete (%d)", glGetError());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     free(attachments);

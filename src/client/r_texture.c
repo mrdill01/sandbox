@@ -11,6 +11,7 @@ static uint32_t get_internal_format(quark_t* quark, texture_format_t format) {
     case TEX_FORMAT_RGB: return GL_RGB;
     case TEX_FORMAT_RGBA: return GL_RGBA;
     case TEX_FORMAT_RGBA_F16: return GL_RGBA16F;
+    case TEX_FORMAT_RED: return GL_RED;
     case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
     default: unreachable(quark);
     }
@@ -23,8 +24,21 @@ static uint32_t get_gl_format(quark_t* quark, texture_format_t format) {
     case TEX_FORMAT_RGB: return GL_RGB;
     case TEX_FORMAT_RGBA: return GL_RGBA;
     case TEX_FORMAT_RGBA_F16: return GL_RGBA;
+    case TEX_FORMAT_RED: return GL_RED;
     case TEX_FORMAT_DEPTH: return GL_DEPTH_COMPONENT;
     default: unreachable(quark);
+    }
+
+    return 0;
+}
+
+static uint32_t get_bits_per_pixel(quark_t* quark, texture_format_t format) {
+    switch (format) {
+    case TEX_FORMAT_RGB: return 3;
+    case TEX_FORMAT_RGBA: return 4;
+    case TEX_FORMAT_RGBA_F16: return 4;
+    case TEX_FORMAT_RED: return 1;
+    case TEX_FORMAT_DEPTH: return 1;
     }
 
     return 0;
@@ -43,15 +57,8 @@ texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
     uint32_t gl_type = (format == TEX_FORMAT_RGBA_F16 ||
         format == TEX_FORMAT_DEPTH) ? GL_FLOAT : GL_UNSIGNED_BYTE;
     
-    glTexImage2D(GL_TEXTURE_2D,
-        0,
-        gl_internal_format,
-        width,
-        height,
-        0,
-        gl_format,
-        gl_type,
-        data);
+    glTexImage2D(GL_TEXTURE_2D, 0, gl_internal_format, width, height,
+        0, gl_format, gl_type, data);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -68,6 +75,8 @@ texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    int bits_per_pixel = get_bits_per_pixel(quark, format);
+
     texture_t* texture = malloc(sizeof(texture_t));
     texture->id = id;
     texture->type = TEX_2D;
@@ -75,6 +84,12 @@ texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
     texture->height = height;
     texture->format = format;
     texture->filter = filter;
+    texture->data = NULL;
+
+    if (data) {
+        texture->data = malloc(width * height * bits_per_pixel);
+        memcpy(texture->data, data, width * height * bits_per_pixel);
+    }
 
     texture->next = quark->textures;
     quark->textures = texture;
@@ -82,7 +97,7 @@ texture_t* texture_new(quark_t* quark, int width, int height, uint8_t* data,
 }
 
 texture_t* texture_load(quark_t* quark, const char* path, texture_filter_t filter) {
-    info(quark, "loading texture %s", path);
+    quark_set_progress(quark, "loading texture %s", path);
 
     int width, height, channels;
     unsigned char* data = stbi_load(path, &width, &height, &channels, STBI_rgb_alpha);

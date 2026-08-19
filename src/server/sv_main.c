@@ -60,8 +60,6 @@ void sv_tick(quark_t* quark, server_t* server) {
             info(quark, "[server] client connected from %s", ip);
 
             sv_create_client(quark, server, event.peer);
-            //sv_disconnect_client(quark, server, event.peer, "no reason");
-            
             break;
         }
         case ENET_EVENT_TYPE_DISCONNECT:
@@ -84,6 +82,16 @@ void sv_send(quark_t* quark, server_t* server) {
         if (!client || !client->peer) continue;
 
         sv_write_byte(quark, server, client, SVC_NOTHING);
+
+    }
+
+    sv_flush(quark, server);
+}
+
+void sv_flush(quark_t* quark, server_t* server) {
+    for (size_t i = 0; i < NET_MAX_PLAYERS; i++) {
+        sv_client_t* client = server->clients[i];
+        if (!client || !client->peer) continue;
 
         ENetPacket* packet = enet_packet_create(
             client->buffer, client->nbuffer, ENET_PACKET_FLAG_RELIABLE);
@@ -146,7 +154,7 @@ int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer) {
 
     if (id == -1) {
         char reason[64];
-        sprintf(reason, "the server is full (%d/%d players)", NET_MAX_PLAYERS, NET_MAX_PLAYERS);
+        sprintf(reason, "The server is full (%d/%d players).", NET_MAX_PLAYERS, NET_MAX_PLAYERS);
         sv_disconnect_client(quark, server, peer, reason);
         return -1;
     }
@@ -156,6 +164,7 @@ int sv_create_client(quark_t* quark, server_t* server, ENetPeer* peer) {
     client->id = id;
     client->name = NULL;
 
+    client->buffer = malloc(SERVER_MAX_BUFFER);
     client->nbuffer = 0;
 
     quark->players[id] = gm_spawn_player(quark, id, false);

@@ -7,6 +7,7 @@
 void r_init(quark_t* quark, renderer_t* renderer) {
     info(quark, "r_init()...");
 
+    renderer->init = false;
     camera_init(quark, &renderer->camera);
 
     renderer->ndrawcalls = 0;
@@ -16,8 +17,8 @@ void r_init(quark_t* quark, renderer_t* renderer) {
 
     renderer->gbuffer_shader = shader_load(quark,
         "gbuffer", "res/shaders/gbuffer.vs", "res/shaders/gbuffer.fs");
-    renderer->viewmodel_shader = shader_load(quark,
-        "viewmodel", "res/shaders/viewmodel.vs", "res/shaders/viewmodel.fs"); 
+    renderer->ssao_shader = shader_load(quark,
+        "ssao", "res/shaders/ssao.vs", "res/shaders/ssao.fs"); 
     renderer->ambient_light_shader = shader_load(quark,
         "ambient_light", "res/shaders/ambient_light.vs", "res/shaders/ambient_light.fs"); 
     renderer->sun_light_shader = shader_load(quark,
@@ -54,6 +55,7 @@ void r_init(quark_t* quark, renderer_t* renderer) {
         1, 1, false, PHYS_MAT_METAL);
 
     renderer->gbuffer = NULL;
+    renderer->ssao_framebuffer = NULL;
     renderer->screen_buffer = NULL;
     renderer->sun_shadow_buffer = NULL;
     for (int i = 0; i < INVENTORY_SLOTS; i++) {
@@ -107,7 +109,40 @@ void r_init(quark_t* quark, renderer_t* renderer) {
         particle->is_free = true;
     }
 
+    for (int i = 0; i < SSAO_KERNEL_SIZE; i++) {
+        vec3 sample = {
+            random(0.0f, 1.0f) * 2.0f - 1.0f,
+            random(0.0f, 1.0f) * 2.0f - 1.0f,
+            random(0.0f, 1.0f),
+        };
+
+        glm_vec3_normalize(sample);
+        glm_vec3_scale(sample, random(0.0f, 1.0f), sample);
+
+        float scale = (float)i / SSAO_KERNEL_SIZE; 
+        scale = lerp(0.1f, 1.0f, scale * scale);
+        glm_vec3_scale(sample, scale, sample);
+
+        glm_vec3_copy(sample, renderer->ssao_kernel[i]);
+    }
+
+    vec3 ssao_noise[16];
+    for (int i = 0; i < 16; i++) {
+        vec3 noise = {
+            random(0.0f, 1.0f) * 2.0f - 1.0f,
+            random(0.0f, 1.0f) * 2.0f - 1.0f,
+            0.0f
+        };
+        glm_vec3_copy(noise, ssao_noise[i]);
+    }
+
+    renderer->ssao_noise_texture = texture_new(quark, 4, 4, NULL,
+        TEX_FORMAT_RGBA_F16, TEX_FILTER_NEAREST);
+    r_set_texture(quark, &quark->renderer, NULL, renderer->ssao_noise_texture, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssao_noise[0]);
+
     r_reset_stats(quark, renderer);
+    renderer->init = true;
     info(quark, "renderer initialized!");
 }
 
@@ -257,6 +292,8 @@ void r_on_resize(quark_t* quark) {
 
     framebuffer_free(renderer->gbuffer);
     framebuffer_free(renderer->screen_buffer);
+    framebuffer_free(renderer->ssao_framebuffer);
+    framebuffer_free(renderer->sun_shadow_buffer);
 
     int width = r_width.value * r_scale.value;
     int height = r_height.value * r_scale.value;
@@ -273,6 +310,11 @@ void r_on_resize(quark_t* quark) {
     framebuffer_add_texture(quark, renderer->screen_buffer, width, height, TEX_FORMAT_RGBA_F16);
     framebuffer_add_depth_buffer(quark, renderer->screen_buffer, width, height);
     framebuffer_finish(quark, renderer->screen_buffer);
+
+    renderer->ssao_framebuffer = framebuffer_new(quark);
+    framebuffer_add_texture(quark, renderer->ssao_framebuffer, width, height, TEX_FORMAT_RGBA_F16);
+    framebuffer_add_depth_buffer(quark, renderer->ssao_framebuffer, width, height);
+    framebuffer_finish(quark, renderer->ssao_framebuffer);
 
     renderer->sun_shadow_buffer = framebuffer_new(quark);
     framebuffer_add_texture(quark, renderer->sun_shadow_buffer,

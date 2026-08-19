@@ -29,6 +29,8 @@ void item_free(quark_t* quark, item_t* item) {
 }
 
 void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
+    item_t* item = inventory_get_item(quark, &player->inventory);
+
     if (quark->time - weapon->last_fire < weapon->fire_rate)
         return;
 
@@ -61,6 +63,23 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
 
     player->item_anim[2] -= (player->buttons & PLAYER_BUTTON_AIM) ?
         weapon->recoil * 0.04f : weapon->recoil;
+
+    if (weapon->has_muzzle_flash) {
+        vec3 color = {48.0f, 32.0f, 32.0f};
+
+        vec3 position;
+        player_get_item_position_world_space(quark, player, position);
+
+        vec3 forward;
+        glm_vec3_copy(quark->renderer.camera.forward, forward);
+        glm_vec3_scale(forward, item->mesh->bbox.max[2], forward);
+        glm_vec3_add(position, forward, position);
+
+        entity_t* entity = NULL;
+        entity_init_point_light(quark, "muzzle flash", position,
+            color, 0.1f, &entity);
+        entlist_add(quark, &quark->map.entlist, entity);
+    }
     
     quark->renderer.camera.shake[0] += weapon->recoil * 14.0f;
     quark->renderer.camera.shake[1] += weapon->recoil * 14.0f * random(-1.0f, 1.0f);
@@ -152,7 +171,10 @@ void weapon_fire(quark_t* quark, weapon_t* weapon, player_t* player) {
 }
 
 void weapon_reload(quark_t* quark, weapon_t* weapon, player_t* player) {
-    if (weapon->is_reloading || weapon->ammo_unloaded == 0) return;
+    if (weapon->is_reloading ||
+        weapon->ammo_unloaded == 0 ||
+        weapon->ammo_loaded == weapon->mag_size)
+        return;
     weapon->is_reloading = true;
     weapon->reload_start = quark->time;
 }
@@ -163,8 +185,11 @@ void weapon_finish_reload(quark_t* quark, weapon_t* weapon, player_t* player) {
     weapon->is_reloading = false;
     int difference = weapon->mag_size - weapon->ammo_loaded;
     weapon->ammo_loaded = min(weapon->mag_size, weapon->ammo_unloaded);
-    weapon->ammo_unloaded -= difference;
-    weapon->ammo_unloaded = max(weapon->ammo_unloaded, 0);
+
+    if (!sv_inf_ammo.value) {
+        weapon->ammo_unloaded -= difference;
+        weapon->ammo_unloaded = max(weapon->ammo_unloaded, 0);
+    }
 }
 
 void inventory_init(quark_t* quark, inventory_t* inventory) {
@@ -203,6 +228,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 3.4f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = true;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
     weapon->projectile_material = NULL;
@@ -226,6 +252,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 2.4f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = true;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
     weapon->projectile_material = NULL;
@@ -251,6 +278,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 2.4f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = false;
     weapon->is_projectile = true;
     weapon->projectile_mesh = mesh_load(quark, "res/meshes/items/rocket.obj");
     weapon->projectile_material = quark->renderer.default_material;
@@ -276,6 +304,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 5.5f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = true;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
     weapon->projectile_material = NULL;
@@ -299,6 +328,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 4.0f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = true;
     weapon->is_projectile = false;
     weapon->projectile_mesh = NULL;
     weapon->projectile_material = NULL;
@@ -323,6 +353,7 @@ void inventory_init(quark_t* quark, inventory_t* inventory) {
     weapon->reload_time = 5.0f;
     weapon->is_reloading = false;
     weapon->reload_start = 0.0f;
+    weapon->has_muzzle_flash = false;
     weapon->is_projectile = true;
     weapon->projectile_mesh = mesh_load(quark, "res/meshes/items/landmine.obj");
     weapon->projectile_material = quark->renderer.default_material;

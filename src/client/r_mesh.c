@@ -13,9 +13,9 @@ mesh_buffer_t* mesh_buffer_new(quark_t* quark, size_t nvertices, size_t nindices
     glGenBuffers(1, &buffer->vbo);
     glGenBuffers(1, &buffer->ebo);
     buffer->nvertices = nvertices;
-    buffer->vertices = malloc(nvertices * sizeof(float));
+    buffer->vertices = (nvertices == 0) ? NULL : malloc(nvertices * sizeof(float));
     buffer->nindices = nindices;
-    buffer->indices = malloc(nindices * sizeof(uint32_t));
+    buffer->indices = (nindices == 0) ? NULL : malloc(nindices * sizeof(uint32_t));
     return buffer;
 }
 
@@ -74,7 +74,7 @@ static void file_callback(void *ctx,
 }
 
 mesh_t* mesh_load(quark_t* quark, const char* path) {
-    info(quark, "loading mesh %s", path);
+    quark_set_progress(quark, "loading mesh %s", path);
 
     tinyobj_attrib_t attrib;
     tinyobj_shape_t* shapes = NULL;

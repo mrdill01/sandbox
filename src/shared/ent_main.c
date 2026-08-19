@@ -15,6 +15,7 @@ void entity_init_common(
     glm_quat_identity(entity->rotation);
 	glm_vec3_copy((vec3){1.0f, 1.0f, 1.0f}, entity->scale);
 	glm_vec3_zero(entity->velocity);
+	entity->parent_id = -1;
 	entity->local_bbox = (bbox_t){0};
 	entity->world_bbox = (bbox_t){0};
 	entity->spawn_time = quark->time;
@@ -39,18 +40,6 @@ void entity_init_sun_light(quark_t* quark,
 	*out = entity;
 }
 
-void entity_init_point_light(quark_t* quark,
-    const char* name, float x, float y, float z, vec3 color, entity_t** out)
-{
-	if (!out) return;
-
-	entity_t* entity = NULL;
-	entity_init_common(quark, name, ENTITY_POINT_LIGHT, (vec3){x, y, z}, &entity);
-	glm_vec3_copy(color, entity->data.point_light.color);
-
-	*out = entity;
-}
-
 void entity_free(quark_t* quark, entity_t* entity) {
 	if (!entity) return;
 	if (entity->name)
@@ -64,6 +53,7 @@ mesh_t* entity_get_mesh(quark_t* quark, entity_t* entity) {
 	case ENTITY_PROJECTILE: return entity->data.projectile.mesh;
 	case ENTITY_PICKUP: return entity->data.pickup.mesh;
 	case ENTITY_VEHICLE: return entity->data.vehicle.mesh;
+	case ENTITY_TERRAIN: return entity->data.terrain.mesh;
 	default: return NULL;
 	}
 }
@@ -98,6 +88,12 @@ void entity_get_materials(quark_t* quark,
 			*nmaterials = entity->data.vehicle.mesh->nmaterials;
 		break;
 	}
+	case ENTITY_TERRAIN: {
+		memcpy(materials, entity->data.terrain.materials, sizeof(material_t*) * MAX_MATERIALS);
+		if (nmaterials)
+			*nmaterials = entity->data.terrain.mesh->nmaterials;
+		break;
+	}
 	default: break;
 	}
 }
@@ -109,7 +105,8 @@ bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall)
 	if (entity->type != ENTITY_MESH &&
 		entity->type != ENTITY_PROJECTILE &&
 		entity->type != ENTITY_PICKUP &&
-		entity->type != ENTITY_VEHICLE)
+		entity->type != ENTITY_VEHICLE &&
+		entity->type != ENTITY_TERRAIN)
 		return false;
 
 	if (entity->type == ENTITY_MESH && !entity->data.mesh.is_visible)
@@ -123,10 +120,8 @@ bool entity_get_drawcall(quark_t* quark, entity_t* entity, drawcall_t* drawcall)
 	size_t nmaterials = 0;
 	entity_get_materials(quark, entity, drawcall->materials, &nmaterials);
 
-	drawcall->local_bbox = drawcall->mesh->bbox;
-	drawcall->world_bbox = entity->local_bbox;
-	drawcall->world_bbox = bbox_scale(&drawcall->world_bbox, entity->scale);
-	drawcall->world_bbox = bbox_translate(&drawcall->world_bbox, entity->position);
+	drawcall->local_bbox = entity->local_bbox;
+	drawcall->world_bbox = entity->world_bbox;
 
 	glm_mat4_identity(drawcall->model);
 	glm_translate(drawcall->model, entity->position);
@@ -177,8 +172,8 @@ static void compute_bounding_box(quark_t* quark, entity_t* entity) {
 
 	entity->world_bbox = entity->local_bbox;
 	entity->world_bbox = bbox_rotate(&entity->world_bbox, entity->rotation);
-	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
 	entity->world_bbox = bbox_scale(&entity->world_bbox, entity->scale);
+	entity->world_bbox = bbox_translate(&entity->world_bbox, entity->position);
 }
 
 void entlist_tick(quark_t* quark, entlist_t* entlist) {
@@ -208,6 +203,10 @@ void entlist_tick(quark_t* quark, entlist_t* entlist) {
 		}
 		case ENTITY_VEHICLE: {
 			entity_tick_vehicle(quark, entity, &entity->data.vehicle);
+			break;
+		}
+		case ENTITY_POINT_LIGHT: {
+			entity_tick_point_light(quark, entity, &entity->data.point_light);
 			break;
 		}
 		default: break;

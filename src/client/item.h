@@ -35,6 +35,7 @@ typedef struct {
     float reload_time;
     bool is_reloading;
     float reload_start;
+    bool has_muzzle_flash;
     
     float is_projectile;
     mesh_t* projectile_mesh;

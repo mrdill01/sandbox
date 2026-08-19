@@ -13,6 +13,8 @@ material_t* material_load(quark_t* quark,
     bool is_translucent,
     int phys_mat)
 {
+    quark_set_progress(quark, "loading material %s", name);
+    
     material_t* material = malloc(sizeof(material_t));
     size_t len = strlen(name);
     material->name = malloc(len + 1);

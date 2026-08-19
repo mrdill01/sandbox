@@ -264,10 +264,13 @@ static void hit_ground(quark_t* quark, player_t* player, trace_result_t trace) {
 
     if (player->velocity[1] < -8.0f && player->water_level == 0.0f) {
         float fall_damage = powf(-player->velocity[1], 1.25f);
+        fall_damage = 0.0f;
         player_add_damage(quark, player, fall_damage);
 
-        a_play(quark, &quark->audio, quark->audio.fall_damage_sound,
-            player->position, random(0.85f, 1.15f));
+        if (fall_damage > 0.0f) {
+            a_play(quark, &quark->audio, quark->audio.fall_damage_sound,
+                player->position, random(0.85f, 1.15f));
+        }
     }
 
     player->velocity[1] = 0.0f;
@@ -617,10 +620,12 @@ void player_tick(quark_t* quark, player_t* player, camera_t* camera, entlist_t* 
 
     vec3 forward;
     glm_vec3_copy(camera->forward, forward);
+    forward[1] = 0.0f;
     glm_vec3_scale(forward, player->move_input[2], forward);
 
     vec3 right;
     glm_vec3_copy(camera->right, right);
+    right[1] = 0.0f;
     glm_vec3_scale(right, player->move_input[0], right);
 
     vec3 up;

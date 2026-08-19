@@ -1,5 +1,5 @@
 #include "map.h"
-#include "../shared/quark.h"
+#include "quark.h"
 
 void map_init(quark_t* quark, map_t* map) {
     map->is_loaded = false;
@@ -43,6 +43,7 @@ void map_load(quark_t* quark, map_t* map) {
     mesh_t* ship_mesh = mesh_load(quark, "res/meshes/ship.obj");
     mesh_t* dock_mesh = mesh_load(quark, "res/meshes/dock.obj");
     mesh_t* vinyl_mesh = mesh_load(quark, "res/meshes/vinyl.obj");
+    mesh_t* bed_mesh = mesh_load(quark, "res/meshes/bed.obj");
     mesh_t* cactus_mesh = mesh_load(quark, "res/meshes/nature/cactus.obj");
     mesh_t* rock_mesh = mesh_load(quark, "res/meshes/nature/rock.obj");
     mesh_t* hedge_mesh = mesh_load(quark, "res/meshes/nature/hedge.obj");
@@ -308,6 +309,13 @@ void map_load(quark_t* quark, map_t* map) {
         "res/textures/materials/light_n.png",
         1, 1, false, PHYS_MAT_METAL);
 
+    material_t* fabric = material_load(quark,
+        "fabric",
+        "res/textures/materials/fabric.png",
+        "res/textures/materials/fabric_r.png",
+        "res/textures/materials/fabric_n.png",
+        1, 1, false, PHYS_MAT_GRASS);
+
     material_t* test = material_load(quark,
         "test",
         "res/textures/materials/test.png",
@@ -322,7 +330,10 @@ void map_load(quark_t* quark, map_t* map) {
         "res/textures/materials/coin_n.png",
         1, 1, false, PHYS_MAT_METAL);
 
-    entity_t* entity;
+    texture_t* heightmap_1 = texture_load(quark,
+        "res/textures/heightmaps/1.png", TEX_FILTER_NEAREST);
+
+    entity_t* entity = NULL;
     entity_init_mesh(quark, "floor", 0.0f, -0.5f, 0.0f, floor_mesh, &entity);
     entity_mesh_set_material(quark, entity, metal, 0);
     entlist_add(quark, &map->entlist, entity);
@@ -964,13 +975,24 @@ void map_load(quark_t* quark, map_t* map) {
     entity_init_sun_light(quark, "sun", 0.0f, 0.0f, 0.0f, sun_dir, sun_color, &entity);
     entlist_add(quark, &map->entlist, entity);
 
-    /*vec3 color = {32.0f, 32.0f, 32.0f};
+    /*vec3 color = {0.0f, 32.0f, 32.0f};
     entity_init_point_light(quark, "point light", 0.0f, 1.5f, -2.5f, color, &entity);
     entlist_add(quark, &map->entlist, entity);*/
 
     entity_init_mesh(quark, "streetlight", 0.0f, -0.5f, -2.5f, streetlight_mesh, &entity);
     entity_mesh_set_material(quark, entity, metal, 0);
     entity_mesh_set_material(quark, entity, light, 1);
+    entlist_add(quark, &map->entlist, entity);
+
+    vec3 color;
+    glm_vec3_copy((vec3){64.0f, 32.0f, 32.0f}, color);
+    entity_init_point_light(quark, "point light(2)",
+        (vec3){17.5f, 1.0f, -8.0f}, color, 0.0f, &entity);
+    entlist_add(quark, &map->entlist, entity);
+
+    entity_init_mesh(quark, "bed", 17.5f, -0.5f, -7.5f, bed_mesh, &entity);
+    entity_mesh_set_material(quark, entity, fabric, 0);
+    entity_mesh_set_material(quark, entity, wood, 1);
     entlist_add(quark, &map->entlist, entity);
 
     entity_init_mesh(quark, "hedge", 15.5f, -0.5f, 6.0f, hedge_mesh, &entity);
@@ -1062,6 +1084,13 @@ void map_load(quark_t* quark, map_t* map) {
         entity->data.mesh.enable_collision = false;
         entlist_add(quark, &map->entlist, entity);
     }
+
+    /*entity_init_terrain(quark, "terrain",
+        (vec3){-128.0f, -2.0f, -128.0f},
+        (vec3){256.0f, 10.0f, 256.0f},
+        heightmap_1, &entity);
+    entity_terrain_set_material(quark, entity, grass, 0);
+    entlist_add(quark, &map->entlist, entity);*/
 
     /*for (int i = 0; i < 16; i++) {
         float x = random(-8.0f, 40.0f);

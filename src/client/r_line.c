@@ -75,6 +75,9 @@ void r_render_lines(quark_t* quark, renderer_t* renderer) {
     
     r_set_mat4(quark, renderer, "view", renderer->view);
     r_set_mat4(quark, renderer, "projection", renderer->projection);
+    r_set_vec3(quark, renderer, "camera.position", renderer->camera.position);
+    r_set_float(quark, renderer, "camera.near", renderer->camera.near);
+    r_set_float(quark, renderer, "camera.far", renderer->camera.far);
     
     for (int i = 0; i < MAX_LINES; i++) {
         line_t* line = &renderer->lines[i];

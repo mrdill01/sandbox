@@ -4,7 +4,7 @@
 #include "../../include/gl.h"
 
 void r_add_partfx_shoot_hit(quark_t* quark, renderer_t* renderer, trace_result_t trace) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100 * r_particles.value; i++) {
         /*vec3 velocity;
         glm_vec3_copy(trace.normal, velocity);
         glm_vec3_scale(velocity, 10.0f, velocity);*/
@@ -31,7 +31,7 @@ void r_add_partfx_shoot_hit(quark_t* quark, renderer_t* renderer, trace_result_t
         particle->apply_gravity = true;
     }
 
-    if (trace.phys_mat != PHYS_MAT_PLAYER) {
+    if (trace.phys_mat != PHYS_MAT_PLAYER && r_particles.value > 0) {
         vec3 bullet_hole_position;
         glm_vec3_copy(trace.point, bullet_hole_position);
         
@@ -48,7 +48,7 @@ void r_add_partfx_shoot_hit(quark_t* quark, renderer_t* renderer, trace_result_t
 }
 
 void r_add_partfx_shoot_hit_water(quark_t* quark, renderer_t* renderer, trace_result_t trace) {
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100 * r_particles.value; i++) {
         vec3 velocity;
         glm_vec3_zero(velocity);
         velocity[0] += random(-2.5f, 2.5f);
@@ -71,7 +71,7 @@ void r_add_partfx_shoot_beam(
     vec3 position;
     glm_vec3_copy(start, position);
 
-    for (int i = 0; i < distance * PARTICLES_PER_UNIT; i++) {
+    for (int i = 0; i < distance * PARTICLES_PER_UNIT * r_particles.value; i++) {
         vec3 step;
         glm_vec3_scale(dir, 1.0f / PARTICLES_PER_UNIT, step);
         glm_vec3_add(position, step, position);
@@ -114,7 +114,7 @@ void r_add_partfx_projectile_trail(
 }
 
 void r_add_partfx_hit_ground(quark_t* quark, renderer_t* renderer, vec3 position, material_t* material) {
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 20 * r_particles.value; i++) {
         vec3 velocity = {
             random(-2.0f, 2.0f),
             random(2.0f, 4.0f),
@@ -140,7 +140,7 @@ void r_add_partfx_hit_ground(quark_t* quark, renderer_t* renderer, vec3 position
 void r_add_partfx_enter_water(
     quark_t* quark, renderer_t* renderer, vec3 position, vec3 velocity)
 {
-    for (int i = 0; i < 300; i++) {
+    for (int i = 0; i < 300 * r_particles.value; i++) {
         vec3 new_position;
         glm_vec3_copy(position, new_position);
         new_position[0] += random(-0.5f, 0.5f);
@@ -163,7 +163,7 @@ void r_add_partfx_enter_water(
 void r_add_partfx_step_water(
     quark_t* quark, renderer_t* renderer, vec3 position, vec3 velocity)
 {
-    for (int i = 0; i < 65; i++) {
+    for (int i = 0; i < 65 * r_particles.value; i++) {
         vec3 new_position;
         glm_vec3_copy(position, new_position);
         new_position[0] += random(-0.25f, 0.25f);
@@ -186,7 +186,7 @@ void r_add_partfx_step_water(
 void r_add_partfx_explosion(
     quark_t* quark, renderer_t* renderer, vec3 position, float radius)
 {
-    for (int i = 0; i < 75; i++) {
+    for (int i = 0; i < 75 * r_particles.value; i++) {
         vec3 velocity = {
             random(-3.0f, 3.0f),
             random(-3.0f, 3.0f),
@@ -199,7 +199,7 @@ void r_add_partfx_explosion(
             PARTICLE_FADE_OUT | PARTICLE_SCALE_X2);
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100 * r_particles.value; i++) {
         vec3 velocity = {
             random(-10.0f, 10.0f),
             random(-10.0f, 10.0f),
@@ -211,7 +211,7 @@ void r_add_partfx_explosion(
         particle->apply_gravity = true;
     }
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100 * r_particles.value; i++) {
         vec3 new_position;
         glm_vec3_copy(position, new_position);
         new_position[0] += random(-0.5f, 0.5f);
@@ -231,7 +231,7 @@ void r_add_partfx_explosion(
         particle->apply_gravity = true;
     }
 
-    for (int i = 0; i < 25; i++) {
+    for (int i = 0; i < 25 * r_particles.value; i++) {
         vec3 velocity = {
             random(-0.25f, 0.25f),
             random(0.0f, 2.0f),
@@ -248,7 +248,7 @@ void r_add_partfx_explosion(
 }
 
 void r_add_partfx_pickup_coin(quark_t* quark, renderer_t* renderer, vec3 position) {
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 80 * r_particles.value; i++) {
         vec3 velocity = {
             random(-1.0f, 1.0f),
             random(1.0f, 3.0f),

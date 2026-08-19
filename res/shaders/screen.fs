@@ -13,8 +13,9 @@ uniform sampler2D g_position;
 uniform sampler2D g_albedo_roughness;
 uniform sampler2D g_normal;
 uniform sampler2D g_depth;
-uniform int debug_buffer;
+uniform sampler2D ssao;
 uniform sampler2D sun_shadow;
+uniform int debug_buffer;
 
 uniform vec3 view_position;
 uniform vec3 view_direction;
@@ -59,5 +60,7 @@ void main() {
         frag_color = vec4(texture(g_normal, uv).rgb * 0.5f + 0.5f, 1.0f);
     else if (debug_buffer == 5)
         frag_color = vec4(vec3(texture(g_depth, uv).r), 1.0f);
+    else if (debug_buffer == 6)
+        frag_color = vec4(vec3(texture(ssao, uv).r), 1.0f);
     //frag_color = vec4(vec3(linearize_depth(texture(sun_shadow, uv).r)), 1.0f);
 }

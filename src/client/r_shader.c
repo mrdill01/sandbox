@@ -62,7 +62,7 @@ shader_t* shader_new(quark_t* quark,
 }
 
 shader_t* shader_load(quark_t* quark, const char* name, const char* vpath, const char* fpath) {
-    info(quark, "loading shader %s (%s + %s)", name, vpath, fpath);
+    quark_set_progress(quark, "loading shader %s (%s + %s)", name, vpath, fpath);
     const char* vs = load_file(quark, vpath);
     const char* fs = load_file(quark, fpath);
     return shader_new(quark, name, vs, vpath, fs, fpath);

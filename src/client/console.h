@@ -9,14 +9,14 @@
 #define CON_MAX_INPUT 256
 #define CON_MAX_HISTORY 8192
 #define CON_MAX_ARGS 16
-#define CON_LINES_PER_PAGE 21
+#define CON_LINES_PER_PAGE 18
 
 typedef struct quark_t quark_t;
 
 typedef struct {
     char input[CON_MAX_INPUT];
     char* history[CON_MAX_HISTORY];
-    size_t history_len;
+    int history_len;
     int scroll;
 } console_t;
 

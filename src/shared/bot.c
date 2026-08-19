@@ -1,5 +1,5 @@
-#include "../shared/player.h"
-#include "../shared/quark.h"
+#include "player.h"
+#include "quark.h"
 
 void bot_init(quark_t* quark, player_t* bot) {
     bot->bot.last_speech = quark->time;

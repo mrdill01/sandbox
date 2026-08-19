@@ -1,5 +1,5 @@
-#include "../shared/quark.h"
-#include "render.h"
+#include "quark.h"
+#include "../client/render.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -25,8 +25,7 @@ int main(int argc, char* argv[]) {
     const char* args[] = {"127.0.0.1", "25565"};
     cmd_run(&quark, "connect", args, 2);
 
-    ui_render(&quark, &quark.renderer.ui, &quark.renderer);
-    SDL_GL_SwapWindow(quark.window);
+    quark_set_progress(&quark, "connecting...");
     #endif
 
     while (quark.running) {
@@ -167,26 +166,29 @@ void tick(quark_t* quark) {
     }
 
     if (console.value) {
+        console_t* console = &quark->console;
+
         if (quark->keys[SDL_SCANCODE_RETURN]) {
             quark->keys[SDL_SCANCODE_RETURN] = false;
-            con_submit(quark, &quark->console);
+            con_submit(quark, console);
+            console->scroll = 0;
         }
 
         if (quark->keys[SDL_SCANCODE_UP]) {
             quark->keys[SDL_SCANCODE_UP] = false;
-            if (quark->console.scroll > -353)
-                quark->console.scroll -= 1;
+            if (console->scroll > -console->history_len + CON_LINES_PER_PAGE)
+                console->scroll -= 1;
         }
 
         if (quark->keys[SDL_SCANCODE_DOWN]) {
             quark->keys[SDL_SCANCODE_DOWN] = false;
-            if (quark->console.scroll < quark->console.history_len - 1 - 20)
-                quark->console.scroll += 1;
+            if (console->scroll < 0)
+                console->scroll += 1;
         }
 
         if (quark->keys[SDL_SCANCODE_BACKSPACE]) {
             quark->keys[SDL_SCANCODE_BACKSPACE] = false;
-            quark->console.input[strlen(quark->console.input) - 1] = '\0';
+            console->input[strlen(console->input) - 1] = '\0';
         }
     }
 
@@ -212,7 +214,13 @@ void tick(quark_t* quark) {
         else if (r_debug_buffer.value == 2) cvar_set(quark, "r_debug_buffer", "3");
         else if (r_debug_buffer.value == 3) cvar_set(quark, "r_debug_buffer", "4");
         else if (r_debug_buffer.value == 4) cvar_set(quark, "r_debug_buffer", "5");
-        else if (r_debug_buffer.value == 5) cvar_set(quark, "r_debug_buffer", "0");
+        else if (r_debug_buffer.value == 5) cvar_set(quark, "r_debug_buffer", "6");
+        else if (r_debug_buffer.value == 6) cvar_set(quark, "r_debug_buffer", "0");
+    }
+
+    if (quark->keys[SDL_SCANCODE_F6]) {
+        quark->keys[SDL_SCANCODE_F6] = false;
+        cvar_toggle(quark, "r_wireframe");
     }
 
     if (quark->keys[SDL_SCANCODE_F11] ||

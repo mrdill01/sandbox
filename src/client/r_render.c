@@ -175,6 +175,9 @@ static void render_gbuffer(quark_t* quark, renderer_t* renderer) {
     r_set_framebuffer(renderer, renderer->gbuffer);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
+    if (r_wireframe.value) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -184,6 +187,9 @@ static void render_gbuffer(quark_t* quark, renderer_t* renderer) {
     r_set_mat4(quark, renderer, "view", renderer->view);
     r_set_mat4(quark, renderer, "projection", renderer->projection);
     r_set_float(quark, renderer, "time", quark->time);
+    r_set_vec3(quark, renderer, "camera.position", renderer->camera.position);
+    r_set_float(quark, renderer, "camera.near", renderer->camera.near);
+    r_set_float(quark, renderer, "camera.far", renderer->camera.far);
 
     for (int i = 0; i < renderer->ndrawcalls; i++) {
         drawcall_t* drawcall = &renderer->drawcalls[i];
@@ -207,6 +213,37 @@ static void render_gbuffer(quark_t* quark, renderer_t* renderer) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     r_set_framebuffer(renderer, NULL);
+
+    prof_end(quark, &quark->prof);
+}
+
+static void render_ssao(quark_t* quark, renderer_t* renderer) {
+    if (!r_ssao.value) return;
+
+    prof_start(quark, &quark->prof);
+
+    r_set_framebuffer(renderer, renderer->ssao_framebuffer);
+    r_set_shader(renderer, renderer->ssao_shader);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    r_set_texture(quark, renderer, "g_position", renderer->gbuffer->textures[0], 0);
+    r_set_texture(quark, renderer, "g_normal", renderer->gbuffer->textures[2], 1);
+    r_set_texture(quark, renderer, "noise", renderer->ssao_noise_texture, 2);
+    r_set_mat4(quark, renderer, "view", renderer->view);
+    r_set_mat4(quark, renderer, "projection", renderer->projection);
+    r_set_vec2(quark, renderer, "screen_size",
+        (vec2){r_width.value * r_scale.value, r_height.value * r_scale.value});
+
+    for (int i = 0; i < SSAO_KERNEL_SIZE; i++) {
+        char name[32];
+        sprintf(name, "samples[%d]", i);
+        r_set_vec3(quark, &quark->renderer, name, renderer->ssao_kernel[i]);
+    }
+
+    r_draw_mesh(renderer, renderer->quad_mesh);
+
+    r_set_framebuffer(renderer, NULL);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     prof_end(quark, &quark->prof);
 }
@@ -252,6 +289,8 @@ static void render_ambient_light(quark_t* quark, renderer_t* renderer) {
     r_set_texture(quark, renderer, "gbuffer.albedo_roughness", renderer->gbuffer->textures[1], 1);
     r_set_texture(quark, renderer, "gbuffer.normal", renderer->gbuffer->textures[2], 2);
     r_set_texture(quark, renderer, "gbuffer.depth", renderer->gbuffer->textures[3], 3);
+    r_set_texture(quark, renderer, "ssao", (r_ssao.value) ?
+        renderer->ssao_framebuffer->textures[0] : renderer->default_material->roughness, 4);
 
     r_draw_mesh(renderer, renderer->quad_mesh);
     r_set_framebuffer(renderer, NULL);
@@ -310,7 +349,7 @@ static void render_point_lights(quark_t* quark, renderer_t* renderer) {
 
     //glEnable(GL_CULL_FACE);
     //glCullFace(GL_FRONT);
-    //glEnable(GL_BLEND);
+    glEnable(GL_BLEND);
     /*glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);*/
     glEnable(GL_BLEND);
@@ -336,7 +375,7 @@ static void render_point_lights(quark_t* quark, renderer_t* renderer) {
         mat4 model;
         glm_mat4_identity(model);
         glm_scale(model, (vec3){scale, scale, scale});
-        glm_translate_make(model, entity->position);
+        glm_translate(model, entity->position);
         r_set_mat4(quark, renderer, "model", model);
 
         r_draw_mesh(renderer, renderer->quad_mesh);
@@ -375,6 +414,9 @@ static void render_forward(quark_t* quark, renderer_t* renderer) {
     r_set_shader(renderer, renderer->forward_shader);
     glViewport(0, 0, r_width.value * r_scale.value, r_height.value * r_scale.value);
 
+    if (r_wireframe.value) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glEnable(GL_CULL_FACE);
@@ -383,7 +425,9 @@ static void render_forward(quark_t* quark, renderer_t* renderer) {
 
     r_set_mat4(quark, renderer, "view", renderer->view);
     r_set_mat4(quark, renderer, "projection", renderer->projection);
-    r_set_vec3(quark, renderer, "view_position", renderer->camera.position);
+    r_set_vec3(quark, renderer, "camera.position", renderer->camera.position);
+    r_set_float(quark, renderer, "camera.near", renderer->camera.near);
+    r_set_float(quark, renderer, "camera.far", renderer->camera.far);
     r_set_vec2(quark, renderer, "screen_size",
         (vec2){r_width.value * r_scale.value, r_height.value * r_scale.value});
     r_set_texture(quark, renderer, "g_depth", renderer->gbuffer->textures[3], 5);
@@ -440,7 +484,8 @@ static void render_screen(quark_t* quark, renderer_t* renderer) {
     r_set_texture(quark, renderer, "g_albedo_roughness", renderer->gbuffer->textures[1], 2);
     r_set_texture(quark, renderer, "g_normal", renderer->gbuffer->textures[2], 3);
     r_set_texture(quark, renderer, "g_depth", renderer->gbuffer->textures[3], 4);
-    r_set_texture(quark, renderer, "sun_shadow", renderer->sun_shadow_buffer->textures[0], 5);
+    r_set_texture(quark, renderer, "ssao", renderer->ssao_framebuffer->textures[0], 5);
+    r_set_texture(quark, renderer, "sun_shadow", renderer->sun_shadow_buffer->textures[0], 6);
     r_set_int(quark, renderer, "debug_buffer", (int)r_debug_buffer.value);
 
     r_set_mat4(quark, renderer, "view", renderer->view);
@@ -461,7 +506,6 @@ void r_render(quark_t* quark, renderer_t* renderer) {
 
     if (!quark->map.is_loaded) {
         ui_render(quark, &renderer->ui, renderer);
-        r_clear_drawcalls(renderer);
         r_reset_stats(quark, renderer);
         SDL_GL_SwapWindow(quark->window);
         return;
@@ -475,6 +519,7 @@ void r_render(quark_t* quark, renderer_t* renderer) {
     render_items(quark, renderer);
     render_shadows(quark, renderer);
     render_gbuffer(quark, renderer);
+    render_ssao(quark, renderer);
     render_skybox(quark, renderer);
     render_ambient_light(quark, renderer);
     render_sun_light(quark, renderer);

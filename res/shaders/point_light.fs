@@ -102,8 +102,7 @@ void main() {
 
     vec3 direct = vec3(0.0);
     direct += draw_light(view_dir, f0, sample);
-    vec3 ambient = vec3(0.4) * sample.albedo * sample.ao;
     
-    frag_color = vec4(direct + ambient, 0.5f);
+    frag_color = vec4(direct, 1.0f);
     //frag_color = vec4(0.0f, 1.0f, 0.0f, 1.0f);
 }

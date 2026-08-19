@@ -10,13 +10,14 @@ static void tick_item(quark_t* quark, player_t* player, entlist_t* entlist) {
     if (!item)
         return;
     
-    weapon_t* weapon = &item->data.weapon;
-    if (player->buttons & PLAYER_BUTTON_FIRE) {
-        weapon_fire(quark, weapon, player);
-    }
+    if (item->type == ITEM_WEAPON) {
+        weapon_t* weapon = &item->data.weapon;
+        if (player->buttons & PLAYER_BUTTON_FIRE)
+            weapon_fire(quark, weapon, player);
 
-    if (weapon->is_reloading && quark->time - weapon->reload_start >= weapon->reload_time) {
-        weapon_finish_reload(quark, weapon, player);
+        if (weapon->is_reloading && quark->time - weapon->reload_start >= weapon->reload_time) {
+            weapon_finish_reload(quark, weapon, player);
+        }
     }
 }
 
@@ -133,22 +134,7 @@ void player_render_item(quark_t* quark, player_t* player, renderer_t* renderer) 
     memcpy(drawcall.materials, item->materials, sizeof(material_t*) * MAX_MATERIALS);
 
     vec3 position;
-    glm_vec3_copy(renderer->camera.position, position);
-
-    vec3 forward;
-    glm_vec3_copy(renderer->camera.forward, forward);
-    glm_vec3_scale(forward, player->item_position[2] + player->item_anim[2], forward);
-    glm_vec3_add(position, forward, position);
-    
-    vec3 right;
-    glm_vec3_copy(renderer->camera.right, right);
-    glm_vec3_scale(right, player->item_position[0] + player->item_anim[0], right);
-    glm_vec3_add(position, right, position);
-
-    vec3 up;
-    glm_vec3_copy(renderer->camera.up, up);
-    glm_vec3_scale(up, player->item_position[1] + player->item_anim[1], up);
-    glm_vec3_add(position, up, position);
+    player_get_item_position_world_space(quark, player, position);
 
     vec3 scale = {1.0f, 1.0f, 1.0f};
 
@@ -188,4 +174,25 @@ void player_render_item(quark_t* quark, player_t* player, renderer_t* renderer) 
     drawcall.distance_to_camera = 0.0f;
     drawcall.is_translucent = false;
     r_add_drawcall(renderer, drawcall);
+}
+
+void player_get_item_position_world_space(quark_t* quark, player_t* player, vec3 position) {
+    if (!position) return;
+    player_get_top_position(quark, player, position);
+    position[1] -= 0.1f;
+
+    vec3 forward;
+    glm_vec3_copy(quark->renderer.camera.forward, forward);
+    glm_vec3_scale(forward, player->item_position[2] + player->item_anim[2], forward);
+    glm_vec3_add(position, forward, position);
+    
+    vec3 right;
+    glm_vec3_copy(quark->renderer.camera.right, right);
+    glm_vec3_scale(right, player->item_position[0] + player->item_anim[0], right);
+    glm_vec3_add(position, right, position);
+
+    vec3 up;
+    glm_vec3_copy(quark->renderer.camera.up, up);
+    glm_vec3_scale(up, player->item_position[1] + player->item_anim[1], up);
+    glm_vec3_add(position, up, position);
 }

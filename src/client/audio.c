@@ -244,7 +244,7 @@ int a_get_max_source_count(quark_t* quark, audio_t* audio) {
 }
 
 sound_t* sound_load(quark_t* quark, audio_t* audio, const char* path) {
-    info(quark, "loading %s", path);
+    quark_set_progress(quark, "loading %s", path);
 
     ALuint buffer;
     ALenum err;

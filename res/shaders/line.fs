@@ -4,6 +4,14 @@ out vec4 frag_color;
 
 uniform vec4 color;
 
+struct Camera {
+    vec3 position;
+    float near;
+    float far;
+};
+
+uniform Camera camera;
+
 float linearize_depth(float depth) {
     float ndc = depth * 2.0f - 1.0f;
     float near = 0.01f;
